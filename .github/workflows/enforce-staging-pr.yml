@@ -1,0 +1,17 @@
+name: Enforce staging PRs
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if source branch is staging
+        run: |
+          if [ "${{ github.head_ref }}" != "staging" ]; then
+            echo "❌ Only PRs from 'staging' are allowed into 'main'."
+            exit 1
+          fi
