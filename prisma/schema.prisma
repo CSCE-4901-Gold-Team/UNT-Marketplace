@@ -4,6 +4,7 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// -------- Generators & Datasources --------
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -12,20 +13,110 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
+// -------- Core Auth/Identity --------
 model User {
-  id            String    @id
-  email         String    @unique
-  name          String
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @default(now()) @updatedAt
-  sessions      Session[]
-  accounts      Account[]
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  emailVerified  Boolean         @default(false)
+  image          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @default(now()) @updatedAt
+
+  // Relations
+  roles          UserRole[]
+  listings       Listing[]       @relation("UserListings")
+
+  // Conversations as buyer/seller
+  buyerConvos    Conversation[]  @relation("BuyerConversations")
+  sellerConvos   Conversation[]  @relation("SellerConversations")
+  messages       Message[]       @relation("UserMessages")
+  sessions       Session[]
+  notifications  Notification[]
+  reportsFiled   Report[]        @relation("ReportsFiledByUser")
+  reviewsGiven   Review[]        @relation("ReviewsByReviewer")
+  reviewsTaken   Review[]        @relation("ReviewsForReviewee")
 
   @@map("user")
+}
+
+model Role {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  users     UserRole[]
+
+  @@map("role")
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_role")
+}
+
+// -------- Marketplace --------
+model Listing {
+  id              String        @id @default(cuid())
+  sellerId        String
+  title           String
+  description     String
+  price           Float
+  isProfessorOnly Boolean     @default(false)
+  status          String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now()) @updatedAt
+
+// Relations
+  seller          User        @relation("UserListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  images          ListingImage[]
+  Categories      Category[]
+  conversations   Conversation[]
+  reviews         Review[]
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@index([price])
+  @@index([isProfessorOnly])
+  @@map("listing")
+}
+
+model ListingImage {
+  id        String   @id @default(cuid())
+  url       String
+  listingId String
+  sortOrder Int      @default(0)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("listing_image")
+}
+
+model Category {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  slug      String        @unique
+  listings  ListingCategory[]
+
+  @@map("category")
+}
+
+model ListingCategory {
+  listingId  String
+  categoryId String
+  listing    Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([listingId, categoryId])
+  @@index([categoryId])
+  @@map("listing_category")
 }
 
 model Session {
