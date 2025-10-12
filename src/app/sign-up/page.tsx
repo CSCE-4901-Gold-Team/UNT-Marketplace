@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import TextInput from "@/components/ui/TextInput";
+import Button from "@/components/ui/Button";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -19,9 +22,9 @@ export default function SignUpPage() {
         setLoading(true);
 
         await authClient.signUp.email({
-            email, // user email address
-            password, // user password -> min 8 characters by default
-            name, // user display name
+            email,
+            password,
+            name,
         }, {
             onRequest: () => {
                 setLoading(true);
@@ -41,15 +44,27 @@ export default function SignUpPage() {
                 <h1 className="mb-6 text-center text-2xl font-semibold">Sign Up</h1>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium">Name</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            className="mt-1 w-full rounded-md border px-3 py-2"
-                        />
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <TextInput
+                                inputLabel="First Name"
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required={true}
+                            />
+                        </div>
+
+                        <div>
+                            <TextInput
+                                inputLabel="Last Name"
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                required={true}
+                            />
+                        </div>
                     </div>
 
                     <div>
@@ -79,13 +94,15 @@ export default function SignUpPage() {
                         <p className="text-sm text-red-500">{errorMessage}</p>
                     )}
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        {loading ? "Signing up..." : "Sign Up"}
-                    </button>
+                    <div className="text-center">
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                            buttonSize="lg"
+                        >
+                            Register
+                        </Button>
+                    </div>
                 </form>
             </div>
         </div>

@@ -4,6 +4,7 @@
 @theme {
     --font-display: "Montserrat", "sans-serif";
     --color-green: #3B9842;
+    --breakpoint-xs: 24rem;
 }
 
 /**********************
