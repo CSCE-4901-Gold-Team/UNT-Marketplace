@@ -6,7 +6,7 @@ export default function Button({
     buttonColor = "green",
     buttonStyle = "bg",
     buttonSize = "md",
-    loadingState = false,
+    showSpinner = false,
     type = "button",
     disabled,
 }: {
@@ -14,7 +14,7 @@ export default function Button({
     buttonColor?: "blue" | "green";
     buttonStyle?: "bg" | "border";
     buttonSize?: "sm" | "md" | "lg";
-    loadingState?: boolean;
+    showSpinner?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
     let classList = "min-w-[200px] rounded-md disabled:opacity-50 cursor-pointer";
@@ -58,9 +58,9 @@ export default function Button({
         <button
             type={ type }
             className={ classList }
-            disabled={ disabled || loadingState }
+            disabled={ disabled || showSpinner }
         >
-            { loadingState ? (
+            { showSpinner ? (
                 <LoadingSpinner />
             ) : children }
         </button>
