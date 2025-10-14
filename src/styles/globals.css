@@ -4,25 +4,34 @@
 @theme {
     --font-display: "Montserrat", "sans-serif";
     --color-green: #3B9842;
+    --breakpoint-xs: 24rem;
 }
 
-/**********************
- * Heading Styles
- *********************/
+@layer base {
+    h1 {
+        font-size: var(--text-2xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-950);
+    }
 
-p {
-    font-size: var(--text-base);
-    color: var(--color-gray-700);
-}
+    h2 {
+        font-size: var(--text-xl);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-950);
+    }
 
-h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-gray-950);
-}
-
-h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-gray-950);
+    h3 {
+        font-size: var(--text-lg);
+        font-weight: var(--font-weight-semibold);
+        color: var(--color-gray-950);
+    }
+    
+    p {
+        font-size: var(--text-base);
+    }
+    
+    a {
+        text-decoration: underline;
+        color: var(--color-green-700);
+    }   
 }

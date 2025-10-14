@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 import "@/styles/globals.css";
+import {ToastContainer} from "react-toastify";
 
 export const metadata: Metadata = {
   title: "UNT Marketplace",
@@ -14,10 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className="antialiased font-display"
-      >
-        {children}
+      <body className="antialiased font-display">
+        <div id="appContainer">
+            {children}
+        </div>
+        <ToastContainer />
       </body>
     </html>
   );
