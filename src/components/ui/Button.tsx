@@ -9,6 +9,7 @@ export default function Button({
     showSpinner = false,
     type = "button",
     disabled,
+    onClick,
 }: {
     children?: React.ReactNode;
     buttonColor?: "blue" | "green";
@@ -59,6 +60,7 @@ export default function Button({
             type={ type }
             className={ classList }
             disabled={ disabled || showSpinner }
+            onClick={onClick}
         >
             { showSpinner ? (
                 <LoadingSpinner />

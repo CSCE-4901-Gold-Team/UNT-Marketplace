@@ -6,7 +6,7 @@ export interface FormResponse {
 
     // Message to be displayed as a toast
     message?: {
-        type: "success" | "info" | "error";
+        type: "success" | "info" | "error" | "warn";
         content: string;
         delay?: number;
         duration?: number;
