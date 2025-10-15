@@ -1,7 +1,6 @@
 ﻿"use server";
 
 import {FormResponse} from "@/types/FormResponse";
-import {authClient} from "@/lib/auth-client";
 import * as z from "zod";
 import {ZodValidators} from "@/utils/ZodValidators";
 import {FormStatus} from "@/constants/FormStatus";
@@ -45,7 +44,7 @@ export async function registerAction(initialState: FormResponse, formData: FormD
             body: {
                 email: parsedFormData.data.email,
                 password: parsedFormData.data.password,
-                name: parsedFormData.data.last_name + " " + parsedFormData.data.last_name,
+                name: parsedFormData.data.first_name + " " + parsedFormData.data.last_name,
             }
         });
     } catch (error) {
