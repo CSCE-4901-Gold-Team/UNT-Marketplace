@@ -10,6 +10,7 @@ import {FormStatus} from "@/constants/FormStatus";
 import Alert from "@/components/ui/Alert";
 import Link from "next/link";
 import {toastService} from "@/lib/toast-service";
+import Card from "@/components/ui/Card";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -39,7 +40,7 @@ export default function SignUpPage() {
     
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-md">
+            <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Create Your Account</h1>
 
                 { registerFormResponse.status === FormStatus.SUCCESS && 
@@ -122,7 +123,7 @@ export default function SignUpPage() {
                         </Button>
                     </div>
                 </form>
-            </div>
+            </Card>
         </div>
     );
 }
