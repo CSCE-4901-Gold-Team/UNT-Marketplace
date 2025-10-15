@@ -34,22 +34,22 @@ export default function SignUpPage() {
         
         // Redirect user on success
         if (registerFormResponse.status === FormStatus.SUCCESS) {
-            router.push("/");
+            router.push("/market");
         }
     }, [registerFormResponse, router]);
     
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
-                <h1 className="mb-6 text-center text-2xl font-semibold">Create Your Account</h1>
+                <h1 className="mb-6 text-center">Create Your Account</h1>
 
-                { registerFormResponse.status === FormStatus.SUCCESS && 
+                {registerFormResponse.status === FormStatus.SUCCESS &&
                     <Alert alertType="success">
-                        <h3>Registration success!</h3> 
+                        <h3>Registration success!</h3>
                         <p>If you&#39;re not redirected <Link href="/">click here</Link></p>
-                    </Alert> 
-                } 
-                
+                    </Alert>
+                }
+
                 <form action={registerFormAction} className="space-y-4">
 
                     <div className="grid sm:grid-cols-2 gap-4">
@@ -113,7 +113,7 @@ export default function SignUpPage() {
                         />
                     </div>
 
-                    <div className="text-center">
+                    <div className="text-center mt-8">
                         <Button
                             type="submit"
                             showSpinner={isPending || registerFormResponse.status === FormStatus.SUCCESS}
@@ -124,6 +124,8 @@ export default function SignUpPage() {
                     </div>
                 </form>
             </Card>
+
+            <p><Link href="/login">Already have an account?</Link></p>
         </div>
     );
 }
