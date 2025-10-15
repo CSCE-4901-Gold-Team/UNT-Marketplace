@@ -31,12 +31,12 @@ export default function LoginPage() {
 
         // Redirect user on success
         if (loginFormResponse.status === FormStatus.SUCCESS) {
-            router.push("/");
+            router.push("/market");
         }
     }, [loginFormResponse, router]);
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 
@@ -71,9 +71,10 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             validationErrors={loginFormResponse.validationErrors}
                         />
+                        <p className="text-end text-sm text-gray-50 mt-1"><Link href="/#">Forgot password</Link></p>
                     </div>
 
-                    <div className="text-center">
+                    <div className="text-center mt-8">
                         <Button
                             type="submit"
                             showSpinner={isPending || loginFormResponse.status === FormStatus.SUCCESS}
@@ -84,6 +85,8 @@ export default function LoginPage() {
                     </div>
                 </form>
             </Card>
+
+            <p><Link href="/register">Don&#39;t have an account?</Link></p>
         </div>
     );
 }

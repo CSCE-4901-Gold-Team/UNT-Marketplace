@@ -7,7 +7,7 @@ export default function Alert({
     children?: React.ReactNode;
     alertType?: string;
 }) {
-    
+
     let alertClasses = "";
     switch (alertType) {
         case "info":
@@ -19,18 +19,18 @@ export default function Alert({
         case "success":
             alertClasses += "text-green-800 border-green-300 bg-green-100";
             break;
-        case "warning": 
+        case "warning":
             alertClasses += "text-yellow-800 border-yellow-300 bg-yellow-50";
             break;
         case "info":
             alertClasses += "border-gray-300 bg-gray-50";
             break;
     }
-    
+
     return (
-        <div className={ "flex items-center p-4 mb-4 border-t-4 " + alertClasses } role="alert">
+        <div className={"flex items-center p-4 mb-4 border-t-4 " + alertClasses} role="alert">
             <div className="text-sm font-medium">
-                { children }
+                {children}
             </div>
         </div>
     );
