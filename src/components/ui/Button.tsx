@@ -18,7 +18,7 @@ export default function Button({
     showSpinner?: boolean;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
-    let classList = "min-w-[200px] rounded-md disabled:opacity-50 cursor-pointer";
+    let classList = "min-w-[200px] rounded-md disabled:opacity-50 cursor-pointer text-center";
 
     switch (buttonColor) {
         case "green":
