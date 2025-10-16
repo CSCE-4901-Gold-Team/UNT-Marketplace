@@ -7,13 +7,13 @@
 // -------- Generators & Datasources --------
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  provider  = "prisma-client-js"
+  output    = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -71,14 +71,15 @@ model Listing {
   sellerId        String
   title           String
   description     String
-  price           Float
-  isProfessorOnly Boolean     @default(false)
+  price           Decimal       @db.Decimal(10, 2)
+  isProfessorOnly Boolean       @default(false)
   status          String
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @default(now()) @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now()) @updatedAt
+  listingStatus   ListingStatus @default(AVAILABLE)
 
 // Relations
-  seller          User        @relation("UserListings", fields: [sellerId], references: [id], onDelete: Cascade)
+  seller          User          @relation("UserListings", fields: [sellerId], references: [id], onDelete: Cascade)
   images          ListingImage[]
   categories      ListingCategory[]
   conversations   Conversation[]
@@ -124,26 +125,33 @@ model ListingCategory {
   @@map("listing_category")
 }
 
+enum ListingStatus {
+  AVAILABLE
+  DRAFT
+  SOLD
+  ARCHIVED
+}
+
 // -------- Messaging --------
 
 model Conversation {
-    id            String   @id @default(cuid())
-    buyerId       String
-    sellerId      String
-    listingId     String
-    lastMessageAt DateTime?
+  id            String   @id @default(cuid())
+  buyerId       String
+  sellerId      String
+  listingId     String
+  lastMessageAt DateTime?
 
-    // Relations
-    buyer         User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
-    seller        User      @relation("SellerConversations", fields: [sellerId], references: [id], onDelete: Cascade)
-    listing       Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
-    messages      Message[]
+  // Relations
+  buyer         User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller        User      @relation("SellerConversations", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing       Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  messages      Message[]
 
-    @@index([buyerId ])
-    @@index([sellerId])
-    @@index([listingId])
-    @@index([lastMessageAt])
-    @@map("conversation")
+  @@index([buyerId ])
+  @@index([sellerId])
+  @@index([listingId])
+  @@index([lastMessageAt])
+  @@map("conversation")
 }
 
 model Message {
@@ -186,14 +194,15 @@ model Review {
 }
 
 model Report {
-  id          String   @id @default(cuid())
-  reporterId  String
-  targetType  String  // e.g., "User", "Listing", "Message"
-  targetId    String
-  reason      String
-  status      String
-  createdAt   DateTime @default(now())
-  closedAt    DateTime?
+  id            String   @id @default(cuid())
+  reporterId    String
+  targetType    String  // e.g., "User", "Listing", "Message"
+  targetId      String
+  reason        String
+  status        String
+  createdAt     DateTime @default(now())
+  closedAt      DateTime?
+  reportStatus  ReportStatus @default(PENDING)
 
   reporter    User     @relation("ReportsFiledByUser", fields: [reporterId], references: [id], onDelete: Cascade)
 
@@ -201,6 +210,13 @@ model Report {
   @@index([targetType, targetId])
   @@index([status])
   @@map("report")
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  CLOSED
 }
 
 model Notification {
