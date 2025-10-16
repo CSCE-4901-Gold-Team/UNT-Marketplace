@@ -11,6 +11,10 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        snedResetPassword: async ({ user, url }) => {
+            console.log('Send password reset link to ${user.email}. ');
+            console.log('Reser URL: ${url}');
+        }
     },
     plugins: [nextCookies()] // nextCookies needs to be last
 });
