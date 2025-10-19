@@ -29,7 +29,7 @@ export default function SignUpPage() {
             onSuccess: () => {
                 router.push("/");
             },
-            onError: (ctx) => {
+            onError: (ctx: any) => {
                 setErrorMessage(ctx.error.message);
             },
         });
