@@ -22,47 +22,22 @@ datasource db {
 model User {
   id             String          @id @default(cuid())
   email          String          @unique
-  name           String?
+  name           String
   emailVerified  Boolean         @default(false)
   image          String?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @default(now()) @updatedAt
 
   // Relations
-  roles          UserRole[]
   accounts       Account[]
   listings       Listing[]       @relation("UserListings")
 
-  // Conversations as buyer/seller
-  buyerConvos    Conversation[]  @relation("BuyerConversations")
-  sellerConvos   Conversation[]  @relation("SellerConversations")
-  messages       Message[]       @relation("UserMessages")
   sessions       Session[]
-  notifications  Notification[]
-  reportsFiled   Report[]        @relation("ReportsFiledByUser")
-  reviewsGiven   Review[]        @relation("ReviewsByReviewer")
-  reviewsTaken   Review[]        @relation("ReviewsForReviewee")
 
   @@map("user")
 }
 
-model Role {
-  id        String     @id @default(cuid())
-  name      String     @unique
-  users     UserRole[]
 
-  @@map("role")
-}
-
-model UserRole {
-  userId String
-  roleId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@id([userId, roleId])
-  @@map("user_role")
-}
 
 // -------- Marketplace --------
 
@@ -82,8 +57,6 @@ model Listing {
   seller          User          @relation("UserListings", fields: [sellerId], references: [id], onDelete: Cascade)
   images          ListingImage[]
   categories      ListingCategory[]
-  conversations   Conversation[]
-  reviews         Review[]
 
   @@index([sellerId])
   @@index([status])
@@ -132,127 +105,31 @@ enum ListingStatus {
   ARCHIVED
 }
 
-// -------- Messaging --------
-
-model Conversation {
-  id            String   @id @default(cuid())
-  buyerId       String
-  sellerId      String
-  listingId     String
-  lastMessageAt DateTime?
-
-  // Relations
-  buyer         User      @relation("BuyerConversations", fields: [buyerId], references: [id], onDelete: Cascade)
-  seller        User      @relation("SellerConversations", fields: [sellerId], references: [id], onDelete: Cascade)
-  listing       Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  messages      Message[]
-
-  @@index([buyerId ])
-  @@index([sellerId])
-  @@index([listingId])
-  @@index([lastMessageAt])
-  @@map("conversation")
-}
-
-model Message {
-  id             String      @id @default(cuid())
-  conversationId String
-  senderId       String
-  content        String
-  createdAt      DateTime    @default(now())
-
-  // Relations
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  sender         User         @relation("UserMessages", fields: [senderId], references: [id], onDelete: Cascade)
-
-  @@index([conversationId])
-  @@index([senderId])
-  @@index([createdAt])
-  @@map("message")
-}
-
-// -------- Reviews / Reports / Notifications --------
-
-model Review {
-  id          String   @id @default(cuid())
-  listingId   String
-  reviewerId  String
-  revieweeId  String
-  rating      Int
-  comment     String?
-  createdAt   DateTime @default(now())
-
-  // Relations
-  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reviewer    User     @relation("ReviewsByReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
-  reviewee    User     @relation("ReviewsForReviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
-
-  @@index([listingId])
-  @@index([reviewerId])
-  @@index([revieweeId])
-  @@map("review")
-}
-
-model Report {
-  id            String   @id @default(cuid())
-  reporterId    String
-  targetType    String  // e.g., "User", "Listing", "Message"
-  targetId      String
-  reason        String
-  status        String
-  createdAt     DateTime @default(now())
-  closedAt      DateTime?
-  reportStatus  ReportStatus @default(PENDING)
-
-  reporter    User     @relation("ReportsFiledByUser", fields: [reporterId], references: [id], onDelete: Cascade)
-
-  @@index([reporterId])
-  @@index([targetType, targetId])
-  @@index([status])
-  @@map("report")
-}
-
-enum ReportStatus {
-  PENDING
-  UNDER_REVIEW
-  RESOLVED
-  CLOSED
-}
-
-model Notification {
-  id         String   @id @default(cuid())
-  userId     String
-  type       String
-  payload    Json
-  readAt     DateTime?
-  createdAt  DateTime @default(now())
-
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([readAt])
-  @@index([createdAt])
-  @@map("notification")
-}
+// -------- Future Features (to be added in separate PRs) --------
+// - Messaging system (Conversation, Message)
+// - Reviews and ratings (Review)
+// - Reports and moderation (Report)
+// - Notifications (Notification)
 
 // -------- Auth / Identity Management --------
 
 model Session {
-  id         String   @id @default(cuid())
-  userId     String
-  provider   String
-  expiresAt  DateTime
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user       User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
-  @@index([provider])
+  @@unique([token])
   @@map("session")
 }
 
 model Account {
-  id                    String    @id @default(cuid())  // Add @default(cuid())
+  id                    String    @id @default(cuid())
   accountId             String
   providerId            String
   userId                String
@@ -267,20 +144,16 @@ model Account {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  @@index([userId])
-  @@index([providerId])
   @@map("account")
 }
 
 model Verification {
-  id         String   @id @default(cuid())
+  id         String   @id
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime @default(now()) @updatedAt
 
-  @@index([identifier])
-  @@index([expiresAt])
   @@map("verification")
 }
