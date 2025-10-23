@@ -29,8 +29,7 @@ model User {
 
   // Relations
   accounts       Account[]
-  listings       Listing[]       @relation("UserListings")
-
+  listings       Listing[]
   sessions       Session[]
 
   @@map("user")
@@ -42,59 +41,20 @@ model User {
 
 model Listing {
   id              String        @id @default(cuid())
-  sellerId        String
+  ownerId        String
   title           String
   description     String
   price           Decimal       @db.Decimal(10, 2)
   isProfessorOnly Boolean       @default(false)
-  status          String
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @default(now()) @updatedAt
   listingStatus   ListingStatus @default(AVAILABLE)
 
+
 // Relations
-  seller          User          @relation("UserListings", fields: [sellerId], references: [id], onDelete: Cascade)
-  images          ListingImage[]
-  categories      ListingCategory[]
-
-  @@index([sellerId])
-  @@index([status])
-  @@index([createdAt])
-  @@index([status, createdAt])
-  @@index([price])
-  @@index([isProfessorOnly])
-  @@map("listing")
-}
-
-model ListingImage {
-  id        String   @id @default(cuid())
-  url       String
-  listingId String
-  sortOrder Int      @default(0)
-  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  @@index ([listingId])
-  @@map("listing_image")
-}
-
-model Category {
-  id        String        @id @default(cuid())
-  name      String        @unique
-  slug      String        @unique
-  listings  ListingCategory[]
-
-  @@map("category")
-}
-
-model ListingCategory {
-  listingId  String
-  categoryId String
-  listing    Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  category   Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@id([listingId, categoryId])
-  @@index([categoryId])
-  @@map("listing_category")
+  seller          User
+  images          Image[]
+  categories      Category[]
 }
 
 enum ListingStatus {
@@ -102,6 +62,27 @@ enum ListingStatus {
   DRAFT
   SOLD
   ARCHIVED
+}
+
+model Image {
+  id        String   @id @default(cuid())
+  url       String
+  listingId String
+  sortOrder Int      @default(0)
+  listing   Listing
+  imageType ImageType
+}
+
+ENUM ImageType {
+  LISTING
+  PROFILE
+}
+
+model Category {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  slug      String        @unique
+  listings  Category[]
 }
 
 // -------- Future Features (to be added in separate PRs) --------
