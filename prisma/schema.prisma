@@ -19,7 +19,7 @@ datasource db {
 // -------- Core Auth/Identity --------
 
 model User {
-  id             String          @id @default(cuid())
+  id             String          @id
   email          String          @unique
   name           String
   emailVerified  Boolean         @default(false)
@@ -40,7 +40,7 @@ model User {
 // -------- Marketplace --------
 
 model Listing {
-  id              String        @id @default(cuid())
+  id              String        @id
   ownerId        String
   title           String
   description     String
@@ -65,7 +65,7 @@ enum ListingStatus {
 }
 
 model Image {
-  id        String   @id @default(cuid())
+  id        String   @id
   url       String
   listingId String
   sortOrder Int      @default(0)
@@ -79,7 +79,7 @@ ENUM ImageType {
 }
 
 model Category {
-  id        String        @id @default(cuid())
+  id        String        @id
   name      String        @unique
   slug      String        @unique
   listings  Category[]
@@ -109,7 +109,7 @@ model Session {
 }
 
 model Account {
-  id                    String    @id @default(cuid())
+  id                    String    @id
   accountId             String
   providerId            String
   userId                String
