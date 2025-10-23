@@ -15,17 +15,24 @@ datasource db {
 }
 
 model User {
-    id            String    @id
-    email         String    @unique
+    id            String     @id
+    email         String     @unique
     name          String
-    emailVerified Boolean   @default(false)
+    emailVerified Boolean    @default(false)
     image         String?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @default(now()) @updatedAt
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @default(now()) @updatedAt
     sessions      Session[]
     accounts      Account[]
+    roles         UserRole[]
 
     @@map("user")
+}
+
+enum UserRole {
+    ADMIN
+    STUDENT
+    FACULTY
 }
 
 model Session {
