@@ -18,9 +18,10 @@ export default async function MarketLayout({
     });
 
     // Market route protection logic can be extended here
-    if(!session) {
-        redirect("/login");
-    }
+    // TODO: Temporarily disabled for development
+    // if(!session) {
+    //     redirect("/login");
+    // }
     
     return (
         <div id="marketContainer" className="flex min-h-screen items-stretch bg-white">
@@ -92,25 +93,34 @@ export default async function MarketLayout({
 
                         <div id="marketSidebarBottomMenu"
                              className="mt-auto flex flex-col gap-1 px-4 font-black text-gray-700">
-                            <div id="marketPersonalizedMessage" className="text-gray-400 text-xs text-center mb-3">
-                                <p>Welcome back, {session.user.name}</p>
-                            </div>
+                            {session ? (
+                                <>
+                                    <div id="marketPersonalizedMessage" className="text-gray-400 text-xs text-center mb-3">
+                                        <p>Welcome back, {session.user.name}</p>
+                                    </div>
 
-                            <Link href="/logout">
-                                <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
-                                    <div>
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                             strokeWidth="1.5"
-                                             stroke="currentColor" className="size-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round"
-                                                  d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        Logout
-                                    </div>
+                                    <Link href="/logout">
+                                        <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
+                                            <div>
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                     strokeWidth="1.5"
+                                                     stroke="currentColor" className="size-6">
+                                                    <path strokeLinecap="round" strokeLinejoin="round"
+                                                          d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                Logout
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </>
+                            ) : (
+                                <div className="text-gray-400 text-xs text-center mb-3">
+                                    <p>Development Mode - No Login Required</p>
+                                    <Link href="/login" className="text-blue-500 underline">Login</Link>
                                 </div>
-                            </Link>
+                            )}
                         </div>
 
                     </div>

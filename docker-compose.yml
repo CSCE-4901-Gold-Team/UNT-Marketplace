@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: unt-marketplace-db
+    environment:
+      POSTGRES_USER: unt_user
+      POSTGRES_PASSWORD: unt_password
+      POSTGRES_DB: unt_marketplace
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+# docker-compose up -d      # Start all services
+# docker-compose down       # Stop all services
+# docker-compose logs       # View logs
+# docker-compose ps         # See what's running
