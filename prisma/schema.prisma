@@ -7,81 +7,86 @@
 // -------- Generators & Datasources --------
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma"
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 // -------- Core Auth/Identity --------
 
 model User {
-  id            String   @id
-  email         String   @unique
-  name          String
-  emailVerified Boolean  @default(false)
-  image         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now()) @updatedAt
+    id            String     @id
+    email         String     @unique
+    name          String
+    emailVerified Boolean    @default(false)
+    image         String?
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @default(now()) @updatedAt
+    sessions      Session[]
+    accounts      Account[]
+    listings      Listing[]
+    roles         UserRole[]
 
-  // Relations
-  accounts Account[]
-  listings Listing[]
-  sessions Session[]
+    @@map("user")
+}
 
-  @@map("user")
+enum UserRole {
+    ADMIN
+    STUDENT
+    FACULTY
 }
 
 // -------- Marketplace --------
 
 model Listing {
-  id              String        @id
-  ownerId         String
-  title           String
-  description     String
-  price           Decimal       @db.Decimal(10, 2)
-  isProfessorOnly Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
-  listingStatus   ListingStatus @default(AVAILABLE)
+    id              String        @id
+    ownerId         String
+    title           String
+    description     String
+    price           Decimal       @db.Decimal(10, 2)
+    isProfessorOnly Boolean       @default(false)
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @default(now()) @updatedAt
+    listingStatus   ListingStatus @default(AVAILABLE)
 
-  // Relations
-  seller     User       @relation(fields: [userId], references: [id])
-  images     Image[]
-  categories Category[]
-  userId     String
+    // Relations
+    seller     User       @relation(fields: [userId], references: [id])
+    images     Image[]
+    categories Category[]
+    userId     String
 }
 
 enum ListingStatus {
-  AVAILABLE
-  DRAFT
-  SOLD
-  ARCHIVED
+    AVAILABLE
+    DRAFT
+    SOLD
+    ARCHIVED
 }
 
 model Image {
-  id        String    @id
-  url       String
-  listingId String
-  sortOrder Int       @default(0)
-  listing   Listing   @relation(fields: [listingId], references: [id])
-  imageType ImageType
+    id        String    @id
+    url       String
+    listingId String
+    sortOrder Int       @default(0)
+    listing   Listing   @relation(fields: [listingId], references: [id])
+    imageType ImageType
 }
 
 enum ImageType {
-  LISTING
-  PROFILE
+    LISTING
+    PROFILE
 }
 
 model Category {
-  id        String  @id
-  name      String  @unique
-  slug      String  @unique
-  listings  Listing @relation(fields: [listingId], references: [id])
-  listingId String
+    id        String  @id
+    name      String  @unique
+    slug      String  @unique
+    listings  Listing @relation(fields: [listingId], references: [id])
+    listingId String
 }
 
 // -------- Future Features (to be added in separate PRs) --------
@@ -93,46 +98,46 @@ model Category {
 // -------- Auth / Identity Management --------
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    id        String   @id
+    expiresAt DateTime
+    token     String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    ipAddress String?
+    userAgent String?
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
-  @@map("session")
+    @@unique([token])
+    @@map("session")
 }
 
 model Account {
-  id                    String    @id
-  accountId             String
-  providerId            String
-  userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  accessToken           String?
-  refreshToken          String?
-  idToken               String?
-  accessTokenExpiresAt  DateTime?
-  refreshTokenExpiresAt DateTime?
-  scope                 String?
-  password              String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+    id                    String    @id
+    accountId             String
+    providerId            String
+    userId                String
+    user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    accessToken           String?
+    refreshToken          String?
+    idToken               String?
+    accessTokenExpiresAt  DateTime?
+    refreshTokenExpiresAt DateTime?
+    scope                 String?
+    password              String?
+    createdAt             DateTime  @default(now())
+    updatedAt             DateTime  @updatedAt
 
-  @@map("account")
+    @@map("account")
 }
 
 model Verification {
-  id         String   @id
-  identifier String
-  value      String
-  expiresAt  DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+    id         String   @id
+    identifier String
+    value      String
+    expiresAt  DateTime
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @default(now()) @updatedAt
 
-  @@map("verification")
+    @@map("verification")
 }
