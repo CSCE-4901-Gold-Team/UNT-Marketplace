@@ -43,50 +43,50 @@ enum UserRole {
 // -------- Marketplace --------
 
 model Listing {
-  id              String        @id
-  ownerId         String
-  title           String
-  description     String
-  price           Decimal       @db.Decimal(10, 2)
-  isProfessorOnly Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
-  listingStatus   ListingStatus @default(AVAILABLE)
+    id              String        @id
+    ownerId         String
+    title           String
+    description     String
+    price           Decimal       @db.Decimal(10, 2)
+    isProfessorOnly Boolean       @default(false)
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @default(now()) @updatedAt
+    listingStatus   ListingStatus @default(AVAILABLE)
 
-  // Relations
-  seller     User       @relation(fields: [userId], references: [id])
-  images     Image[]
-  categories Category[]
-  userId     String
+    // Relations
+    seller     User       @relation(fields: [userId], references: [id])
+    images     Image[]
+    categories Category[]
+    userId     String
 }
 
 enum ListingStatus {
-  AVAILABLE
-  DRAFT
-  SOLD
-  ARCHIVED
+    AVAILABLE
+    DRAFT
+    SOLD
+    ARCHIVED
 }
 
 model Image {
-  id        String    @id
-  url       String
-  listingId String
-  sortOrder Int       @default(0)
-  listing   Listing   @relation(fields: [listingId], references: [id])
-  imageType ImageType
+    id        String    @id
+    url       String
+    listingId String
+    sortOrder Int       @default(0)
+    listing   Listing   @relation(fields: [listingId], references: [id])
+    imageType ImageType
 }
 
 enum ImageType {
-  LISTING
-  PROFILE
+    LISTING
+    PROFILE
 }
 
 model Category {
-  id        String  @id
-  name      String  @unique
-  slug      String  @unique
-  listings  Listing @relation(fields: [listingId], references: [id])
-  listingId String
+    id        String  @id
+    name      String  @unique
+    slug      String  @unique
+    listings  Listing @relation(fields: [listingId], references: [id])
+    listingId String
 }
 
 // -------- Future Features (to be added in separate PRs) --------
