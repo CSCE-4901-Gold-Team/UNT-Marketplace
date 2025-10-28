@@ -43,7 +43,7 @@ enum UserRole {
 // -------- Marketplace --------
 
 model Listing {
-    id              String        @id
+    id              String        @id @default(cuid())
     ownerId         String
     title           String
     description     String
@@ -54,10 +54,9 @@ model Listing {
     listingStatus   ListingStatus @default(AVAILABLE)
 
     // Relations
-    seller     User       @relation(fields: [userId], references: [id])
+    owner      User       @relation(fields: [ownerId], references: [id])
     images     Image[]
     categories Category[]
-    userId     String
 }
 
 enum ListingStatus {
@@ -68,7 +67,7 @@ enum ListingStatus {
 }
 
 model Image {
-    id        String    @id
+    id        Int       @id @default(autoincrement())
     url       String
     listingId String
     sortOrder Int       @default(0)
@@ -82,11 +81,10 @@ enum ImageType {
 }
 
 model Category {
-    id        String  @id
-    name      String  @unique
-    slug      String  @unique
-    listings  Listing @relation(fields: [listingId], references: [id])
-    listingId String
+    id       Int       @id @default(autoincrement())
+    name     String    @unique
+    slug     String    @unique
+    listings Listing[]
 }
 
 // -------- Future Features (to be added in separate PRs) --------
