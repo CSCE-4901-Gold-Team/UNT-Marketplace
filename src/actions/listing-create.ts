@@ -2,10 +2,10 @@
 
 import {FormResponse} from "@/types/FormResponse";
 import * as z from "zod";
-import {FormStatus} from "@/constants/FormStatus";
-import {db} from "@/lib/db";
+import {FormStatus} from "@/constants/FormStatus"; 
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
+import {PrismaClient} from "@prisma/client";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -53,8 +53,10 @@ export async function createListingAction(initialState: FormResponse, formData: 
     }
 
     // Create the listing in the database
+    const prisma = new PrismaClient();
+
     try {
-        await db.listing.create({
+        await prisma.listing.create({
             data: {
                 title: parsedFormData.data.title,
                 description: parsedFormData.data.description,
@@ -66,7 +68,10 @@ export async function createListingAction(initialState: FormResponse, formData: 
                 }
             }
         });
+
+        await prisma.$disconnect();
     } catch (error) {
+        await prisma.$disconnect();
         return {
             status: FormStatus.ERROR,
             message: {
