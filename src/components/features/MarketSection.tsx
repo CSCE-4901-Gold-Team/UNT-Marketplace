@@ -1,28 +1,33 @@
 ﻿"use client"
 
-import {ListingReturnType} from "@/models/ListingReturnType";
+import {ListingObject} from "@/models/ListingObject";
 import {use, useState} from "react";
-import ListingsContainer from "@/components/features/ListingsContainer";
+import ListingsContainer from "@/components/ui/ListingsContainer";
 import TextInput from "@/components/ui/TextInput";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {getListings} from "@/actions/listing-actions";
 import Button from "@/components/ui/Button";
 import {FaMagnifyingGlass} from "react-icons/fa6";
+import MarketFilterControls from "@/components/ui/MarketFilterControls";
+import {ListingFilters} from "@/types/ListingFilters";
 
 export default function MarketSection({
     listingsResponse
 }: {
-    listingsResponse: Promise<ListingReturnType[]>;
+    listingsResponse: Promise<ListingObject[]>;
 }) {
-    const [listings, setListings] = useState(use(listingsResponse));
-    const [searchQuery, setSearchQuery] = useState("");
-    const [listingsLoading, setListingsLoading] = useState(false);
+    const [listings, setListings] = useState(use(listingsResponse)); // Listing object
+    const [searchQuery, setSearchQuery] = useState(""); // Search input state
+    const [listingsLoading, setListingsLoading] = useState(false); // Listing loading state
+    const [filterObject, setFilterObject] = useState<ListingFilters>({
+        priceMin: ""
+    });
 
     async function searchListings() {
         if (listingsLoading) return;
 
         setListingsLoading(true);
-        setListings(await getListings(searchQuery));
+        setListings(await getListings(searchQuery, filterObject));
         setListingsLoading(false);
     }
 
@@ -30,15 +35,18 @@ export default function MarketSection({
         <div id="marketSectionWrapper" className="flex flex-col gap-6">
 
             <div className="market-search-container">
-
                 <div className="flex">
                     <TextInput inputClasses="rounded-r-none border-r-0"
                                onChange={e => setSearchQuery(e.target.value)}
                                onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
                                placeholder="Search..."
                     />
-                    <Button buttonClasses="rounded-l-none" onClick={searchListings}><FaMagnifyingGlass /></Button>
+                    <Button buttonStyle="icon" buttonClasses="rounded-l-none" onClick={searchListings}><FaMagnifyingGlass /></Button>
                 </div>
+            </div>
+
+            <div className="market-filter-container">
+                <MarketFilterControls filterObject={filterObject} setFilterObjectAction={setFilterObject} />
             </div>
 
             {

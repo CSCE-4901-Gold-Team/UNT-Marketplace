@@ -26,10 +26,13 @@ export default function Button({
         case "green":
             switch (buttonStyle) {
                 case "bg":
-                    classList += " text-white bg-green-600 hover:bg-green-700";
+                    classList += " min-w-[200px] text-white bg-green-600 hover:bg-green-700";
                     break;
                 case "border":
-                    classList += " text-green-600 border-green-600 hover:border-green-50";
+                    classList += " min-w-[200px] text-green-600 border-green-600 hover:border-green-50";
+                    break;
+                case "icon":
+                    classList += " text-white bg-green-600 hover:bg-green-700";
                     break;
             }
             break;
@@ -42,7 +45,7 @@ export default function Button({
                     classList += " min-w-[200px] text-blue-600 border-blue-600 hover:border-blue-50";
                     break;
                 case "icon":
-                    classList += " text-green-600 border-green-600 hover:text-green-700";
+                    classList += " text-white bg-blue-600 hover:bg-blue-700";
                     break;
             }
             break;
