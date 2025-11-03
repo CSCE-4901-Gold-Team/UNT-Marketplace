@@ -10,7 +10,7 @@ export default function ListingCard({
 }) {
 
     const listingBackground = listing.images.length > 0 ?
-        `url(images/${listing.images[0].url}) center center / cover no-repeat` : "#f9f9f9";
+        `url(images/${listing.images[0].url}) center center / cover no-repeat, #d1d5dc` : "#d1d5dc";
 
     const listingPrice = new Intl.NumberFormat("en-US", {
         style: "currency",

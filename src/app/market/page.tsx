@@ -9,7 +9,7 @@ export default async function MarketPage() {
     const listingsResponse = getListings();
 
     return (
-        <main className="px-20 py-12 flex flex-col gap-6">
+        <main className="px-20 py-12">
             <Suspense fallback={<MarketSuspense/>}>
                 <MarketSection listingsResponse={listingsResponse} />
             </Suspense>

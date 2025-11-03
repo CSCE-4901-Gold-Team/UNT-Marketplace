@@ -7,18 +7,22 @@ import {ErrorHelper} from "@/utils/ErrorHelper";
 export default function TextInput({
     inputLabel,
     onChange,
+    onKeyDown,
     validationErrors,
     type = "text",
     required,
     value,
     placeholder,
-    name
+    name,
+    inputClasses = "",
 }: {
     inputLabel?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    validationErrors?: z.core.$ZodIssue[]
+    onKeydown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    validationErrors?: z.core.$ZodIssue[];
+    inputClasses?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
-    
+
     return (
         <div>
             { !!inputLabel && (
@@ -29,9 +33,10 @@ export default function TextInput({
                 value={value}
                 placeholder={placeholder}
                 onChange={onChange}
+                onKeyDown={onKeyDown}
                 required={required}
                 name={name}
-                className="mt-1 w-full rounded-md px-3 py-2 border border-black"
+                className={"w-full rounded-md px-3 py-2 border border-black " + inputClasses}
             />
 
             { !!name && !!validationErrors && 
