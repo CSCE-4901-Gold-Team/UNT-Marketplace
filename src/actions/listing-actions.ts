@@ -10,7 +10,13 @@ import {ListingReturnType, ListingWithImages} from "@/models/ListingReturnType";
 
 const prisma = new PrismaClient();
 
-export async function getListings(): Promise<ListingReturnType[]> {
+/**
+ * Returns all listings based on listing status and current user's role.
+ *
+ * @param searchQuery  String to search for within listing body and titles
+ * @return Promise<ListingReturnType[]> Array of listings with their related images
+ */
+export async function getListings(searchQuery?: string): Promise<ListingReturnType[]> {
     // Validate session
     const session = await auth.api.getSession({
         headers: await headers()
@@ -24,13 +30,39 @@ export async function getListings(): Promise<ListingReturnType[]> {
     const currentUserRole = await getCurrentUserRole();
 
     if (!currentUserRole) return [];
-    let listings: ListingWithImages[] = [];
+    let listings: ListingWithImages[];
 
-    // Admin/Faculty
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
+        // Admin/Faculty
         listings = await prisma.listing.findMany({
             where: {
-                listingStatus: ListingStatus.AVAILABLE
+                listingStatus: ListingStatus.AVAILABLE,
+                ...(searchQuery ? {
+                    OR: [
+                        {title: {search: searchQuery}},
+                        {description: {search: searchQuery}}
+                    ]
+                } : {})
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                images: true
+            }
+        });
+    } else {
+        // All other roles
+        listings = await prisma.listing.findMany({
+            where: {
+                listingStatus: ListingStatus.AVAILABLE,
+                isProfessorOnly: false,
+                ...(searchQuery ? {
+                    OR: [
+                        {title: {search: searchQuery}},
+                        {description: {search: searchQuery}}
+                    ]
+                } : {})
             },
             orderBy: {
                 createdAt: 'desc'
@@ -40,20 +72,6 @@ export async function getListings(): Promise<ListingReturnType[]> {
             }
         });
     }
-
-    // All other roles
-    listings = await prisma.listing.findMany({
-        where: {
-            listingStatus: ListingStatus.AVAILABLE,
-            isProfessorOnly: false
-        },
-        orderBy: {
-            createdAt: 'desc'
-        },
-        include: {
-            images: true
-        }
-    });
 
     // Convert and return listings
     return listings.map(listing => ({
