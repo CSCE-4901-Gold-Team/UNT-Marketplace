@@ -6,7 +6,7 @@ import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getCurrentUserRole} from "@/actions/user-actions";
 import UserRole = $Enums.UserRole;
-import {ListingReturnType} from "@/models/ListingReturnType";
+import {ListingReturnType, ListingWithImages} from "@/models/ListingReturnType";
 
 const prisma = new PrismaClient();
 
@@ -24,7 +24,7 @@ export async function getListings(): Promise<ListingReturnType[]> {
     const currentUserRole = await getCurrentUserRole();
 
     if (!currentUserRole) return [];
-    let listings: Listing[] = [];
+    let listings: ListingWithImages[] = [];
 
     // Admin/Faculty
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {

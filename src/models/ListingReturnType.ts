@@ -3,7 +3,7 @@
 // Price is return from Prisma as a Decimal.js object, which can't
 //  be streamed to React client components. The following type
 //  allows conversion of Decimal->Number from client side streaming.
-type ListingWithImages = Prisma.ListingGetPayload<{
+export type ListingWithImages = Prisma.ListingGetPayload<{
     include: { images: true }
 }>
 
