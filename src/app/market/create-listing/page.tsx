@@ -1,18 +1,22 @@
 "use client"
 
-import { useFormState } from "react-dom";
+import { useActionState } from "react";
 import { createListingAction } from "@/actions/listing-create";
 import { FormStatus } from "@/constants/FormStatus";
 import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
 import PriceInput from "@/components/ui/PriceInput";
+import CategoryInput from "@/components/ui/CategoryInput";
+import React, { useState } from "react";
+
 
 const initialState: FormResponse = {
     status: FormStatus.INITIALIZED
 };
 
 export default function CreateListing() {
-    const [state, formAction] = useFormState(createListingAction, initialState);
+    const [state, formAction] = useActionState(createListingAction, initialState);
+    const [selected, setSelected] = useState<number[]>([]);
 
     return (
         <main className="min-h-screen flex items-start justify-center px-20 py-10">
@@ -20,7 +24,7 @@ export default function CreateListing() {
                 <h1 className="text-4xl mb-6">Create New Listing</h1>
 
                 <form action={formAction} className="max-w-2xl flex flex-col gap-4">
-                
+                    
                     {/* Title */}
                     <TextInput
                         inputLabel="Title"
@@ -49,45 +53,22 @@ export default function CreateListing() {
                         required
                     />
 
-                    {/* Professor Only Checkbox */}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isProfessorOnly"
-                            name="isProfessorOnly"
-                            value="true"
-                        />
-                        <label htmlFor="isProfessorOnly">Professor Only</label>
-                    </div>
+                    {/* Categories */}
+                    <CategoryInput
+                        inputLabel="Categories"
+                        name="categoryIds"
+                        options={[]} // Pass your fetched categories here
+                        value={selected}
+                        onChange={setSelected}
+                        validationErrors={state.validationErrors}
+                    />
 
-                    {/* Categories (placeholder - you'll need to fetch from DB) */}
-                    <div>
-                        <label htmlFor="categoryIds" className="block mb-2">Categories</label>
-                        <input
-                            type="hidden"
-                            name="categoryIds"
-                            value="[]"
-                        />
-                        <p className="text-sm text-gray-500">Category selection coming soon</p>
-                    </div>
-
-                    {/* Error Messages */}
+                    {/* Error/Success Messages */}
                     {state.message && (
                         <div className={`p-4 rounded-lg ${
                             state.message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
                         }`}>
                             {state.message.content}
-                        </div>
-                    )}
-
-                    {/* Validation Errors */}
-                    {state.validationErrors && (
-                        <div className="bg-red-100 text-red-700 p-4 rounded-lg">
-                            <ul className="list-disc list-inside">
-                                {state.validationErrors.map((error, index) => (
-                                    <li key={index}>{error.message}</li>
-                                ))}
-                            </ul>
                         </div>
                     )}
 
