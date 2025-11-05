@@ -6,27 +6,21 @@ import CurrencyInput from "@/components/ui/CurrencyInput";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
 import {FaFilter} from "react-icons/fa";
+import {$Enums} from "@/generated/prisma";
+import UserRole = $Enums.UserRole;
 
 export default function MarketFilterControls({
     setFilterObjectAction,
     filterObject,
-    refreshListingsAction
+    refreshListingsAction,
+    userRole
 }: {
     setFilterObjectAction: React.Dispatch<SetStateAction<ListingFilters>>
     filterObject: ListingFilters;
     refreshListingsAction: () => void;
+    userRole: UserRole
 }) {
-    const [showFilters, setShowFilters] = useState(true);
-
-    function resetFilters() {
-        setFilterObjectAction({
-            priceMin: "",
-            priceMax: "",
-            dateMin: undefined,
-            dateMax: undefined,
-            professorOnly: false
-        });
-    }
+    const [showFilters, setShowFilters] = useState(false);
 
     return (
         <div className="listing-filter-controls-wrapper relative">
@@ -80,13 +74,16 @@ export default function MarketFilterControls({
                             />
                         </div>
                         <div className="col-span-2">
-                            <TextInput
-                                inputLabel="Faculty-Only Listings"
-                                type="checkbox"
-                                setChecked={(newValue) => {
-                                    setFilterObjectAction({ ...filterObject, professorOnly: newValue })
-                                }}
-                            />
+                            { userRole === UserRole.FACULTY || userRole === UserRole.ADMIN && (
+                                <TextInput
+                                    inputLabel="Faculty-Only Listings"
+                                    type="checkbox"
+                                    checked={filterObject.professorOnly ?? false}
+                                    setChecked={(newValue) => {
+                                        setFilterObjectAction({ ...filterObject, professorOnly: newValue })
+                                    }}
+                                />
+                            )}
                         </div>
                         <div className="col-span-2 flex justify-between items-center">
                             <Button

@@ -10,13 +10,18 @@ import Button from "@/components/ui/Button";
 import {FaMagnifyingGlass} from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import {ListingFilters} from "@/types/ListingFilters";
+import {$Enums} from "@/generated/prisma";
+import UserRole = $Enums.UserRole;
 
 export default function MarketSection({
-    listingsResponse
+    listingsResponse,
+    userRoleResponse
 }: {
     listingsResponse: Promise<ListingObject[]>;
+    userRoleResponse: Promise<UserRole>;
 }) {
     const [listings, setListings] = useState(use(listingsResponse)); // Listing object
+    const userRole = use(userRoleResponse);
     const [searchQuery, setSearchQuery] = useState(""); // Search input state
     const [listingsLoading, setListingsLoading] = useState(false); // Listing loading state
     const [filterObject, setFilterObject] = useState<ListingFilters>({
@@ -52,6 +57,7 @@ export default function MarketSection({
                         filterObject={filterObject}
                         setFilterObjectAction={setFilterObject}
                         refreshListingsAction={searchListings}
+                        userRole={userRole}
                     />
                 </div>
             </div>

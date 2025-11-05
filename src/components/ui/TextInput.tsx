@@ -13,6 +13,7 @@ export default function TextInput({
     required,
     value,
     setValue,
+    checked,
     setChecked,
     placeholder,
     name,
@@ -52,6 +53,7 @@ export default function TextInput({
             <input
                 type={type}
                 value={value}
+                checked={checked}
                 placeholder={placeholder}
                 onChange={handleInput}
                 onKeyDown={onKeyDown}
