@@ -7,8 +7,9 @@
 // -------- Generators & Datasources --------
 
 generator client {
-    provider = "prisma-client-js"
-    output   = "../generated/prisma"
+    provider        = "prisma-client-js"
+    output          = "../src/generated/prisma"
+    previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -19,17 +20,17 @@ datasource db {
 // -------- Core Auth/Identity --------
 
 model User {
-    id            String     @id
-    email         String     @unique
+    id            String    @id
+    email         String    @unique
     name          String
-    emailVerified Boolean    @default(false)
+    emailVerified Boolean   @default(false)
     image         String?
-    createdAt     DateTime   @default(now())
-    updatedAt     DateTime   @default(now()) @updatedAt
+    createdAt     DateTime  @default(now())
+    updatedAt     DateTime  @default(now()) @updatedAt
     sessions      Session[]
     accounts      Account[]
     listings      Listing[]
-    roles         UserRole[]
+    role          UserRole  @default(STUDENT)
 
     @@map("user")
 }

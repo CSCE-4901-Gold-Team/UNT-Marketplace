@@ -25,7 +25,7 @@ export default async function MarketLayout({
     return (
         <div id="marketContainer" className="flex min-h-screen items-stretch bg-white">
             
-            <div id="marketSidebar" className="flex flex-col w-xs">
+            <div id="marketSidebar" className="flex flex-col w-xs shrink-0">
 
                     <div className="h-screen fixed flex flex-col gap-8 py-6 w-xs bg-gray-100 shadow-2xl">
                     
