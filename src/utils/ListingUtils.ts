@@ -32,14 +32,14 @@ export const ListingUtils = {
         // Min date
         if (!!filters.dateMin) {
             filterObject.push({
-                createdAt: { gte: filters.dateMin.toLocaleDateString() }
+                createdAt: { gte: filters.dateMin.toISOString() }
             });
         }
 
         // Max date
         if (!!filters.dateMax) {
             filterObject.push({
-                createdAt: { lte: filters.dateMax }
+                createdAt: { lte: filters.dateMax.toISOString() }
             });
         }
 

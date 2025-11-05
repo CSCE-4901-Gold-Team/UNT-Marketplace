@@ -12,6 +12,8 @@ export default function TextInput({
     type = "text",
     required,
     value,
+    setValue,
+    setChecked,
     placeholder,
     name,
     inputClasses = "",
@@ -21,7 +23,26 @@ export default function TextInput({
     onKeydown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
     validationErrors?: z.core.$ZodIssue[];
     inputClasses?: string;
+    setValue?: (newValue: string) => void;
+    setChecked?: (newValue: boolean) => void;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
+    let inputElementClasses = "rounded-md px-3 py-2 border border-black " + inputClasses;
+
+    if (type === "checkbox") {
+        inputElementClasses += " w-auto";
+    } else {
+        inputElementClasses += " w-full";
+    }
+
+    function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+        if (setValue && type !== "checkbox") {
+            setValue(e.target.value);
+        }
+        if (type === "checkbox" && setChecked) {
+            setChecked(e.currentTarget.checked);
+        }
+        if (onChange) onChange(e);
+    }
 
     return (
         <div>
@@ -32,11 +53,11 @@ export default function TextInput({
                 type={type}
                 value={value}
                 placeholder={placeholder}
-                onChange={onChange}
+                onChange={handleInput}
                 onKeyDown={onKeyDown}
                 required={required}
                 name={name}
-                className={"w-full rounded-md px-3 py-2 border border-black " + inputClasses}
+                className={inputElementClasses}
             />
 
             { !!name && !!validationErrors && 

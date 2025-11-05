@@ -20,7 +20,8 @@ export default function MarketSection({
     const [searchQuery, setSearchQuery] = useState(""); // Search input state
     const [listingsLoading, setListingsLoading] = useState(false); // Listing loading state
     const [filterObject, setFilterObject] = useState<ListingFilters>({
-        priceMin: ""
+        priceMin: "",
+        priceMax: ""
     });
 
     async function searchListings() {
@@ -34,19 +35,25 @@ export default function MarketSection({
     return (
         <div id="marketSectionWrapper" className="flex flex-col gap-6">
 
-            <div className="market-search-container">
-                <div className="flex">
-                    <TextInput inputClasses="rounded-r-none border-r-0"
-                               onChange={e => setSearchQuery(e.target.value)}
-                               onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
-                               placeholder="Search..."
-                    />
-                    <Button buttonStyle="icon" buttonClasses="rounded-l-none" onClick={searchListings}><FaMagnifyingGlass /></Button>
+            <div className="market-controls flex justify-between items-center">
+                <div className="market-search-container">
+                    <div className="flex">
+                        <TextInput inputClasses="rounded-r-none border-r-0"
+                                   onChange={e => setSearchQuery(e.target.value)}
+                                   onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
+                                   placeholder="Search..."
+                        />
+                        <Button buttonStyle="icon" buttonClasses="rounded-l-none" onClick={searchListings}><FaMagnifyingGlass /></Button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="market-filter-container">
-                <MarketFilterControls filterObject={filterObject} setFilterObjectAction={setFilterObject} />
+                <div className="market-filter-container">
+                    <MarketFilterControls
+                        filterObject={filterObject}
+                        setFilterObjectAction={setFilterObject}
+                        refreshListingsAction={searchListings}
+                    />
+                </div>
             </div>
 
             {
