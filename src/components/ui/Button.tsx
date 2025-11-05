@@ -10,15 +10,17 @@ export default function Button({
     type = "button",
     disabled,
     onClick,
+    buttonClasses = ""
 }: {
     children?: React.ReactNode;
     buttonColor?: "blue" | "green";
-    buttonStyle?: "bg" | "border";
+    buttonStyle?: "bg" | "border" | "icon" | "text";
     buttonSize?: "sm" | "md" | "lg";
     showSpinner?: boolean;
+    buttonClasses?: string;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
-    let classList = "min-w-[200px] rounded-md disabled:opacity-50 cursor-pointer text-center";
+    let classList = "rounded-md disabled:opacity-50 cursor-pointer text-center";
 
     switch (buttonColor) {
         case "green":
@@ -27,17 +29,23 @@ export default function Button({
                     classList += " text-white bg-green-600 hover:bg-green-700";
                     break;
                 case "border":
-                    classList += " text-green-600 border-green-600 hover:border-green-50";
+                    classList += " text-green-600 border border-green-600 hover:bg-green-600 hover:text-white";
+                    break;
+                case "icon":
+                    classList += " text-white bg-green-600 hover:bg-green-700";
                     break;
             }
             break;
         case "blue":
             switch (buttonStyle) {
                 case "bg":
-                    classList += " text-white bg-blue-600 hover:bg-blue-700";
+                    classList += " text-white bg-blue-500 hover:bg-blue-700";
                     break;
                 case "border":
-                    classList += " text-blue-600 border-blue-600 hover:border-blue-50";
+                    classList += " text-blue-500 border border-blue-500 hover:border-blue-50";
+                    break;
+                case "icon":
+                    classList += " text-white bg-blue-500 hover:bg-blue-500";
                     break;
             }
             break;
@@ -54,6 +62,9 @@ export default function Button({
             classList += " px-6 py-4.5 text-lg font-bold";
             break;
     }
+
+    // Custom classes applied last to allow overriding default classes
+    classList += ` ${buttonClasses}`;
 
     return (
         <button
