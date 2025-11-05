@@ -3,7 +3,8 @@
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
-import { PrismaClient } from "@/generated/prisma";
+import {$Enums, PrismaClient} from "@/generated/prisma";
+import UserRole = $Enums.UserRole;
 
 const prisma = new PrismaClient();
 
@@ -26,5 +27,5 @@ export async function getCurrentUserRole() {
         }
     });
 
-    return user?.role ?? false;
+    return user?.role ?? UserRole.STUDENT;
 }

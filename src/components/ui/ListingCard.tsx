@@ -1,12 +1,12 @@
 ﻿"use client"
 
-import {ListingReturnType} from "@/models/ListingReturnType";
+import {ListingObject} from "@/models/ListingObject";
 import Link from "next/link";
 
 export default function ListingCard({
     listing
 }: {
-    listing: ListingReturnType
+    listing: ListingObject
 }) {
 
     const listingBackground = listing.images.length > 0 ?

@@ -14,7 +14,7 @@ export default function Button({
 }: {
     children?: React.ReactNode;
     buttonColor?: "blue" | "green";
-    buttonStyle?: "bg" | "border" | "icon";
+    buttonStyle?: "bg" | "border" | "icon" | "text";
     buttonSize?: "sm" | "md" | "lg";
     showSpinner?: boolean;
     buttonClasses?: string;
@@ -29,20 +29,23 @@ export default function Button({
                     classList += " text-white bg-green-600 hover:bg-green-700";
                     break;
                 case "border":
-                    classList += " text-green-600 border-green-600 hover:border-green-50";
+                    classList += " text-green-600 border border-green-600 hover:bg-green-600 hover:text-white";
+                    break;
+                case "icon":
+                    classList += " text-white bg-green-600 hover:bg-green-700";
                     break;
             }
             break;
         case "blue":
             switch (buttonStyle) {
                 case "bg":
-                    classList += " min-w-[200px] text-white bg-blue-600 hover:bg-blue-700";
+                    classList += " text-white bg-blue-500 hover:bg-blue-700";
                     break;
                 case "border":
-                    classList += " min-w-[200px] text-blue-600 border-blue-600 hover:border-blue-50";
+                    classList += " text-blue-500 border border-blue-500 hover:border-blue-50";
                     break;
                 case "icon":
-                    classList += " text-green-600 border-green-600 hover:text-green-700";
+                    classList += " text-white bg-blue-500 hover:bg-blue-500";
                     break;
             }
             break;

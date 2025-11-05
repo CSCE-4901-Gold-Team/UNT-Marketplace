@@ -118,6 +118,7 @@ export default function SignUpPage() {
                             type="submit"
                             showSpinner={isPending || registerFormResponse.status === FormStatus.SUCCESS}
                             buttonSize="lg"
+                            buttonClasses="min-w-[200px]"
                         >
                             Register
                         </Button>

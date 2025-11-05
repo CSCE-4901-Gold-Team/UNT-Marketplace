@@ -1,13 +1,12 @@
 ﻿"use client"
 
-import React, {use} from "react";
-import {ListingReturnType} from "@/models/ListingReturnType";
+import {ListingObject} from "@/models/ListingObject";
 import ListingCard from "@/components/ui/ListingCard";
 
 export default function ListingsContainer({
     listings,
 }: {
-    listings: ListingReturnType[],
+    listings: ListingObject[],
 }) {
 
     return (
