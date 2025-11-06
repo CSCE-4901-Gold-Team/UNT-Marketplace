@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 interface User {
@@ -15,6 +15,9 @@ interface User {
 export default function Admin() {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+    function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+        const { name, value } = e.target;
+    }
 
     return (
         <main className="px-20 py-12 flex flex-col gap-6">
