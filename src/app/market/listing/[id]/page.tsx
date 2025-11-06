@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../../../generated/prisma";
+import { PrismaClient } from "@/generated/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 

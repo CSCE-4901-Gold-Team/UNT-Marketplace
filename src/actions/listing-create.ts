@@ -5,7 +5,7 @@ import * as z from "zod";
 import {FormStatus} from "@/constants/FormStatus"; 
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
-import {PrismaClient} from "../../generated/prisma";
+import {PrismaClient, Prisma} from "@/generated/prisma";
 import {redirect} from "next/navigation";
 
 const CreateListingRequest = z.object({
@@ -55,19 +55,20 @@ export async function createListingAction(_initialState: FormResponse, formData:
     let newListingId: string;
 
     try {
+        // Build categories connection if provided
+        const categoriesConnection = parsedFormData.data.categoryIds && parsedFormData.data.categoryIds.length > 0
+            ? { connect: parsedFormData.data.categoryIds.map(id => ({ id })) }
+            : undefined;
+
         // Create the listing
         const newListing = await prisma.listing.create({
             data: {
                 title: parsedFormData.data.title,
                 description: parsedFormData.data.description,
-                price: parsedFormData.data.price,
+                price: parseFloat(parsedFormData.data.price),
                 isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
                 ownerId: session.user.id,
-                ...(parsedFormData.data.categoryIds && parsedFormData.data.categoryIds.length > 0 && {
-                    categories: {
-                        connect: parsedFormData.data.categoryIds.map(id => ({ id }))
-                    }
-                })
+                ...(categoriesConnection && { categories: categoriesConnection })
             }
         });
 
