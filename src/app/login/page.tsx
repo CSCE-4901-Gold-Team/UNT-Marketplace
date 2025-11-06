@@ -80,6 +80,7 @@ export default function LoginPage() {
                             type="submit"
                             showSpinner={isPending || loginFormResponse.status === FormStatus.SUCCESS}
                             buttonSize="lg"
+                            buttonClasses="min-w-[200px]"
                         >
                             Login
                         </Button>
