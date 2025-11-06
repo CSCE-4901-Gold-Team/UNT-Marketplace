@@ -16,7 +16,11 @@ export default function Admin() {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-        const { name, value } = e.target;
+        return;
+    }
+
+    function handleSave() {
+        return;
     }
 
     return (
