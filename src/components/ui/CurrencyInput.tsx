@@ -3,8 +3,9 @@
 import React from "react";
 import * as z from "zod";
 import {ErrorHelper} from "@/utils/ErrorHelper";
+import {FaDollarSign} from "react-icons/fa";
 
-export default function TextInput({
+export default function CurrencyInput({
     inputLabel,
     onChange,
     onKeyDown,
@@ -13,8 +14,6 @@ export default function TextInput({
     required,
     value,
     setValue,
-    checked,
-    setChecked,
     placeholder,
     name,
     inputClasses = "",
@@ -24,24 +23,14 @@ export default function TextInput({
     onKeydown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
     validationErrors?: z.core.$ZodIssue[];
     inputClasses?: string;
-    setValue?: (newValue: string) => void;
-    setChecked?: (newValue: boolean) => void;
+    setValue: (newValue: string) => void;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
-    let inputElementClasses = "rounded-md px-3 py-2 border border-black " + inputClasses;
-
-    if (type === "checkbox") {
-        inputElementClasses += " w-auto";
-    } else {
-        inputElementClasses += " w-full";
-    }
 
     function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
-        if (setValue && type !== "checkbox") {
+        if (/^\d*\.?\d{0,2}$/.test(e.target.value)) {
             setValue(e.target.value);
         }
-        if (type === "checkbox" && setChecked) {
-            setChecked(e.currentTarget.checked);
-        }
+
         if (onChange) onChange(e);
     }
 
@@ -50,19 +39,24 @@ export default function TextInput({
             { !!inputLabel && (
                 <label className="block text-sm font-medium">{ inputLabel }</label>
             )}
-            <input
-                type={type}
-                value={value}
-                checked={checked}
-                placeholder={placeholder}
-                onChange={handleInput}
-                onKeyDown={onKeyDown}
-                required={required}
-                name={name}
-                className={inputElementClasses}
-            />
 
-            { !!name && !!validationErrors && 
+            <div className="flex">
+                <div className="bg-gray-100 text-green border border-gray-700 border-r-0 flex items-center justify-center px-2 rounded-l-md">
+                    <FaDollarSign />
+                </div>
+                <input
+                    type={type}
+                    value={value}
+                    placeholder={placeholder}
+                    onChange={handleInput}
+                    onKeyDown={onKeyDown}
+                    required={required}
+                    name={name}
+                    className={"w-full rounded-r-md px-3 py-2 border border-gray-700 border-l-0 " + inputClasses}
+                />
+            </div>
+
+            { !!name && !!validationErrors &&
                 ErrorHelper.getZodIssuesByPath(validationErrors, name)?.map((issue, key) => {return (
                     <p key={key} className="mt-2 text-sm text-red-600 flex gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
