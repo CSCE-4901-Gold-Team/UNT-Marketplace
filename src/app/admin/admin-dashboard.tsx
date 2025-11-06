@@ -1,6 +1,8 @@
 "use client"
 import { useState } from "react";
 import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 interface User {
     id: number;
@@ -12,8 +14,15 @@ interface User {
     reports: number;
 }
 
-export default function Admin() {
+export default function Admin({ userRole }: { userRole: string | null }) {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (userRole != "ADMIN") {
+            router.push("/market");
+        }
+    }, [userRole, router]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         return;
@@ -22,6 +31,8 @@ export default function Admin() {
     function handleSave() {
         return;
     }
+
+    if (userRole !== "ADMIN") return null;
 
     return (
         <main className="px-20 py-12 flex flex-col gap-6">
@@ -248,9 +259,9 @@ export default function Admin() {
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-xl p-2 mt-1"
                                 >
-                                    <option>User</option>
+                                    <option>Student</option>
+                                    <option>Faculty</option>
                                     <option>Admin</option>
-                                    <option>Moderator</option>
                                 </select>
                             </label>
                         </div>
