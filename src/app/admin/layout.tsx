@@ -2,9 +2,18 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-export default function Admin() {
-    const [selectedUser, setSelectedUser] = useState(null);
+interface User {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+    transactions: number;
+    listings: number;
+    reports: number;
+}
 
+export default function Admin() {
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
 
     return (
