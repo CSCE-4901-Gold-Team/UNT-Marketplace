@@ -1,4 +1,5 @@
 ﻿"use server";
+
 import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
 import { ZodValidators } from "@/utils/ZodValidators";
@@ -16,6 +17,7 @@ const RegisterRequest = z.object({
     .refine(ZodValidators.passwordConfirmation.check, ZodValidators.passwordConfirmation.params);
 
 export async function registerAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
+
     // Parse and validate form data
     const parsedFormData = RegisterRequest.safeParse({
         email: formData.get("email"),
@@ -46,21 +48,13 @@ export async function registerAction(initialState: FormResponse, formData: FormD
             }
         });
     } catch (error) {
-        // Log the full error for debugging
-        console.error("Registration error:", error);
-        console.error("Error details:", {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            stack: error instanceof Error ? error.stack : undefined,
-            isAPIError: error instanceof APIError
-        });
-
         // Registration failed
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
                 content: error instanceof APIError ?
-                    error.message : `An internal service error occurred during registration: ${error instanceof Error ? error.message : 'Unknown error'}`
+                    error.message : "An internal service error occured during registration."
             }
         };
     }
