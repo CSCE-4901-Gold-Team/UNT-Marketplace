@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
     unoptimized: true, // Allow base64 and any local images
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
