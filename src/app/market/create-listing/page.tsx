@@ -7,6 +7,7 @@ import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
 import PriceInput from "@/components/ui/PriceInput";
 import CategoryInput from "@/components/ui/CategoryInput";
+import ImageUpload from "@/components/ui/ImageUpload";
 import React, { useState } from "react";
 
 
@@ -17,6 +18,7 @@ const initialState: FormResponse = {
 export default function CreateListing() {
     const [state, formAction] = useActionState(createListingAction, initialState);
     const [selected, setSelected] = useState<number[]>([]);
+    const [selectedImage, setSelectedImage] = useState<string>("");
 
     return (
         <main className="min-h-screen flex items-start justify-center px-20 py-10">
@@ -53,11 +55,19 @@ export default function CreateListing() {
                         required
                     />
 
+                    {/* Image Upload */}
+                    <ImageUpload
+                        inputLabel="Upload an Image"
+                        name="imagePath"
+                        selectedImage={selectedImage}
+                        onImageChange={setSelectedImage}
+                    />
+
                     {/* Categories */}
                     <CategoryInput
                         inputLabel="Categories"
                         name="categoryIds"
-                        options={[]} // Pass your fetched categories here
+                        options={[]}
                         value={selected}
                         onChange={setSelected}
                         validationErrors={state.validationErrors}

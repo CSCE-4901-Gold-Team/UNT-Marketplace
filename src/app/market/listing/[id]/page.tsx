@@ -1,6 +1,7 @@
 import { PrismaClient } from "@/generated/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 const prisma = new PrismaClient();
 
@@ -22,6 +23,12 @@ export default async function ListingDetail({ params }: { params: { id: string }
                     name: true,
                 }
             },
+            images: {
+                select: {
+                    id: true,
+                    url: true,
+                }
+            }
         }
     });
 
@@ -40,6 +47,20 @@ export default async function ListingDetail({ params }: { params: { id: string }
                 
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
+                    
+                    {/* Image Display */}
+                    {listing.images.length > 0 && (
+                        <div className="mb-6 relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                            <Image
+                                src={listing.images[0].url}
+                                alt={listing.title}
+                                fill
+                                className="object-cover"
+                                priority
+                                unoptimized
+                            />
+                        </div>
+                    )}
                     
                     <div className="flex items-center justify-between mb-6 pb-6 border-b">
                         <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>

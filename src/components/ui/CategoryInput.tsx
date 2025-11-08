@@ -70,7 +70,7 @@ export default function CategoryInput({
 
             <div className="flex flex-wrap gap-2 mb-2">
                 {localOptions.length === 0 && newNames.length === 0 && (
-                    <div className="text-sm text-gray-500">No categories available</div>
+                    <div className="text-sm text-gray-500">At least one category is required</div>
                 )}
 
                 {localOptions.map((opt) => (

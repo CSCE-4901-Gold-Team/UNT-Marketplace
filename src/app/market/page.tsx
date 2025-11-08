@@ -1,14 +1,23 @@
-﻿import { getListings } from "@/actions/listing-actions";
-import { getCurrentUserRole } from "@/actions/user-actions";
-import MarketSection from "@/components/features/MarketSection";
+﻿"use server"
 
-export default async function Market() {
+import {getListings} from "@/actions/listing-actions";
+import MarketSection from "@/components/features/MarketSection";
+import {Suspense} from "react";
+import MarketSuspense from "@/components/suspense/MarketSuspense";
+import {getCurrentUserRole} from "@/actions/user-actions";
+
+export default async function MarketPage() {
     const listingsResponse = getListings();
     const userRole = getCurrentUserRole();
 
     return (
         <main className="px-20 py-12">
-            <MarketSection listingsResponse={listingsResponse} userRoleResponse={userRole} />
+            <Suspense fallback={<MarketSuspense/>}>
+                <MarketSection
+                    listingsResponse={listingsResponse}
+                    userRoleResponse={userRole}
+                />
+            </Suspense>
         </main>
     );
 }

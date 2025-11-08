@@ -39,9 +39,6 @@ export default function MarketSection({
 
     return (
         <div id="marketSectionWrapper" className="flex flex-col gap-6">
-            <div>
-                <h1 className="text-4xl">Current Listings</h1>
-            </div>
 
             <div className="market-controls flex justify-between items-center">
                 <div className="market-search-container">
@@ -51,9 +48,7 @@ export default function MarketSection({
                                    onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
                                    placeholder="Search..."
                         />
-                        <Button buttonStyle="icon" buttonClasses="rounded-l-none" onClick={searchListings}>
-                            <FaMagnifyingGlass />
-                        </Button>
+                        <Button buttonStyle="icon" buttonClasses="rounded-l-none" onClick={searchListings}><FaMagnifyingGlass /></Button>
                     </div>
                 </div>
 
@@ -67,11 +62,13 @@ export default function MarketSection({
                 </div>
             </div>
 
-            {listingsLoading ? (
-                <LoadingSpinner />
-            ) : (
-                <ListingsContainer listings={listings} />
-            )}
+            {
+
+                listingsLoading ? <LoadingSpinner /> :
+                    (listings.length === 0 ? <h2 className="text-gray-400 text-center mt-16">No listings found</h2> :
+                        <ListingsContainer listings={listings} />)
+            }
+
         </div>
     );
 }

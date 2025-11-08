@@ -2,6 +2,7 @@
 
 import {ListingObject} from "@/models/ListingObject";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function ListingCard({
     listing
@@ -9,22 +10,30 @@ export default function ListingCard({
     listing: ListingObject
 }) {
 
-    const listingBackground = listing.images.length > 0 ?
-        `url(images/${listing.images[0].url}) center center / cover no-repeat, #d1d5dc` : "#d1d5dc";
-
     const listingPrice = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
     }).format(listing.price);
 
     const listingUrl = `/market/listing/${listing.id}`;
+    const hasValidImage = listing.images.length > 0 && listing.images[0].url;
 
     return (
         <div className="listing group relative">
             <div className="listing-image">
-                <div className="h-[350px] bg-gray-300 rounded-sm bg-center bg-cover group-hover:shadow-lg group-hover:scale-101 transition-all duration-500 ease-in-out"
-                     style={{background: listingBackground}}
-                ></div>
+                <div className="h-[350px] bg-gray-300 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
+                    {hasValidImage ? (
+                        <Image
+                            src={listing.images[0].url}
+                            alt={listing.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                            unoptimized
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gray-300" />
+                    )}
+                </div>
             </div>
             <div className="listing-info mt-1">
                 <p className="font-bold text-lg">
