@@ -7,8 +7,6 @@ import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {PrismaClient, Prisma} from "@/generated/prisma";
 import {redirect} from "next/navigation";
-import {writeFile} from "fs/promises";
-import path from "path";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -22,31 +20,6 @@ const CreateListingRequest = z.object({
     (data) => (data.categoryIds && data.categoryIds.length > 0) || (data.newCategoryNames && data.newCategoryNames.length > 0),
     { message: "At least one category is required", path: ["categoryIds"] }
 );
-
-async function saveBase64Image(base64Data: string): Promise<string> {
-    // Extract the base64 data and file extension
-    const matches = base64Data.match(/^data:image\/([a-zA-Z]+);base64,(.+)$/);
-    if (!matches) {
-        throw new Error("Invalid base64 image data");
-    }
-
-    const extension = matches[1];
-    const data = matches[2];
-    const buffer = Buffer.from(data, 'base64');
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const filename = `${timestamp}.${extension}`;
-    
-    // Save to public/images/uploads/
-    const uploadDir = path.join(process.cwd(), "public", "images", "uploads");
-    const filepath = path.join(uploadDir, filename);
-
-    await writeFile(filepath, buffer);
-
-    // Return the public URL path
-    return `/images/uploads/${filename}`;
-}
 
 export async function createListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
 
@@ -123,11 +96,8 @@ export async function createListingAction(_initialState: FormResponse, formData:
             ...newCategoryIds
         ];
 
-        // Save base64 image if provided
-        let savedImagePath: string | null = null;
-        if (parsedFormData.data.imagePath && parsedFormData.data.imagePath.startsWith('data:image')) {
-            savedImagePath = await saveBase64Image(parsedFormData.data.imagePath);
-        }
+        // Use the image path directly (base64 or file path)
+        const imagePath = parsedFormData.data.imagePath || null;
 
         // Create the listing
         const newListing = await prisma.listing.create({
@@ -140,10 +110,10 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 categories: {
                     connect: allCategoryIds.map(id => ({ id }))
                 },
-                ...(savedImagePath && {
+                ...(imagePath && {
                     images: {
                         create: [{
-                            url: savedImagePath,
+                            url: imagePath,
                             imageType: "LISTING"
                         }]
                     }
