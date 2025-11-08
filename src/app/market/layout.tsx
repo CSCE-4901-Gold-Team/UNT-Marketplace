@@ -1,21 +1,20 @@
-﻿"use server"
+﻿"use server";
 
 import React from "react";
 import "@/styles/globals.css";
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
-import {redirect} from "next/navigation";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default async function MarketLayout({
-    children,
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
     // Market route protection logic can be extended here
     if(!session) {
@@ -112,30 +111,48 @@ export default async function MarketLayout({
                             <p>Welcome back, {session.user.name}</p>
                         </div>
 
-                        <Link href="/logout">
-                            <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
-                                <div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                         strokeWidth="1.5"
-                                         stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round"
-                                              d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/>
-                                    </svg>
-                                </div>
-                                <div>
-                                    Logout
-                                </div>
-                            </div>
-                        </Link>
-                    </div>
+            <div className="border-t border-gray-300 pt-4 flex flex-col gap-1">
 
-                </div>
+              {/* Logout */}
+
+              <div className="flex gap-2">
+                  <Link href="/logout" className="flex-1">
+                      <div className="flex items-center justify-center gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
+                          <div>
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor" className="size-6">
+                                  <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/>
+                              </svg>
+                          </div>
+                          <div className="text-center">Logout</div>
+                      </div>
+                  </Link>
+
+                  <Link href="/profile" className="flex-1">
+                      <div className="flex items-center justify-center gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
+                          <div>
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                  strokeWidth="1.5"
+                                  stroke="currentColor" className="size-6">
+                                  <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                              </svg>
+                          </div>
+                          <div className="text-center">Account</div>
+                      </div>
+                  </Link>
+              </div>
             </div>
-
-            <div id="marketContent" className="flex flex-col grow">
-                {children}
-            </div>
-
+          </div>
         </div>
-    );
+      </div>
+
+      {/* Main Content */}
+      <div id="marketContent" className="flex flex-col grow ml-64">
+        {children}
+      </div>
+    </div>
+  );
 }
