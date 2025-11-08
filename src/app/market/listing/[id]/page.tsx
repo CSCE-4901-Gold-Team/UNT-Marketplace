@@ -5,10 +5,11 @@ import Image from "next/image";
 
 const prisma = new PrismaClient();
 
-export default async function ListingDetail({ params }: { params: { id: string } }) {
+export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const listing = await prisma.listing.findUnique({
         where: {
-            id: params.id
+            id: id
         },
         include: {
             owner: {
