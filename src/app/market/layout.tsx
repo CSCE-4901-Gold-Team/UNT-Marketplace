@@ -20,6 +20,11 @@ export default async function MarketLayout({
     if(!session) {
         redirect("/login");
     }
+
+    // Check if email is verified
+    if (!session.user.emailVerified) {
+        redirect(`/verify-email?email=${encodeURIComponent(session.user.email)}`);
+    }
     
     return (
         <div id="marketContainer" className="flex min-h-screen items-stretch bg-white">
