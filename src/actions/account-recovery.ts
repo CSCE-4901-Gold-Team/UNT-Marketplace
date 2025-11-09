@@ -85,7 +85,7 @@ export async function resetPasswordAction(initialState: FormResponse, formData: 
     try {
         await auth.api.resetPassword({
             body: {
-                password: parsedFormData.data.password,
+                newPassword: parsedFormData.data.password,
                 token: token,
             }
         });
