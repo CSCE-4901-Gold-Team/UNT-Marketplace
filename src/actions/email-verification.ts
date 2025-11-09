@@ -82,19 +82,28 @@ export async function verifyEmailOtpAction(initialState: FormResponse, formData:
 
     // Verify email with OTP
     try {
-        await auth.api.verifyEmail({
-            body: {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
                 email: parsedFormData.data.email,
                 otp: parsedFormData.data.otp,
-            }
+            }),
         });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || "Verification failed");
+        }
     } catch (error) {
         // Verification failed
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
-                content: error instanceof APIError ?
+                content: error instanceof Error ?
                     error.message : "Invalid verification code. Please try again."
             }
         };
