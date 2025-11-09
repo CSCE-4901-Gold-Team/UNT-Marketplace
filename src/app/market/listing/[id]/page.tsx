@@ -1,4 +1,4 @@
-import { PrismaClient } from "@/generated/prisma";
+import { PrismaClient } from "@/prisma/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -45,10 +45,10 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                 <Link href="/market" className="text-green hover:underline mb-4 inline-block">
                     ← Back to all listings
                 </Link>
-                
+
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
-                    
+
                     {/* Image Display */}
                     {listing.images.length > 0 && (
                         <div className="mb-6 relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
@@ -62,7 +62,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                             />
                         </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between mb-6 pb-6 border-b">
                         <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
                         {listing.isProfessorOnly && (
@@ -82,7 +82,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                             <h2 className="text-xl font-semibold mb-2">Categories</h2>
                             <div className="flex flex-wrap gap-2">
                                 {listing.categories.map((category) => (
-                                    <span 
+                                    <span
                                         key={category.id}
                                         className="bg-gray-100 text-gray-700 px-3 py-1 rounded"
                                     >

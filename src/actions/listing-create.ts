@@ -1,12 +1,12 @@
 "use server";
 
-import {FormResponse} from "@/types/FormResponse";
+import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
-import {FormStatus} from "@/constants/FormStatus"; 
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
-import {PrismaClient, Prisma} from "@/generated/prisma";
-import {redirect} from "next/navigation";
+import { FormStatus } from "@/constants/FormStatus";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { PrismaClient, Prisma } from "@prisma/client";
+import { redirect } from "next/navigation";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -71,7 +71,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             for (const categoryName of parsedFormData.data.newCategoryNames) {
                 // Create a slug from the category name
                 const slug = categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                
+
                 // Check if category already exists, if not create it
                 let category = await prisma.category.findUnique({
                     where: { name: categoryName }
@@ -79,13 +79,13 @@ export async function createListingAction(_initialState: FormResponse, formData:
 
                 if (!category) {
                     category = await prisma.category.create({
-                        data: { 
+                        data: {
                             name: categoryName,
                             slug: slug
                         }
                     });
                 }
-                
+
                 newCategoryIds.push(category.id);
             }
         }
@@ -134,7 +134,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             }
         };
     }
-    
+
     // Redirect after successfully creating and disconnecting (outside try-catch)
     redirect(`/market/listing/${newListingId}`);
 }
