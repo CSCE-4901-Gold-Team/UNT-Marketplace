@@ -2,11 +2,11 @@
 
 "use server";
 
-import {FormResponse} from "@/types/FormResponse";
-import {FormStatus} from "@/constants/FormStatus";
-import {ForgotPasswordSchema, ResetPasswordSchema} from "@/schemas/auth-schemas";
-import {auth} from "@/lib/auth";
-import {APIError} from "better-auth";
+import { FormResponse } from "@/types/FormResponse";
+import { FormStatus } from "@/constants/FormStatus";
+import { ForgotPasswordSchema, ResetPasswordSchema } from "@/schemas/auth-schemas";
+import { auth } from "@/lib/auth";
+import { APIError } from "better-auth";
 
 export async function forgotPasswordAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
     const parsedFormData = ForgotPasswordSchema.safeParse({
@@ -70,7 +70,7 @@ export async function resetPasswordAction(initialState: FormResponse, formData: 
         };
     }
 
-    const { token } = (new URL(formData.get("pathname") as string)).searchParams;
+    const token = (new URL(formData.get("pathname") as string)).searchParams.get("token");
 
     if (!token) {
         return {
