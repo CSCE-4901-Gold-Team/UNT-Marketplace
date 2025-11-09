@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useActionState, useEffect, useState } from "react";
+import React, { useActionState, useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
@@ -12,7 +12,7 @@ import Link from "next/link";
 import { toastService } from "@/lib/toast-service";
 import Card from "@/components/ui/Card";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const emailFromQuery = searchParams.get("email") || "";
@@ -187,3 +187,14 @@ export default function VerifyEmailPage() {
     );
 }
 
+export default function VerifyEmailPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-100">
+                <div className="text-center">Loading...</div>
+            </div>
+        }>
+            <VerifyEmailContent />
+        </Suspense>
+    );
+}
