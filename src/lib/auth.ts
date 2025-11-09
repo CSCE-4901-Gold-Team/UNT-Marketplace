@@ -6,9 +6,6 @@ import { emailOTP } from "better-auth/plugins";
 
 export const prisma = new PrismaClient();
 
-// Allowed UNT email domains
-const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
-
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
@@ -35,19 +32,7 @@ export const auth = betterAuth({
         }),
         nextCookies(),
     ],
-    // Use the onRequest hook for email validation
-    async onRequest(request, context) {
-        // Check if this is a sign-up request
-        if (request.url.includes('/sign-up') && request.method === 'POST') {
-            const body = await request.json();
-            const email = body.email;
-
-            if (email) {
-                const emailDomain = email.split("@")[1]?.toLowerCase();
-                if (!emailDomain || !ALLOWED_UNT_DOMAINS.includes(emailDomain)) {
-                    throw new Error(`Only UNT email addresses (@${ALLOWED_UNT_DOMAINS.join(", @")}) are allowed for registration.`);
-                }
-            }
-        }
-    },
 });
+
+// Export allowed domains for validation in your sign-up action
+export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];

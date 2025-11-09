@@ -1,10 +1,9 @@
 ﻿"use server";
-
 import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
 import { ZodValidators } from "@/utils/ZodValidators";
 import { FormStatus } from "@/constants/FormStatus";
-import { auth } from "@/lib/auth";
+import { auth, ALLOWED_UNT_DOMAINS } from "@/lib/auth";
 import { APIError } from "better-auth";
 
 const RegisterRequest = z.object({
@@ -17,7 +16,6 @@ const RegisterRequest = z.object({
     .refine(ZodValidators.passwordConfirmation.check, ZodValidators.passwordConfirmation.params);
 
 export async function registerAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
-
     // Parse and validate form data
     const parsedFormData = RegisterRequest.safeParse({
         email: formData.get("email"),
@@ -35,6 +33,20 @@ export async function registerAction(initialState: FormResponse, formData: FormD
                 type: "error",
                 content: "One or more validation errors have occured."
             }
+        };
+    }
+
+    // Validate email domain for UNT emails only
+    const email = parsedFormData.data.email;
+    const emailDomain = email.split("@")[1]?.toLowerCase();
+
+    if (!emailDomain || !ALLOWED_UNT_DOMAINS.includes(emailDomain)) {
+        return {
+            status: FormStatus.ERROR,
+            message: {
+                type: "error",
+                content: `Only UNT email addresses (@${ALLOWED_UNT_DOMAINS.join(", @")}) are allowed for registration.`,
+            },
         };
     }
 
@@ -61,6 +73,10 @@ export async function registerAction(initialState: FormResponse, formData: FormD
 
     // Success    
     return {
-        status: FormStatus.SUCCESS
+        status: FormStatus.SUCCESS,
+        message: {
+            type: "success",
+            content: "Account created successfully! Please check your email for verification code."
+        }
     };
 }
