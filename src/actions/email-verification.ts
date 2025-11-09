@@ -1,5 +1,4 @@
 "use server";
-
 import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
 import { ZodValidators } from "@/utils/ZodValidators";
@@ -33,12 +32,12 @@ export async function sendVerificationOtpAction(initialState: FormResponse, form
         };
     }
 
-    // Send verification OTP
+    // Send verification OTP using the emailOTP plugin
     try {
-        await auth.api.sendVerificationOTP({
+        // Use sendVerificationEmail from the emailOTP plugin
+        await auth.api.sendVerificationEmail({
             body: {
                 email: parsedFormData.data.email,
-                type: "email-verification",
             }
         });
     } catch (error) {
@@ -83,7 +82,7 @@ export async function verifyEmailOtpAction(initialState: FormResponse, formData:
 
     // Verify email with OTP
     try {
-        await auth.api.verifyEmailOTP({
+        await auth.api.verifyEmail({
             body: {
                 email: parsedFormData.data.email,
                 otp: parsedFormData.data.otp,
@@ -110,4 +109,3 @@ export async function verifyEmailOtpAction(initialState: FormResponse, formData:
         }
     };
 }
-
