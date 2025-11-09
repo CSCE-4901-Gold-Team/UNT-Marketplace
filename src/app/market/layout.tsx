@@ -21,16 +21,26 @@ export default async function MarketLayout({
     if(!session) {
         redirect("/login");
     }
-
+    
     // Check if email is verified
-    if (!session.user.emailVerified) {
-        redirect(`/verify-email?email=${encodeURIComponent(session.user.email)}`);
+    if(!session.user.emailVerified) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-gray-100">
+                <div className="max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
+                    <h1 className="text-2xl font-semibold mb-4">Email Verification Required</h1>
+                    <p className="mb-6">Please verify your email to access the marketplace.</p>
+                    <Link href="/resend-verification" className="text-lg font-black px-3 py-1.5 bg-green-600 rounded text-white no-underline">
+                        Resend Verification Email
+                    </Link>
+                </div>
+            </div>
+        );
     }
     
     return (
         <div id="marketContainer" className="flex min-h-screen items-stretch bg-white">
             
-            <div id="marketSidebar" className="flex flex-col w-xs shrink-0">
+            <div id="marketSidebar" className="flex flex-col w-xs">
 
                     <div className="h-screen fixed flex flex-col gap-8 py-6 w-xs bg-gray-100 shadow-2xl">
                     
@@ -99,6 +109,9 @@ export default async function MarketLayout({
                              className="mt-auto flex flex-col gap-1 px-4 font-black text-gray-700">
                             <div id="marketPersonalizedMessage" className="text-gray-400 text-xs text-center mb-3">
                                 <p>Welcome back, {session.user.name}</p>
+                                {!session.user.emailVerified && (
+                                    <p className="text-yellow-600 mt-1">Email not verified</p>
+                                )}
                             </div>
 
                             <Link href="/logout">
