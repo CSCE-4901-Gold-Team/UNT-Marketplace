@@ -24,6 +24,15 @@ export default async function Home() {
                 <p className="mt-5">
                     Session Info:<br />{session?.user.name ?? "No session found"}
                 </p>
+                
+                {session && !session.user.emailVerified && (
+                    <div className="mt-4 p-3 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded">
+                        <p>Your email is not verified.</p>
+                        <Link href="/resend-verification" className="text-blue-600 hover:underline">
+                            Resend verification email
+                        </Link>
+                    </div>
+                )}
             </div>
         </main>
     );

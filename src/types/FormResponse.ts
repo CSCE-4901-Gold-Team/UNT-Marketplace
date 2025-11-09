@@ -14,4 +14,7 @@ export interface FormResponse {
 
     // Error fields
     validationErrors?: z.core.$ZodIssue[];
+
+    // Flag indicating if email verification is required
+    requiresVerification?: boolean;
 }

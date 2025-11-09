@@ -5,6 +5,7 @@ import { ZodValidators } from "@/utils/ZodValidators";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { APIError } from "better-auth";
+import { headers } from "next/headers";
 
 const SendVerificationOtpRequest = z.object({
     email: ZodValidators.email,
@@ -34,20 +35,44 @@ export async function sendVerificationOtpAction(initialState: FormResponse, form
 
     // Send verification OTP using the emailOTP plugin
     try {
+<<<<<<< Updated upstream
         // Use sendVerificationEmail from the emailOTP plugin
         await auth.api.sendVerificationEmail({
+=======
+        // Try using the API method directly first
+        const result = await auth.api.sendVerificationOTP({
+            headers: await headers(),
+>>>>>>> Stashed changes
             body: {
                 email: parsedFormData.data.email,
             }
         });
-    } catch (error) {
+        
+        console.log("[OTP Send] Success:", result);
+    } catch (error: any) {
+        console.error("[OTP Send] Error Details:", {
+            error,
+            message: error?.message,
+            stack: error?.stack,
+            name: error?.name,
+        });
+        
         // Request failed
+        let errorMessage = "An internal service error occurred while sending verification code.";
+        
+        if (error instanceof APIError) {
+            errorMessage = error.message;
+        } else if (error?.message) {
+            errorMessage = error.message;
+        } else if (typeof error === "string") {
+            errorMessage = error;
+        }
+        
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
-                content: error instanceof APIError ?
-                    error.message : "An internal service error occurred while sending verification code."
+                content: errorMessage
             }
         };
     }
@@ -57,7 +82,7 @@ export async function sendVerificationOtpAction(initialState: FormResponse, form
         status: FormStatus.SUCCESS,
         message: {
             type: "success",
-            content: "Verification code has been sent to your email."
+            content: "Verification code has been sent to your email. Please check your server console logs for the code (in development mode)."
         }
     };
 }
@@ -82,29 +107,62 @@ export async function verifyEmailOtpAction(initialState: FormResponse, formData:
 
     // Verify email with OTP
     try {
+<<<<<<< Updated upstream
         const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
+=======
+        const result = await auth.api.verifyEmailOTP({
+            headers: await headers(),
+            body: {
+>>>>>>> Stashed changes
                 email: parsedFormData.data.email,
                 otp: parsedFormData.data.otp,
             }),
         });
+<<<<<<< Updated upstream
 
         if (!response.ok) {
             const error = await response.json();
             throw new Error(error.message || "Verification failed");
         }
     } catch (error) {
+=======
+        
+        console.log("[OTP Verify] Success:", result);
+    } catch (error: any) {
+        console.error("[OTP Verify] Error Details:", {
+            error,
+            message: error?.message,
+            stack: error?.stack,
+            name: error?.name,
+        });
+        
+>>>>>>> Stashed changes
         // Verification failed
+        let errorMessage = "Invalid verification code. Please try again.";
+        
+        if (error instanceof APIError) {
+            errorMessage = error.message;
+        } else if (error?.message) {
+            errorMessage = error.message;
+        } else if (typeof error === "string") {
+            errorMessage = error;
+        }
+        
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
+<<<<<<< Updated upstream
                 content: error instanceof Error ?
                     error.message : "Invalid verification code. Please try again."
+=======
+                content: errorMessage
+>>>>>>> Stashed changes
             }
         };
     }

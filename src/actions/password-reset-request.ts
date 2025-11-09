@@ -1,23 +1,25 @@
 "use server";
 
 import { FormResponse } from "@/types/FormResponse";
-import * as z from "zod";
-import { ZodValidators } from "@/utils/ZodValidators";
 import { FormStatus } from "@/constants/FormStatus";
+import { ForgotPasswordSchema } from "@/schemas/auth-schemas";
 import { auth } from "@/lib/auth";
 import { APIError } from "better-auth";
 
-const PasswordResetRequest = z.object({
-    email: ZodValidators.email,
-});
-
-export async function passwordResetRequestAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
+export async function passwordResetRequestAction(
+    initialState: FormResponse, 
+    formData: FormData
+): Promise<FormResponse> {
+    
+    console.log("Password reset request initiated");
+    
     // Parse and validate form data
-    const parsedFormData = PasswordResetRequest.safeParse({
+    const parsedFormData = ForgotPasswordSchema.safeParse({
         email: formData.get("email"),
     });
 
     if (!parsedFormData.success) {
+        console.log("Validation failed:", parsedFormData.error.issues);
         return {
             status: FormStatus.ERROR,
             validationErrors: parsedFormData.error.issues,
@@ -28,22 +30,28 @@ export async function passwordResetRequestAction(initialState: FormResponse, for
         };
     }
 
-    // Send password reset request
+    console.log("Requesting password reset for:", parsedFormData.data.email);
+
+    // Send password reset request using Better Auth
     try {
         await auth.api.forgetPassword({
             body: {
                 email: parsedFormData.data.email,
-                redirectTo: `${process.env.APP_URL}/reset-password`,
+                redirectTo: `${process.env.BETTER_AUTH_URL || process.env.APP_URL}/reset-password`,
             }
         });
+        
+        console.log("Password reset email sent successfully");
     } catch (error) {
-        // Request failed
+        console.error("Password reset request failed:", error);
+        
+        // Request failed - but we don't want to reveal if the email exists
+        // So we return success anyway, but log actual error for debugging
         return {
-            status: FormStatus.ERROR,
+            status: FormStatus.SUCCESS,
             message: {
-                type: "error",
-                content: error instanceof APIError ?
-                    error.message : "An internal service error occurred during password reset request."
+                type: "success",
+                content: "If an account exists with that email, a password reset link has been sent."
             }
         };
     }
@@ -53,7 +61,7 @@ export async function passwordResetRequestAction(initialState: FormResponse, for
         status: FormStatus.SUCCESS,
         message: {
             type: "success",
-            content: "Password reset link has been sent to your email."
+            content: "If an account exists with that email, a password reset link has been sent."
         }
     };
 }

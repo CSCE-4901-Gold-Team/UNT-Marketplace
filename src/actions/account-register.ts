@@ -16,6 +16,12 @@ const RegisterRequest = z.object({
     .refine(ZodValidators.passwordConfirmation.check, ZodValidators.passwordConfirmation.params);
 
 export async function registerAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
+<<<<<<< Updated upstream
+=======
+
+    console.log("Registration attempt started");
+    
+>>>>>>> Stashed changes
     // Parse and validate form data
     const parsedFormData = RegisterRequest.safeParse({
         email: formData.get("email"),
@@ -24,17 +30,25 @@ export async function registerAction(initialState: FormResponse, formData: FormD
         first_name: formData.get("first_name"),
         last_name: formData.get("last_name"),
     });
+<<<<<<< Updated upstream
 
+=======
+    
+    console.log("Form data parsed:", parsedFormData.success ? "Success" : "Failed");
+    
+>>>>>>> Stashed changes
     if (!parsedFormData.success) {
+        console.log("Validation errors:", parsedFormData.error.issues);
         return {
             status: FormStatus.ERROR,
             validationErrors: parsedFormData.error.issues,
             message: {
                 type: "error",
-                content: "One or more validation errors have occured."
+                content: "One or more validation errors have occurred."
             }
         };
     }
+<<<<<<< Updated upstream
 
     // Validate email domain for UNT emails only
     const email = parsedFormData.data.email;
@@ -50,6 +64,11 @@ export async function registerAction(initialState: FormResponse, formData: FormD
         };
     }
 
+=======
+    
+    console.log("Attempting to create user:", parsedFormData.data.email);
+    
+>>>>>>> Stashed changes
     // Send registration request
     try {
         await auth.api.signUpEmail({
@@ -59,14 +78,28 @@ export async function registerAction(initialState: FormResponse, formData: FormD
                 name: parsedFormData.data.first_name + " " + parsedFormData.data.last_name,
             }
         });
+        
+        console.log("User created successfully");
     } catch (error) {
+        // Log the actual error for debugging
+        console.error("Registration error details:", {
+            error,
+            message: error instanceof Error ? error.message : "Unknown error",
+            stack: error instanceof Error ? error.stack : undefined,
+            apiError: error instanceof APIError ? {
+                message: error.message,
+                statusCode: error.statusCode,
+                body: error.body
+            } : "Not an APIError"
+        });
+        
         // Registration failed
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
                 content: error instanceof APIError ?
-                    error.message : "An internal service error occured during registration."
+                    error.message : `Registration failed: ${error instanceof Error ? error.message : "Unknown error"}`
             }
         };
     }
@@ -76,7 +109,11 @@ export async function registerAction(initialState: FormResponse, formData: FormD
         status: FormStatus.SUCCESS,
         message: {
             type: "success",
+<<<<<<< Updated upstream
             content: "Account created successfully! Please check your email for verification code."
+=======
+            content: "Registration successful! Please check your email to verify your account."
+>>>>>>> Stashed changes
         }
     };
 }
