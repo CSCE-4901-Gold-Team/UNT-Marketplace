@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useActionState, useEffect, useState } from "react";
+import React, { useActionState, useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
@@ -12,7 +12,7 @@ import { toastService } from "@/lib/toast-service";
 import { passwordResetConfirmAction } from "@/actions/password-reset-confirm";
 import Card from "@/components/ui/Card";
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
@@ -107,5 +107,17 @@ export default function ResetPasswordPage() {
 
             <p><Link href="/login">Back to login</Link></p>
         </div>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-gray-100">
+                <div className="text-center">Loading...</div>
+            </div>
+        }>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }
