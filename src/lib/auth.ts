@@ -1,19 +1,15 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-<<<<<<< Updated upstream
-import { PrismaClient } from "@prisma/client";
 import { nextCookies } from "better-auth/next-js";
-import { emailOTP } from "better-auth/plugins";
-
-export const prisma = new PrismaClient();
-=======
 import { PrismaClient } from "@/generated/prisma";
-import { nextCookies } from "better-auth/next-js";
 import { ALLOWED_EMAIL_DOMAINS } from "@/constants/AuthConfig";
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 const prisma = new PrismaClient();
 
+// ---------------------------
+// Email Transporter
+// ---------------------------
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || "587"),
@@ -22,40 +18,44 @@ const transporter = nodemailer.createTransport({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
     },
-    tls: {
-        rejectUnauthorized: false
-    }
+    tls: { rejectUnauthorized: false },
 });
->>>>>>> Stashed changes
 
+// ---------------------------
+// BetterAuth Configuration
+// ---------------------------
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
+
+    // ---------------------------
+    // Email + Password Auth
+    // ---------------------------
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
-<<<<<<< Updated upstream
-=======
-        // Add domain validation
+
+        // Domain validation
         validateEmail: async (email: string) => {
-            const domain = email.split('@')[1];
+            const domain = email.split("@")[1];
             if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
                 return {
                     valid: false,
-                    error: `Only ${ALLOWED_EMAIL_DOMAINS.join(" or ")} email addresses are allowed`
+                    error: `Only ${ALLOWED_EMAIL_DOMAINS.join(" or ")} email addresses are allowed`,
                 };
             }
             return { valid: true };
         },
-        // Password reset configuration - MUST be inside emailAndPassword
-        sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
+
+        // Password Reset Email
+        sendResetPassword: async ({ user, url }) => {
             console.log("Sending password reset to:", user.email);
             console.log("Reset URL:", url);
 
             try {
                 await transporter.sendMail({
-                    from: process.env.SMTP_FROM_EMAIL 
+                    from: process.env.SMTP_FROM_EMAIL
                         ? `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`
                         : process.env.SMTP_USER,
                     to: user.email,
@@ -63,10 +63,10 @@ export const auth = betterAuth({
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                             <h2 style="color: #3B9842;">Reset Your Password</h2>
-                            <p>You requested to reset your password. Click the link below to set a new password:</p>
+                            <p>You requested a password reset. Click the link below to continue:</p>
                             <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3B9842; color: white; text-decoration: none; border-radius: 4px;">Reset Password</a>
-                            <p style="margin-top: 20px;">If you didn't request a password reset, you can safely ignore this email.</p>
-                            <p style="margin-top: 20px;">This link will expire in 5 minutes.</p>
+                            <p style="margin-top: 20px;">If you didn't request this, ignore this message.</p>
+                            <p style="margin-top: 20px;">This link expires in 5 minutes.</p>
                         </div>
                     `,
                 });
@@ -74,40 +74,23 @@ export const auth = betterAuth({
             } catch (error) {
                 console.error("Failed to send password reset email:", error);
             }
-        }
->>>>>>> Stashed changes
+        },
     },
+
+    // ---------------------------
+    // Email Verification
+    // ---------------------------
     emailVerification: {
         sendOnSignUp: true,
         expiresIn: 300, // 5 minutes
-<<<<<<< Updated upstream
-    },
-    passwordReset: {
-        enabled: true,
-        expiresIn: 300, // 5 minutes
-    },
-    plugins: [
-        emailOTP({
-            overrideDefaultEmailVerification: true,
-            sendVerificationOnSignUp: true,
-            async sendVerificationOTP({ email, otp, type }: { email: string; otp: string; type: "sign-in" | "email-verification" | "forget-password" }) {
-                console.log(`[EMAIL OTP] Type: ${type}, Email: ${email}, OTP: ${otp}`);
-            },
-        }),
-        nextCookies(),
-    ],
-});
 
-// Export allowed domains for validation in your sign-up action
-export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
-=======
         sendVerificationEmail: async ({ user, url }) => {
-            console.log("Sending email verification to:", user.email);
+            console.log("Sending verification email to:", user.email);
             console.log("Verification URL:", url);
 
             try {
                 await transporter.sendMail({
-                    from: process.env.SMTP_FROM_EMAIL 
+                    from: process.env.SMTP_FROM_EMAIL
                         ? `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`
                         : process.env.SMTP_USER,
                     to: user.email,
@@ -115,10 +98,9 @@ export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
                     html: `
                         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                             <h2 style="color: #3B9842;">Welcome to UNT Marketplace!</h2>
-                            <p>Thank you for signing up. Please click the link below to verify your email address:</p>
+                            <p>Please verify your email address:</p>
                             <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3B9842; color: white; text-decoration: none; border-radius: 4px;">Verify Email</a>
-                            <p style="margin-top: 20px;">If you didn't create an account, you can safely ignore this email.</p>
-                            <p style="margin-top: 20px;">This link will expire in 5 minutes.</p>
+                            <p style="margin-top: 20px;">This link expires in 5 minutes.</p>
                         </div>
                     `,
                 });
@@ -126,12 +108,22 @@ export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
             } catch (error) {
                 console.error("Failed to send verification email:", error);
             }
-        }
+        },
     },
+
+    // ---------------------------
+    // Session
+    // ---------------------------
     session: {
         expiresIn: 60 * 60 * 24 * 7, // 7 days
         updateAge: 60 * 60 * 24, // 1 day
     },
-    plugins: [nextCookies()]
+
+    // ---------------------------
+    // Plugins
+    // ---------------------------
+    plugins: [nextCookies()],
 });
->>>>>>> Stashed changes
+
+// Export allowed domains if needed
+export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];

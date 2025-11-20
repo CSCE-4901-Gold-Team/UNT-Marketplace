@@ -1,4 +1,5 @@
 "use server";
+
 import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
 import { ZodValidators } from "@/utils/ZodValidators";
@@ -7,17 +8,28 @@ import { auth } from "@/lib/auth";
 import { APIError } from "better-auth";
 import { headers } from "next/headers";
 
+// -----------------------------
+// Request Schemas
+// -----------------------------
 const SendVerificationOtpRequest = z.object({
     email: ZodValidators.email,
 });
 
 const VerifyEmailOtpRequest = z.object({
     email: ZodValidators.email,
-    otp: z.string().min(6, "OTP must be at least 6 characters").max(8, "OTP cannot be longer than 8 characters"),
+    otp: z
+        .string()
+        .min(6, "OTP must be at least 6 characters")
+        .max(8, "OTP cannot be longer than 8 characters"),
 });
 
-export async function sendVerificationOtpAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
-    // Parse and validate form data
+// -----------------------------
+// Send Verification OTP
+// -----------------------------
+export async function sendVerificationOtpAction(
+    initialState: FormResponse,
+    formData: FormData
+): Promise<FormResponse> {
     const parsedFormData = SendVerificationOtpRequest.safeParse({
         email: formData.get("email"),
     });
@@ -28,26 +40,19 @@ export async function sendVerificationOtpAction(initialState: FormResponse, form
             validationErrors: parsedFormData.error.issues,
             message: {
                 type: "error",
-                content: "One or more validation errors have occurred."
-            }
+                content: "One or more validation errors have occurred.",
+            },
         };
     }
 
-    // Send verification OTP using the emailOTP plugin
     try {
-<<<<<<< Updated upstream
-        // Use sendVerificationEmail from the emailOTP plugin
-        await auth.api.sendVerificationEmail({
-=======
-        // Try using the API method directly first
         const result = await auth.api.sendVerificationOTP({
             headers: await headers(),
->>>>>>> Stashed changes
             body: {
                 email: parsedFormData.data.email,
-            }
+            },
         });
-        
+
         console.log("[OTP Send] Success:", result);
     } catch (error: any) {
         console.error("[OTP Send] Error Details:", {
@@ -56,39 +61,36 @@ export async function sendVerificationOtpAction(initialState: FormResponse, form
             stack: error?.stack,
             name: error?.name,
         });
-        
-        // Request failed
+
         let errorMessage = "An internal service error occurred while sending verification code.";
-        
-        if (error instanceof APIError) {
-            errorMessage = error.message;
-        } else if (error?.message) {
-            errorMessage = error.message;
-        } else if (typeof error === "string") {
-            errorMessage = error;
-        }
-        
+
+        if (error instanceof APIError) errorMessage = error.message;
+        else if (error?.message) errorMessage = error.message;
+        else if (typeof error === "string") errorMessage = error;
+
         return {
             status: FormStatus.ERROR,
-            message: {
-                type: "error",
-                content: errorMessage
-            }
+            message: { type: "error", content: errorMessage },
         };
     }
 
-    // Success
     return {
         status: FormStatus.SUCCESS,
         message: {
             type: "success",
-            content: "Verification code has been sent to your email. Please check your server console logs for the code (in development mode)."
-        }
+            content:
+                "Verification code has been sent to your email. Please check your email inbox.",
+        },
     };
 }
 
-export async function verifyEmailOtpAction(initialState: FormResponse, formData: FormData): Promise<FormResponse> {
-    // Parse and validate form data
+// -----------------------------
+// Verify Email OTP
+// -----------------------------
+export async function verifyEmailOtpAction(
+    initialState: FormResponse,
+    formData: FormData
+): Promise<FormResponse> {
     const parsedFormData = VerifyEmailOtpRequest.safeParse({
         email: formData.get("email"),
         otp: formData.get("otp"),
@@ -100,38 +102,20 @@ export async function verifyEmailOtpAction(initialState: FormResponse, formData:
             validationErrors: parsedFormData.error.issues,
             message: {
                 type: "error",
-                content: "One or more validation errors have occurred."
-            }
+                content: "One or more validation errors have occurred.",
+            },
         };
     }
 
-    // Verify email with OTP
     try {
-<<<<<<< Updated upstream
-        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/auth/verify-email`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-=======
         const result = await auth.api.verifyEmailOTP({
             headers: await headers(),
             body: {
->>>>>>> Stashed changes
                 email: parsedFormData.data.email,
                 otp: parsedFormData.data.otp,
-            }),
+            },
         });
-<<<<<<< Updated upstream
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || "Verification failed");
-        }
-    } catch (error) {
-=======
-        
         console.log("[OTP Verify] Success:", result);
     } catch (error: any) {
         console.error("[OTP Verify] Error Details:", {
@@ -140,39 +124,24 @@ export async function verifyEmailOtpAction(initialState: FormResponse, formData:
             stack: error?.stack,
             name: error?.name,
         });
-        
->>>>>>> Stashed changes
-        // Verification failed
+
         let errorMessage = "Invalid verification code. Please try again.";
-        
-        if (error instanceof APIError) {
-            errorMessage = error.message;
-        } else if (error?.message) {
-            errorMessage = error.message;
-        } else if (typeof error === "string") {
-            errorMessage = error;
-        }
-        
+
+        if (error instanceof APIError) errorMessage = error.message;
+        else if (error?.message) errorMessage = error.message;
+        else if (typeof error === "string") errorMessage = error;
+
         return {
             status: FormStatus.ERROR,
-            message: {
-                type: "error",
-<<<<<<< Updated upstream
-                content: error instanceof Error ?
-                    error.message : "Invalid verification code. Please try again."
-=======
-                content: errorMessage
->>>>>>> Stashed changes
-            }
+            message: { type: "error", content: errorMessage },
         };
     }
 
-    // Success
     return {
         status: FormStatus.SUCCESS,
         message: {
             type: "success",
-            content: "Email verified successfully!"
-        }
+            content: "Email verified successfully!",
+        },
     };
 }

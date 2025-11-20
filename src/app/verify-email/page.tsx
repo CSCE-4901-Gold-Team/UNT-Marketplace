@@ -1,34 +1,20 @@
 "use client";
 
-<<<<<<< Updated upstream
-import React, { useActionState, useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import TextInput from "@/components/ui/TextInput";
-import Button from "@/components/ui/Button";
-import { sendVerificationOtpAction, verifyEmailOtpAction } from "@/actions/email-verification";
-import { FormResponse } from "@/types/FormResponse";
-import { FormStatus } from "@/constants/FormStatus";
-=======
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { auth } from "@/lib/auth";
->>>>>>> Stashed changes
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
 
-<<<<<<< Updated upstream
 function VerifyEmailContent() {
     const router = useRouter();
-=======
-export default function VerifyEmailPage() {
+    const searchParams = useSearchParams();
+    const token = searchParams.get("token");
+
     const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
     const [message, setMessage] = useState("");
->>>>>>> Stashed changes
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const token = searchParams.get("token");
 
     useEffect(() => {
         const verifyEmail = async () => {
@@ -40,10 +26,9 @@ export default function VerifyEmailPage() {
 
             try {
                 await auth.api.verifyEmail({
-                    query: {
-                        token
-                    }
+                    query: { token }
                 });
+
                 setStatus("success");
                 setMessage("Your email has been verified successfully!");
             } catch (error) {
@@ -74,10 +59,7 @@ export default function VerifyEmailPage() {
                             <p>{message}</p>
                         </Alert>
                         <div className="text-center mt-6">
-                            <Button 
-                                onClick={() => router.push("/login")}
-                                buttonSize="lg"
-                            >
+                            <Button buttonSize="lg" onClick={() => router.push("/login")}>
                                 Go to Login
                             </Button>
                         </div>
@@ -102,7 +84,6 @@ export default function VerifyEmailPage() {
             </Card>
         </div>
     );
-<<<<<<< Updated upstream
 }
 
 export default function VerifyEmailPage() {
@@ -116,6 +97,3 @@ export default function VerifyEmailPage() {
         </Suspense>
     );
 }
-=======
-}
->>>>>>> Stashed changes
