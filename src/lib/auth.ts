@@ -1,15 +1,15 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+
+import { PrismaClient } from "@/generated/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { PrismaClient } from "@prisma/client";
 import { ALLOWED_EMAIL_DOMAINS } from "@/constants/AuthConfig";
 import nodemailer from "nodemailer";
 
-const prisma = new PrismaClient();
+// Prisma client
+export const prisma = new PrismaClient();
 
-// ---------------------------
-// Email Transporter
-// ---------------------------
+// SMTP transporter for emails
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: parseInt(process.env.SMTP_PORT || "587"),
@@ -18,24 +18,21 @@ const transporter = nodemailer.createTransport({
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
     },
-    tls: { rejectUnauthorized: false },
+    tls: {
+        rejectUnauthorized: false,
+    },
 });
 
-// ---------------------------
-// BetterAuth Configuration
-// ---------------------------
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
-        provider: "postgresql",
+        provider: "postgresql", // match your database type
+        debugLogs: false,
+        usePlural: false,
+        transaction: true,
     }),
-
-    // ---------------------------
-    // Email + Password Auth
-    // ---------------------------
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: true,
-
         // Domain validation
         validateEmail: async (email: string) => {
             const domain = email.split("@")[1];
@@ -47,12 +44,10 @@ export const auth = betterAuth({
             }
             return { valid: true };
         },
-
-        // Password Reset Email
-        sendResetPassword: async ({ user, url }) => {
+        // Password reset email
+        sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
             console.log("Sending password reset to:", user.email);
             console.log("Reset URL:", url);
-
             try {
                 await transporter.sendMail({
                     from: process.env.SMTP_FROM_EMAIL
@@ -61,14 +56,14 @@ export const auth = betterAuth({
                     to: user.email,
                     subject: "Reset your UNT Marketplace password",
                     html: `
-                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                            <h2 style="color: #3B9842;">Reset Your Password</h2>
-                            <p>You requested a password reset. Click the link below to continue:</p>
-                            <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3B9842; color: white; text-decoration: none; border-radius: 4px;">Reset Password</a>
-                            <p style="margin-top: 20px;">If you didn't request this, ignore this message.</p>
-                            <p style="margin-top: 20px;">This link expires in 5 minutes.</p>
-                        </div>
-                    `,
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #3B9842;">Reset Your Password</h2>
+              <p>You requested to reset your password. Click the link below to set a new password:</p>
+              <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3B9842; color: white; text-decoration: none; border-radius: 4px;">Reset Password</a>
+              <p style="margin-top: 20px;">If you didn't request a password reset, you can safely ignore this email.</p>
+              <p style="margin-top: 20px;">This link will expire in 5 minutes.</p>
+            </div>
+          `,
                 });
                 console.log("Password reset email sent successfully");
             } catch (error) {
@@ -76,18 +71,12 @@ export const auth = betterAuth({
             }
         },
     },
-
-    // ---------------------------
-    // Email Verification
-    // ---------------------------
     emailVerification: {
         sendOnSignUp: true,
         expiresIn: 300, // 5 minutes
-
         sendVerificationEmail: async ({ user, url }) => {
-            console.log("Sending verification email to:", user.email);
+            console.log("Sending email verification to:", user.email);
             console.log("Verification URL:", url);
-
             try {
                 await transporter.sendMail({
                     from: process.env.SMTP_FROM_EMAIL
@@ -96,13 +85,14 @@ export const auth = betterAuth({
                     to: user.email,
                     subject: "Verify your UNT Marketplace account",
                     html: `
-                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                            <h2 style="color: #3B9842;">Welcome to UNT Marketplace!</h2>
-                            <p>Please verify your email address:</p>
-                            <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3B9842; color: white; text-decoration: none; border-radius: 4px;">Verify Email</a>
-                            <p style="margin-top: 20px;">This link expires in 5 minutes.</p>
-                        </div>
-                    `,
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #3B9842;">Welcome to UNT Marketplace!</h2>
+              <p>Thank you for signing up. Please click the link below to verify your email address:</p>
+              <a href="${url}" style="display: inline-block; padding: 10px 20px; background-color: #3B9842; color: white; text-decoration: none; border-radius: 4px;">Verify Email</a>
+              <p style="margin-top: 20px;">If you didn't create an account, you can safely ignore this email.</p>
+              <p style="margin-top: 20px;">This link will expire in 5 minutes.</p>
+            </div>
+          `,
                 });
                 console.log("Verification email sent successfully");
             } catch (error) {
@@ -110,20 +100,9 @@ export const auth = betterAuth({
             }
         },
     },
-
-    // ---------------------------
-    // Session
-    // ---------------------------
     session: {
         expiresIn: 60 * 60 * 24 * 7, // 7 days
         updateAge: 60 * 60 * 24, // 1 day
     },
-
-    // ---------------------------
-    // Plugins
-    // ---------------------------
     plugins: [nextCookies()],
 });
-
-// Export allowed domains if needed
-export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
