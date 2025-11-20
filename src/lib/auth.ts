@@ -9,6 +9,8 @@ import nodemailer from "nodemailer";
 // Prisma client
 export const prisma = new PrismaClient();
 
+export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
+
 // SMTP transporter for emails
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -25,7 +27,7 @@ const transporter = nodemailer.createTransport({
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
-        provider: "postgresql", // match your database type
+        provider: "postgresql",
         debugLogs: false,
         usePlural: false,
         transaction: true,
