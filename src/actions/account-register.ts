@@ -39,7 +39,6 @@ export async function registerAction(
         last_name: formData.get("last_name"),
     });
 
-<<<<<<< HEAD
     console.log("Form data parsed:", parsedFormData.success ? "Success" : "Failed");
 
 
@@ -81,7 +80,6 @@ export async function registerAction(
                 name: `${parsedFormData.data.first_name} ${parsedFormData.data.last_name}`,
             },
         });
-<<<<<<< HEAD
 
         console.log("User created successfully");
     } catch (error) {
@@ -99,10 +97,6 @@ export async function registerAction(
                     : "Not an APIError",
         });
 
-=======
-    } catch (error) {
-        // Registration failed
->>>>>>> parent of 108c590 (Password recovery (R1.3),  Account email verification (R1.2.1),  Account email domain validation (R1.2.2))
         return {
             status: FormStatus.ERROR,
             message: {
