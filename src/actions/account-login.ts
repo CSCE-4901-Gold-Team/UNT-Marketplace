@@ -26,7 +26,7 @@ export async function loginAction(initialState: FormResponse, formData: FormData
             validationErrors: parsedFormData.error.issues,
             message: {
                 type: "error",
-                content: "One or more validation errors have occurred."
+                content: "One or more validation errors have occured."
             }
         };
     }
@@ -41,25 +41,12 @@ export async function loginAction(initialState: FormResponse, formData: FormData
         });
     } catch (error) {
         // Login failed
-        if (error instanceof APIError && error.statusCode === 403) {
-            // This might be an unverified email
-            return {
-                status: FormStatus.ERROR,
-                message: {
-                    type: "error",
-                    content: "Please verify your email before logging in. Check your spam or request a new verification email."
-                },
-                // Add a flag to show the resend option
-                requiresVerification: true
-            };
-        }
-        
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
                 content: error instanceof APIError ?
-                    error.message : "An internal service error occurred during login."
+                    error.message : "An internal service error occured during login."
             }
         };
     }

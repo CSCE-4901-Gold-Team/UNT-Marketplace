@@ -21,9 +21,8 @@ const RegisterRequest = z.object({
     ZodValidators.passwordConfirmation.params
 );
 
-// -----------------------------
 // Register Action
-// -----------------------------
+// ----------------------------
 export async function registerAction(
     initialState: FormResponse,
     formData: FormData
@@ -40,10 +39,11 @@ export async function registerAction(
         last_name: formData.get("last_name"),
     });
 
+<<<<<<< HEAD
     console.log("Form data parsed:", parsedFormData.success ? "Success" : "Failed");
 
+
     if (!parsedFormData.success) {
-        console.log("Validation errors:", parsedFormData.error.issues);
         return {
             status: FormStatus.ERROR,
             validationErrors: parsedFormData.error.issues,
@@ -72,9 +72,7 @@ export async function registerAction(
 
     console.log("Attempting to create user:", parsedFormData.data.email);
 
-    // -----------------------------
     // Create User with BetterAuth
-    // -----------------------------
     try {
         await auth.api.signUpEmail({
             body: {
@@ -83,6 +81,7 @@ export async function registerAction(
                 name: `${parsedFormData.data.first_name} ${parsedFormData.data.last_name}`,
             },
         });
+<<<<<<< HEAD
 
         console.log("User created successfully");
     } catch (error) {
@@ -100,6 +99,10 @@ export async function registerAction(
                     : "Not an APIError",
         });
 
+=======
+    } catch (error) {
+        // Registration failed
+>>>>>>> parent of 108c590 (Password recovery (R1.3),  Account email verification (R1.2.1),  Account email domain validation (R1.2.2))
         return {
             status: FormStatus.ERROR,
             message: {

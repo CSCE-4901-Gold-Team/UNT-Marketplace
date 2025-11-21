@@ -32,25 +32,11 @@ export default function SignUpPage() {
             toastService.toast(registerFormResponse.message.content, registerFormResponse.message.type);
         }
         
-        // Redirect user on success
+        // Redirect user on success to verification page
         if (registerFormResponse.status === FormStatus.SUCCESS) {
-            // Don't redirect immediately, let the user see the message
-            // They'll be redirected after clicking the link in their email
+            router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
     }, [registerFormResponse, router]);
-
-    // Update the success alert
-    {registerFormResponse.status === FormStatus.SUCCESS &&
-        <Alert alertType="success">
-            <h3>Registration success!</h3>
-            <p>Please check your email to verify your account before logging in.</p>
-            <div className="mt-3">
-                <Link href="/resend-verification" className="text-green-700 hover:underline">
-                    Didn't receive an email? Resend verification
-                </Link>
-            </div>
-        </Alert>
-    }
     
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
@@ -101,11 +87,7 @@ export default function SignUpPage() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             validationErrors={registerFormResponse.validationErrors}
-                            placeholder="example@my.unt.edu"
                         />
-                        <p className="text-sm text-gray-500 mt-1">
-                            Only @my.unt.edu email addresses are allowed
-                        </p>
                     </div>
 
                     <div>
