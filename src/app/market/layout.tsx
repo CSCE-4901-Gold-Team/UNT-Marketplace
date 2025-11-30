@@ -139,7 +139,7 @@ export default async function MarketLayout({
             </div>
 
             {/* Main Content */}
-            <div id="marketContent" className="flex flex-col grow ml-64">
+            <div id="marketContent" className="flex flex-col grow">
                 {children}
             </div>
         </div>
