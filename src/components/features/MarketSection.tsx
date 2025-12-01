@@ -1,16 +1,16 @@
 ﻿"use client"
 
-import {ListingObject} from "@/models/ListingObject";
-import {use, useState} from "react";
+import { ListingObject } from "@/models/ListingObject";
+import { use, useState } from "react";
 import ListingsContainer from "@/components/ui/ListingsContainer";
 import TextInput from "@/components/ui/TextInput";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
-import {getListings} from "@/actions/listing-actions";
+import { getListings } from "@/actions/listing-actions";
 import Button from "@/components/ui/Button";
-import {FaMagnifyingGlass} from "react-icons/fa6";
+import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
-import {ListingFilters} from "@/types/ListingFilters";
-import {$Enums} from "@/generated/prisma";
+import { ListingFilters } from "@/types/ListingFilters";
+import { $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 
 export default function MarketSection({
@@ -44,9 +44,9 @@ export default function MarketSection({
                 <div className="market-search-container">
                     <div className="flex">
                         <TextInput inputClasses="rounded-r-none border-r-0"
-                                   onChange={e => setSearchQuery(e.target.value)}
-                                   onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
-                                   placeholder="Search..."
+                            onChange={e => setSearchQuery(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
+                            placeholder="Search..."
                         />
                         <Button buttonStyle="icon" buttonClasses="rounded-l-none" onClick={searchListings}><FaMagnifyingGlass /></Button>
                     </div>

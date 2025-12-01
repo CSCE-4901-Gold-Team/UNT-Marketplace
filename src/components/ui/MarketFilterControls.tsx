@@ -1,12 +1,12 @@
 ﻿"use client"
 
-import React, {SetStateAction, useState} from "react";
-import {ListingFilters} from "@/types/ListingFilters";
+import React, { SetStateAction, useState } from "react";
+import { ListingFilters } from "@/types/ListingFilters";
 import CurrencyInput from "@/components/ui/CurrencyInput";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
-import {FaFilter} from "react-icons/fa";
-import {$Enums} from "@/generated/prisma";
+import { FaFilter } from "react-icons/fa";
+import { $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 
 export default function MarketFilterControls({
@@ -34,7 +34,7 @@ export default function MarketFilterControls({
                 </Button>
             </div>
 
-            { showFilters &&
+            {showFilters &&
                 (<div className="listing-filter-controls w-72 p-5 rounded-lg border border-green-700 mt-3 absolute z-10 bg-white/90 backdrop-blur-lg right-0">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-1">
@@ -74,7 +74,7 @@ export default function MarketFilterControls({
                             />
                         </div>
                         <div className="col-span-2">
-                            { userRole === UserRole.FACULTY || userRole === UserRole.ADMIN && (
+                            {userRole === UserRole.FACULTY || userRole === UserRole.ADMIN && (
                                 <TextInput
                                     inputLabel="Faculty-Only Listings"
                                     type="checkbox"
@@ -106,7 +106,7 @@ export default function MarketFilterControls({
 
                     </div>
                 </div>
-            )}
+                )}
         </div>
     );
 }

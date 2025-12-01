@@ -1,8 +1,8 @@
-﻿import {PrismaClient} from '../src/generated/prisma';
-import { $Enums } from "../src/generated/prisma";
+﻿import { PrismaClient } from '@prisma/client';
+import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
-import {auth} from "../src/lib/auth";
+import { auth } from "../src/lib/auth";
 
 const prisma = new PrismaClient()
 
@@ -64,26 +64,26 @@ async function main() {
      * Categories
      */
     const catTextbooks = await prisma.category.upsert({
-        where: {name: "Textbooks"},
-        create: {name: "Textbooks", slug: "textbooks"},
+        where: { name: "Textbooks" },
+        create: { name: "Textbooks", slug: "textbooks" },
         update: {}
     });
 
     const catSupplies = await prisma.category.upsert({
-        where: {name: "Supplies"},
-        create: {name: "Supplies", slug: "supplies"},
+        where: { name: "Supplies" },
+        create: { name: "Supplies", slug: "supplies" },
         update: {}
     });
 
     const catLaptops = await prisma.category.upsert({
-        where: {name: "Laptops"},
-        create: {name: "Laptops", slug: "laptops"},
+        where: { name: "Laptops" },
+        create: { name: "Laptops", slug: "laptops" },
         update: {}
     });
 
     const catNotes = await prisma.category.upsert({
-        where: {name: "Notes"},
-        create: {name: "Notes", slug: "notes"},
+        where: { name: "Notes" },
+        create: { name: "Notes", slug: "notes" },
         update: {}
     });
 
@@ -98,12 +98,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userJohn?.user.id,
-            categories: {connect: [{id: catTextbooks.id}]},
+            categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -117,12 +117,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userEmma?.user.id,
-            categories: {connect: [{id: catSupplies.id}]},
+            categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -136,12 +136,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userMichael?.user.id,
-            categories: {connect: [{id: catLaptops.id}]},
+            categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -155,12 +155,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userSophia?.user.id,
-            categories: {connect: [{id: catNotes.id}]},
+            categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -174,12 +174,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userLiam?.user.id,
-            categories: {connect: [{id: catTextbooks.id}]},
+            categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -193,12 +193,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userEmma?.user.id,
-            categories: {connect: [{id: catSupplies.id}]},
+            categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -212,12 +212,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userJohn?.user.id,
-            categories: {connect: [{id: catLaptops.id}]},
+            categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -231,12 +231,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userSophia?.user.id,
-            categories: {connect: [{id: catTextbooks.id}, {id: catNotes.id}]},
+            categories: { connect: [{ id: catTextbooks.id }, { id: catNotes.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -250,12 +250,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
             ownerId: userMichael?.user.id,
-            categories: {connect: [{id: catSupplies.id}]},
+            categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -269,12 +269,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.ARCHIVED,
             ownerId: userLiam?.user.id,
-            categories: {connect: [{id: catLaptops.id}]},
+            categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -288,12 +288,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.SOLD,
             ownerId: userEmma?.user.id,
-            categories: {connect: [{id: catNotes.id}]},
+            categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -307,12 +307,12 @@ async function main() {
             isProfessorOnly: false,
             listingStatus: ListingStatus.DRAFT,
             ownerId: userJohn?.user.id,
-            categories: {connect: [{id: catSupplies.id}]},
+            categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                    {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
