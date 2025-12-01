@@ -90,14 +90,16 @@ export async function getUserStatus(userId: string): Promise<{status: number, us
     }
 }
 
+
 /**
- * Suspends a user, suspension expiration date is required. If permanent suspension is
- * needed then a ban should be applied.
+ * Internal helper function to apply UserStatuses
  *
  * @param {string} userId The ID of the user to suspend
+ * @param {UserStatusType} userStatus The UserStatusType to apply to the user
  * @param {Date} expires Required expiration date of suspension
+ * @return {Promise<{ status: number }>} Status representing HTTP response code
  */
-export async function suspendUser(userId: string, expires: Date): Promise<{ status: number }> {
+async function createUserStatus(userId: string, userStatus: UserStatusType, expires: Date | null): Promise<{ status: number }> {
     // Validate session
     const session = await auth.api.getSession({
         headers: await headers()
@@ -119,7 +121,7 @@ export async function suspendUser(userId: string, expires: Date): Promise<{ stat
     const createdUserStatus = await prisma.userStatus.create({
         data: {
             userId: userId,
-            status: UserStatusType.SUSPENDED,
+            status: userStatus,
             expiresAt: expires
         }
     });
@@ -127,4 +129,36 @@ export async function suspendUser(userId: string, expires: Date): Promise<{ stat
     return {
         status: !!createdUserStatus ? 200 : 500,
     }
+}
+
+/**
+ * Suspends a user, suspension expiration date is required. If permanent suspension is
+ * needed then a ban should be applied.
+ *
+ * @param {string} userId The ID of the user to suspend
+ * @param {Date} expires Required expiration date of suspension
+ * @return {Promise<{ status: number }>} Status representing HTTP response code
+ */
+export async function suspendUser(userId: string, expires: Date): Promise<{ status: number }> {
+    return await createUserStatus(userId, UserStatusType.SUSPENDED, expires);
+}
+
+/**
+ * Bans a user. Bans are permanent without manual reversal.
+ *
+ * @param {string} userId The ID of the user to ban
+ * @return {Promise<{ status: number }>} Status representing HTTP response code
+ */
+export async function banUser(userId: string): Promise<{ status: number }> {
+    return await createUserStatus(userId, UserStatusType.BANNED, null);
+}
+
+/**
+ * Sets a user's status to Active, this overrides any current bans or suspensions
+ *
+ * @param {string} userId The ID of the user to set the active status for
+ * @return {Promise<{ status: number }>} Status representing HTTP response code
+ */
+export async function setUserActive(userId: string): Promise<{ status: number }> {
+    return await createUserStatus(userId, UserStatusType.ACTIVE, null);
 }
