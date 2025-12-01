@@ -1,11 +1,12 @@
 "use client"
-import { useState } from "react";
-import Link from "next/link";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { $Enums } from "@prisma/client";
+import { getAdminStats, getRecentlyListedItems, getFirstListingsAwaitingApproval, getAllUsers, approveFirstListing, rejectFirstListing } from "@/actions/admin-actions";
+import { updateAdminUser } from "@/actions/user-actions";
 
 interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
     role: string;
@@ -14,22 +15,108 @@ interface User {
     reports: number;
 }
 
+interface RecentListing {
+    id: string;
+    title: string;
+    seller: string;
+    sellerName: string;
+    category: string;
+    price: string;
+    date: string;
+    createdAt: Date;
+}
+
+interface PendingListing {
+    id: string;
+    title: string;
+    seller: string;
+    sellerName: string;
+    category: string;
+    price: string;
+    date: string;
+}
+
 export default function Admin({ userRole }: { userRole: string | null }) {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [stats, setStats] = useState({ totalUsers: 0, activeListings: 0, pendingReports: 0, totalTransactions: 0 });
+    const [recentListings, setRecentListings] = useState<RecentListing[]>([]);
+    const [pendingListings, setPendingListings] = useState<PendingListing[]>([]);
+    const [users, setUsers] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     useEffect(() => {
         if (userRole != "ADMIN") {
             router.push("/market");
+            return;
         }
+
+        // Fetch all data in parallel
+        const fetchData = async () => {
+            try {
+                const [statsData, recentData, pendingData, usersData] = await Promise.all([
+                    getAdminStats(),
+                    getRecentlyListedItems(5),
+                    getFirstListingsAwaitingApproval(10),
+                    getAllUsers(50)
+                ]);
+
+                setStats(statsData);
+                setRecentListings(recentData);
+                setPendingListings(pendingData);
+                setUsers(usersData);
+            } catch (error) {
+                console.error("Error loading admin data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
     }, [userRole, router]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
-        return;
+        if (selectedUser) {
+            const { name, value } = e.target;
+            setSelectedUser({ ...selectedUser, [name]: value });
+        }
     }
 
     function handleSave() {
-        return;
+        if (!selectedUser) return;
+        
+        const saveUser = async () => {
+            try {
+                await updateAdminUser(selectedUser.id, {
+                    name: selectedUser.name,
+                    email: selectedUser.email,
+                    role: selectedUser.role as $Enums.UserRole
+                });
+                setSelectedUser(null);
+            } catch (error) {
+                console.error("Error saving user:", error);
+            }
+        };
+        
+        saveUser();
+    }
+
+    async function handleApproveListing(listingId: string) {
+        try {
+            await approveFirstListing(listingId);
+            setPendingListings(pendingListings.filter(l => l.id !== listingId));
+        } catch (error) {
+            console.error("Error approving listing:", error);
+        }
+    }
+
+    async function handleRejectListing(listingId: string) {
+        try {
+            await rejectFirstListing(listingId);
+            setPendingListings(pendingListings.filter(l => l.id !== listingId));
+        } catch (error) {
+            console.error("Error rejecting listing:", error);
+        }
     }
 
     if (userRole !== "ADMIN") return null;
@@ -45,87 +132,59 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             <div className="grid grid-cols-4 gap-6">
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Total Users</div>
-                    <div className="text-3xl font-black text-green">1,247</div>
-                    <div className="text-xs text-gray-400 mt-1">+12% this month</div>
+                    <div className="text-3xl font-black text-green">{loading ? "-" : stats.totalUsers.toLocaleString()}</div>
+                    <div className="text-xs text-gray-400 mt-1">Registered on platform</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Active Listings</div>
-                    <div className="text-3xl font-black text-green">342</div>
-                    <div className="text-xs text-gray-400 mt-1">+8% this month</div>
+                    <div className="text-3xl font-black text-green">{loading ? "-" : stats.activeListings}</div>
+                    <div className="text-xs text-gray-400 mt-1">Currently available</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="text-gray-500 text-sm font-semibold mb-2">Pending Reports</div>
-                    <div className="text-3xl font-black text-orange-500">7</div>
-                    <div className="text-xs text-gray-400 mt-1">Requires attention</div>
+                    <div className="text-gray-500 text-sm font-semibold mb-2">Pending Approvals</div>
+                    <div className="text-3xl font-black text-orange-500">{loading ? "-" : pendingListings.length}</div>
+                    <div className="text-xs text-gray-400 mt-1">First listings to review</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Total Transactions</div>
-                    <div className="text-3xl font-black text-green">589</div>
-                    <div className="text-xs text-gray-400 mt-1">+15% this month</div>
+                    <div className="text-3xl font-black text-green">{loading ? "-" : stats.totalTransactions}</div>
+                    <div className="text-xs text-gray-400 mt-1">Completed sales</div>
                 </div>
             </div>
 
             {/* Recent Activity */}
             <div>
-                <h2 className="text-2xl font-bold mb-4">Recent Activity</h2>
+                <h2 className="text-2xl font-bold mb-4">Recently Listed Items</h2>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="flex flex-col gap-4">
-                        <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 text-green">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>
+                        {loading ? (
+                            <div className="text-gray-500 text-center py-8">Loading...</div>
+                        ) : recentListings.length === 0 ? (
+                            <div className="text-gray-500 text-center py-8">No recent listings</div>
+                        ) : (
+                            recentListings.map((listing, index) => (
+                                <div
+                                    key={listing.id}
+                                    className={`flex items-center justify-between py-3 px-2 ${
+                                        index !== recentListings.length - 1 ? 'border-b border-gray-100' : ''
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4 flex-1">
+                                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 text-green">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="font-semibold">{listing.title}</div>
+                                            <div className="text-sm text-gray-500">{listing.price} · {listing.category}</div>
+                                            <div className="text-xs text-gray-400">by {listing.sellerName} ({listing.seller})</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-sm text-gray-400">{listing.date}</div>
                                 </div>
-                                <div>
-                                    <div className="font-semibold">New listing created</div>
-                                    <div className="text-sm text-gray-500">Foundations of Cybersecurity textbook - $85</div>
-                                </div>
-                            </div>
-                            <div className="text-sm text-gray-400">2 min ago</div>
-                        </div>
-                        <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 text-blue-600">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <div className="font-semibold">New user registered</div>
-                                    <div className="text-sm text-gray-500">john.doe@unt.edu</div>
-                                </div>
-                            </div>
-                            <div className="text-sm text-gray-400">15 min ago</div>
-                        </div>
-                        <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 text-orange-500">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <div className="font-semibold">Listing reported</div>
-                                    <div className="text-sm text-gray-500">MacBook Pro 2019 - Suspicious</div>
-                                </div>
-                            </div>
-                            <div className="text-sm text-gray-400">1 hour ago</div>
-                        </div>
-                        <div className="flex items-center justify-between py-3">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 text-green">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <div className="font-semibold">Transaction completed</div>
-                                    <div className="text-sm text-gray-500">Calculus textbook - $45</div>
-                                </div>
-                            </div>
-                            <div className="text-sm text-gray-400">3 hours ago</div>
-                        </div>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -144,51 +203,36 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                     </div>
                     <div className="h-px my-3 bg-gray-200" />
 
-                    {[
-                        {
-                            id: 1,
-                            title: "Intro to Programming Textbook",
-                            seller: "alex.johnson@unt.edu",
-                            category: "Books",
-                            price: "$45",
-                            date: "Oct 29, 2025",
-                        },
-                        {
-                            id: 2,
-                            title: "TI-84 Calculator",
-                            seller: "maria.gomez@unt.edu",
-                            category: "Electronics",
-                            price: "$60",
-                            date: "Oct 28, 2025",
-                        },
-                        {
-                            id: 3,
-                            title: "Dorm Mini Fridge",
-                            seller: "sam.lee@unt.edu",
-                            category: "Appliances",
-                            price: "$75",
-                            date: "Oct 27, 2025",
-                        },
-                    ].map((listing) => (
-                        <div
-                            key={listing.id}
-                            className="grid grid-cols-6 py-3 items-center hover:bg-green-50 rounded-xl px-2 transition"
-                        >
-                            <div>{listing.title}</div>
-                            <div>{listing.seller}</div>
-                            <div>{listing.category}</div>
-                            <div>{listing.price}</div>
-                            <div>{listing.date}</div>
-                            <div className="flex gap-2">
-                                <button className="px-3 py-1 bg-green text-white rounded-xl text-sm hover:opacity-90 transition">
-                                    Approve
-                                </button>
-                                <button className="px-3 py-1 bg-red-500 text-white rounded-xl text-sm hover:opacity-90 transition">
-                                    Reject
-                                </button>
+                    {loading ? (
+                        <div className="text-gray-500 text-center py-8">Loading...</div>
+                    ) : pendingListings.length === 0 ? (
+                        <div className="text-gray-500 text-center py-8">No pending listings</div>
+                    ) : (
+                        pendingListings.map((listing) => (
+                            <div
+                                key={listing.id}
+                                className="grid grid-cols-6 py-3 items-center hover:bg-green-50 rounded-xl px-2 transition"
+                            >
+                                <div className="truncate" title={listing.title}>{listing.title}</div>
+                                <div className="truncate text-sm" title={listing.seller}>{listing.seller}</div>
+                                <div>{listing.category}</div>
+                                <div>{listing.price}</div>
+                                <div>{listing.date}</div>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => handleApproveListing(listing.id)}
+                                        className="px-3 py-1 bg-green text-white rounded-xl text-sm hover:opacity-90 transition">
+                                        Approve
+                                    </button>
+                                    <button 
+                                        onClick={() => handleRejectListing(listing.id)}
+                                        className="px-3 py-1 bg-red-500 text-white rounded-xl text-sm hover:opacity-90 transition">
+                                        Reject
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))
+                    )}
                 </div>
             </div>
             {/*User Directory*/}
@@ -206,24 +250,26 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                     </div>
                     <div className="h-px my-3 bg-gray-200" />
 
-                    {[
-                        { id: 1, name: "John Doe", email: "john.doe@unt.edu", role: "User", transactions: 5, listings: 2, reports: 0 },
-                        { id: 2, name: "Jane Smith", email: "jane.smith@unt.edu", role: "Admin", transactions: 12, listings: 4, reports: 1 },
-                        { id: 3, name: "David Lin", email: "david.lin@unt.edu", role: "User", transactions: 3, listings: 1, reports: 0 },
-                    ].map((user) => (
-                        <div
-                            key={user.id}
-                            onClick={() => setSelectedUser(user)}
-                            className="grid grid-cols-6 py-3 cursor-pointer hover:bg-green-50 rounded-xl px-2 transition"
-                        >
-                            <div>{user.name}</div>
-                            <div>{user.email}</div>
-                            <div>{user.role}</div>
-                            <div>{user.transactions}</div>
-                            <div>{user.listings}</div>
-                            <div>{user.reports}</div>
-                        </div>
-                    ))}
+                    {loading ? (
+                        <div className="text-gray-500 text-center py-8">Loading...</div>
+                    ) : users.length === 0 ? (
+                        <div className="text-gray-500 text-center py-8">No users found</div>
+                    ) : (
+                        users.map((user) => (
+                            <div
+                                key={user.id}
+                                onClick={() => setSelectedUser(user)}
+                                className="grid grid-cols-6 py-3 cursor-pointer hover:bg-green-50 rounded-xl px-2 transition items-center"
+                            >
+                                <div className="truncate">{user.name}</div>
+                                <div className="truncate text-sm">{user.email}</div>
+                                <div>{user.role}</div>
+                                <div>{user.transactions}</div>
+                                <div>{user.listings}</div>
+                                <div>{user.reports}</div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
@@ -259,9 +305,9 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-xl p-2 mt-1"
                                 >
-                                    <option>Student</option>
-                                    <option>Faculty</option>
-                                    <option>Admin</option>
+                                    <option>STUDENT</option>
+                                    <option>FACULTY</option>
+                                    <option>ADMIN</option>
                                 </select>
                             </label>
                         </div>
