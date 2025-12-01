@@ -17,20 +17,21 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-// -------- Core Auth/Identity --------
+// -------- User Schema --------
 
 model User {
-    id            String    @id
-    email         String    @unique
+    id            String       @id
+    email         String       @unique
     name          String
-    emailVerified Boolean   @default(false)
+    emailVerified Boolean      @default(false)
     image         String?
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @default(now()) @updatedAt
+    createdAt     DateTime     @default(now())
+    updatedAt     DateTime     @default(now()) @updatedAt
     sessions      Session[]
     accounts      Account[]
     listings      Listing[]
-    role          UserRole  @default(STUDENT)
+    role          UserRole     @default(STUDENT)
+    statuses      UserStatus[]
 
     @@map("user")
 }
@@ -39,6 +40,23 @@ enum UserRole {
     ADMIN
     STUDENT
     FACULTY
+}
+
+model UserStatus {
+    id        Int            @id @default(autoincrement())
+    status    UserStatusType
+    userId    String
+    expiresAt DateTime?
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @default(now()) @updatedAt
+
+    user User @relation(fields: [userId], references: [id])
+}
+
+enum UserStatusType {
+    ACTIVE
+    SUSPENDED
+    BANNED
 }
 
 // -------- Marketplace --------
@@ -87,12 +105,6 @@ model Category {
     slug     String    @unique
     listings Listing[]
 }
-
-// -------- Future Features (to be added in separate PRs) --------
-// - Messaging system (Conversation, Message)
-// - Reviews and ratings (Review)
-// - Reports and moderation (Report)
-// - Notifications (Notification)
 
 // -------- Auth / Identity Management --------
 
