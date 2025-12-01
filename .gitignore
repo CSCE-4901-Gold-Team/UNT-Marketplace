@@ -45,3 +45,5 @@ src/generated/prisma
 generated/prisma
 
 .idea/dataSources.xml
+
+/public/images/uploads/*
