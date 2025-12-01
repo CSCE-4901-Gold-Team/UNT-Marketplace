@@ -40,10 +40,10 @@ export async function getCurrentUserRole(): Promise<$Enums.UserRole> {
  * Retrieves and returns a User's current UserStatusType
  *
  * @param {string} userId The user ID to retrieve UserStatusType for
- * @return {Promise<{status: boolean, userStatus?: UserStatusType}>}
- *         Boolean status representing function success, and an optional UserStatusType
+ * @return {Promise<{status: number, userStatus?: UserStatusType}>}
+ *         Number status representing HTTP response code, and an optional UserStatusType
  */
-export async function getUserStatus(userId: string): Promise<{status: boolean, userStatus: UserStatusType | null}> {
+export async function getUserStatus(userId: string): Promise<{status: number, userStatus: UserStatusType | null}> {
     // Validate session
     const session = await auth.api.getSession({
         headers: await headers()
@@ -57,7 +57,7 @@ export async function getUserStatus(userId: string): Promise<{status: boolean, u
     const currentUserRole = await getCurrentUserRole();
     if (!currentUserRole || currentUserRole !== UserRole.ADMIN ) {
         return {
-            status: false,
+            status: 403,
             userStatus: null
         }
     }
@@ -76,7 +76,6 @@ export async function getUserStatus(userId: string): Promise<{status: boolean, u
             ]
         },
         orderBy: {
-            expiresAt: { sort: "desc", nulls: "first" },
             createdAt: "desc"
         },
         select: {
@@ -86,7 +85,46 @@ export async function getUserStatus(userId: string): Promise<{status: boolean, u
 
     // Return retrieved status, or active type if no status is found
     return {
-        status: true,
+        status: 200,
         userStatus: userStatus?.status ?? UserStatusType.ACTIVE
+    }
+}
+
+/**
+ * Suspends a user, suspension expiration date is required. If permanent suspension is
+ * needed then a ban should be applied.
+ *
+ * @param {string} userId The ID of the user to suspend
+ * @param {Date} expires Required expiration date of suspension
+ */
+export async function suspendUser(userId: string, expires: Date): Promise<{ status: number }> {
+    // Validate session
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    // Get role of current user and validate
+    const currentUserRole = await getCurrentUserRole();
+    if (!currentUserRole || currentUserRole !== UserRole.ADMIN ) {
+        return {
+            status: 403
+        }
+    }
+
+    // Insert UserStatus Record
+    const createdUserStatus = await prisma.userStatus.create({
+        data: {
+            userId: userId,
+            status: UserStatusType.SUSPENDED,
+            expiresAt: expires
+        }
+    });
+
+    return {
+        status: !!createdUserStatus ? 200 : 500,
     }
 }
