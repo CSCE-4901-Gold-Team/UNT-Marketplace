@@ -65,6 +65,12 @@ export async function createListingAction(_initialState: FormResponse, formData:
     let newListingId: string;
 
     try {
+        // Check if this is the user's first listing
+        const existingListingsCount = await prisma.listing.count({
+            where: { ownerId: session.user.id }
+        });
+        const isFirstListing = existingListingsCount === 0;
+
         // First, create any new categories if provided (or find existing ones)
         const newCategoryIds: number[] = [];
         if (parsedFormData.data.newCategoryNames && parsedFormData.data.newCategoryNames.length > 0) {
@@ -106,6 +112,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 description: parsedFormData.data.description,
                 price: parseFloat(parsedFormData.data.price),
                 isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+                listingStatus: isFirstListing ? "DRAFT" : "AVAILABLE",
                 ownerId: session.user.id,
                 categories: {
                     connect: allCategoryIds.map(id => ({ id }))
