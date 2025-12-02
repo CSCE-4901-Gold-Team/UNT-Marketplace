@@ -46,7 +46,7 @@ export async function updateAdminUser(userId: string, data: { name?: string; ema
     }
 
     const userRole = await getCurrentUserRole();
-    if (userRole !== "ADMIN") {
+    if (userRole !== UserRole.ADMIN) {
         throw new Error("Unauthorized");
     }
 
