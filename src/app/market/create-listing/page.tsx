@@ -21,7 +21,7 @@ export default function CreateListing() {
     const [selectedImage, setSelectedImage] = useState<string>("");
 
     return (
-        <main className="min-h-screen flex items-start justify-center px-20 py-10">
+        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12">
             <div className="w-full max-w-1xl">
                 <h1 className="text-4xl mb-6">Create New Listing</h1>
 

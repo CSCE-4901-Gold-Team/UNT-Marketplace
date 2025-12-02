@@ -101,7 +101,7 @@ export default function MarketSection({
     return (
         <div id="marketSectionWrapper" className="flex flex-col gap-6">
 
-            <div className="market-controls flex justify-between items-center">
+            <div className="market-controls flex gap-6 justify-between items-center">
                 <div className="market-search-container">
                     <div className="flex">
                         <TextInput inputClasses="rounded-r-none border-r-0"
