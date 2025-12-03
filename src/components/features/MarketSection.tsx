@@ -117,7 +117,7 @@ export default function MarketSection({
                 <div className="market-filter-container flex gap-4 items-center">
                     {userRole === "ADMIN" && (
                         <Link href="/admin">
-                            <Button buttonStyle="secondary" title="Admin Panel">
+                            <Button buttonStyle="bg" title="Admin Panel">
                                 Admin Panel
                             </Button>
                         </Link>
