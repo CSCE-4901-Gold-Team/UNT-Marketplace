@@ -6,7 +6,7 @@ import CurrencyInput from "@/components/ui/CurrencyInput";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
 import { FaFilter } from "react-icons/fa";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/generated/prisma";
 import UserRole = $Enums.UserRole;
 import {DateHelper} from "@/utils/DateHelper";
 
