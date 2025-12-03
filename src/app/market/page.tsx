@@ -7,7 +7,7 @@ import MarketSuspense from "@/components/suspense/MarketSuspense";
 import {getCurrentUserRole} from "@/actions/user-actions";
 
 export default async function MarketPage() {
-    const listingsResponse = getListings();
+    const listingsResponse = getListings("", {}, 0, 12);
     const userRole = getCurrentUserRole();
 
     return (
