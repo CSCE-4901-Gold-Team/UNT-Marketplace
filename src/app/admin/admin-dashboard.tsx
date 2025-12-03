@@ -129,7 +129,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-5 gap-6">
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Total Users</div>
                     <div className="text-3xl font-black text-green">{loading ? "-" : stats.totalUsers.toLocaleString()}</div>
@@ -144,6 +144,11 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                     <div className="text-gray-500 text-sm font-semibold mb-2">Pending Approvals</div>
                     <div className="text-3xl font-black text-orange-500">{loading ? "-" : pendingListings.length}</div>
                     <div className="text-xs text-gray-400 mt-1">First listings to review</div>
+                </div>
+                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
+                    <div className="text-gray-500 text-sm font-semibold mb-2">Pending Reports</div>
+                    <div className="text-3xl font-black text-red-500">{loading ? "-" : stats.pendingReports}</div>
+                    <div className="text-xs text-gray-400 mt-1">Reported listings</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Total Transactions</div>
@@ -342,7 +347,9 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                             <div className="text-xl font-bold">Review Users</div>
                         </div>
                     </div>
-                    <div className="bg-green rounded-3xl h-[200px] flex items-center justify-center text-white cursor-pointer hover:shadow-xl transition-shadow">
+                    <div 
+                        onClick={() => router.push("/admin/reports")}
+                        className="bg-green rounded-3xl h-[200px] flex items-center justify-center text-white cursor-pointer hover:shadow-xl transition-shadow">
                         <div className="text-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-12 mx-auto mb-3">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />

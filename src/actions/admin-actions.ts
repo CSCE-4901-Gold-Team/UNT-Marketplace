@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { PrismaClient, ListingStatus } from "@prisma/client";
+import { PrismaClient, ListingStatus, ReportStatus, UserStatusType } from "@prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
@@ -28,8 +28,9 @@ export async function getAdminStats() {
         prisma.listing.count({
             where: { listingStatus: ListingStatus.AVAILABLE }
         }),
-        // Report model to be added in future PR - currently returns 0
-        Promise.resolve(0),
+        prisma.report.count({
+            where: { status: ReportStatus.PENDING }
+        }),
         // Transaction model to be added in future PR - currently returns 0
         Promise.resolve(0)
     ]);
@@ -215,6 +216,191 @@ export async function rejectFirstListing(listingId: string) {
     await prisma.listing.update({
         where: { id: listingId },
         data: { listingStatus: ListingStatus.ARCHIVED }
+    });
+
+    return { success: true };
+}
+
+export async function getPendingListingReports(limit: number = 50) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const reports = await prisma.report.findMany({
+        where: {
+            status: ReportStatus.PENDING
+        },
+        orderBy: {
+            createdAt: 'desc'
+        },
+        take: limit,
+        include: {
+            listing: {
+                select: {
+                    id: true,
+                    title: true,
+                    description: true,
+                    price: true,
+                    ownerId: true,
+                    owner: {
+                        select: {
+                            id: true,
+                            name: true,
+                            email: true
+                        }
+                    },
+                    images: {
+                        select: {
+                            url: true
+                        },
+                        take: 1
+                    }
+                }
+            },
+            reporter: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true
+                }
+            }
+        }
+    });
+
+    return reports.map(report => ({
+        id: report.id,
+        listingId: report.listing.id,
+        listingTitle: report.listing.title,
+        listingDescription: report.listing.description,
+        listingPrice: `$${report.listing.price.toNumber().toFixed(2)}`,
+        listingImage: report.listing.images[0]?.url || null,
+        listingOwnerId: report.listing.ownerId,
+        listingOwnerName: report.listing.owner.name,
+        listingOwnerEmail: report.listing.owner.email,
+        reporterId: report.reporter.id,
+        reporterName: report.reporter.name,
+        reporterEmail: report.reporter.email,
+        reason: report.reason,
+        details: report.details,
+        status: report.status,
+        createdAt: report.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    }));
+}
+
+export async function getReportById(reportId: string) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const report = await prisma.report.findUnique({
+        where: { id: reportId },
+        include: {
+            listing: {
+                include: {
+                    owner: true,
+                    images: true,
+                    categories: true
+                }
+            },
+            reporter: true
+        }
+    });
+
+    if (!report) {
+        throw new Error("Report not found");
+    }
+
+    return report;
+}
+
+export async function deleteListing(listingId: string) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    await prisma.listing.update({
+        where: { id: listingId },
+        data: { listingStatus: ListingStatus.ARCHIVED }
+    });
+
+    return { success: true };
+}
+
+export async function suspendUser(userId: string) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    await prisma.userStatus.create({
+        data: {
+            userId,
+            status: UserStatusType.SUSPENDED
+        }
+    });
+
+    return { success: true };
+}
+
+export async function resolveReport(reportId: string, action: 'RESOLVED' | 'DISMISSED') {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const reportStatus = action === 'RESOLVED' ? ReportStatus.RESOLVED : ReportStatus.DISMISSED;
+
+    await prisma.report.update({
+        where: { id: reportId },
+        data: { status: reportStatus }
     });
 
     return { success: true };
