@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/generated/prisma";
 import { getAdminStats, getRecentlyListedItems, getFirstListingsAwaitingApproval, getAllUsers, approveFirstListing, rejectFirstListing } from "@/actions/admin-actions";
 import { updateAdminUser } from "@/actions/user-actions";
 
