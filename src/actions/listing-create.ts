@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma } from "@/generated/prisma";
 import { redirect } from "next/navigation";
 
 const CreateListingRequest = z.object({
