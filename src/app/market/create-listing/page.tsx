@@ -1,14 +1,20 @@
 "use client"
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createListingAction } from "@/actions/listing-create";
+import { updateListingAction } from "@/actions/listing-update";
+import { deleteListingAction } from "@/actions/listing-delete";
+import Image from "next/image";
 import { FormStatus } from "@/constants/FormStatus";
 import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
 import PriceInput from "@/components/ui/PriceInput";
 import CategoryInput from "@/components/ui/CategoryInput";
 import ImageUpload from "@/components/ui/ImageUpload";
-import React, { useState } from "react";
+import Button from "@/components/ui/Button";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import React from "react";
 
 
 const initialState: FormResponse = {
@@ -16,16 +22,90 @@ const initialState: FormResponse = {
 };
 
 export default function CreateListing() {
-    const [state, formAction] = useActionState(createListingAction, initialState);
+    const searchParams = useSearchParams();
+    const isEditing = searchParams.get('edit') === 'true';
+    const listingId = searchParams.get('id');
+    
+    const [state, formAction] = useActionState(
+        isEditing ? updateListingAction : createListingAction, 
+        initialState
+    );
+    
+    const [title, setTitle] = useState("");
+    const [description, setDescription] = useState("");
+    const [price, setPrice] = useState("");
+    const [isProfessorOnly, setIsProfessorOnly] = useState(false);
     const [selected, setSelected] = useState<number[]>([]);
-    const [selectedImage, setSelectedImage] = useState<string>("");
+    const [categoryOptions, setCategoryOptions] = useState<{id: number, name: string}[]>([]);
+    const [selectedImages, setSelectedImages] = useState<string[]>([]);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    // Load listing data if editing
+    useEffect(() => {
+        if (isEditing && listingId) {
+            console.log('Fetching listing data for ID:', listingId);
+            fetch(`/api/listing/${listingId}`)
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`HTTP error! status: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    console.log('Received listing data:', data);
+                    setTitle(data.title || "");
+                    setDescription(data.description || "");
+                    setPrice(data.price || "");
+                    setIsProfessorOnly(data.isProfessorOnly || false);
+                    
+                    // Set category options and selected IDs
+                    if (data.categories && data.categories.length > 0) {
+                        setCategoryOptions(data.categories);
+                        setSelected(data.categories.map((c: any) => c.id));
+                    }
+                    
+                    // Load existing images into selectedImages for editing
+                    if (data.images && data.images.length > 0) {
+                        const imageUrls = data.images.map((img: any) => img.url);
+                        setSelectedImages(imageUrls);
+                    }
+                    
+                    console.log('State updated:', {
+                        title: data.title,
+                        description: data.description,
+                        price: data.price,
+                        isProfessorOnly: data.isProfessorOnly,
+                        categories: data.categories,
+                        images: data.images
+                    });
+                })
+                .catch(err => {
+                    console.error('Error loading listing:', err);
+                });
+        }
+    }, [isEditing, listingId]);
+
+    const handleDelete = async () => {
+        if (!listingId) return;
+        setIsDeleting(true);
+        try {
+            await deleteListingAction(listingId);
+        } catch (error) {
+            console.error("Error deleting listing:", error);
+            setIsDeleting(false);
+        }
+    };
 
     return (
         <main className="min-h-screen flex items-start justify-center px-20 py-10">
             <div className="w-full max-w-1xl">
-                <h1 className="text-4xl mb-6">Create New Listing</h1>
+                <h1 className="text-4xl mb-6">{isEditing ? 'Edit Listing' : 'Create New Listing'}</h1>
 
                 <form action={formAction} className="max-w-2xl flex flex-col gap-4">
+                    
+                    {/* Hidden field for listing ID when editing */}
+                    {isEditing && <input type="hidden" name="listingId" value={listingId || ""} />}
                     
                     {/* Title */}
                     <TextInput
@@ -33,6 +113,8 @@ export default function CreateListing() {
                         name="title"
                         type="text"
                         placeholder="MacBook Pro 2020"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
                         validationErrors={state.validationErrors}
                         required
                     />
@@ -42,6 +124,8 @@ export default function CreateListing() {
                         inputLabel="Description"
                         name="description"
                         placeholder="Like new, charger included"
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
                         validationErrors={state.validationErrors}
                         required
                     />
@@ -51,23 +135,42 @@ export default function CreateListing() {
                         inputLabel="Price"
                         name="price"
                         placeholder="0.00"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
                         validationErrors={state.validationErrors}
                         required
                     />
 
-                    {/* Image Upload */}
-                    <ImageUpload
-                        inputLabel="Upload an Image"
-                        name="imagePath"
-                        selectedImage={selectedImage}
-                        onImageChange={setSelectedImage}
-                    />
+                    {/* Professor Only Checkbox */}
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="isProfessorOnly"
+                            name="isProfessorOnly"
+                            checked={isProfessorOnly}
+                            onChange={(e) => setIsProfessorOnly(e.target.checked)}
+                            value="true"
+                            className="w-4 h-4"
+                        />
+                        <label htmlFor="isProfessorOnly" className="text-sm">
+                            Professor Only
+                        </label>
+                    </div>
 
+                    {/* Image Upload */}
+                    {/* Image Upload - Works for both create and edit */}
+                    <ImageUpload
+                        inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
+                        name="imagePath"
+                        selectedImages={selectedImages}
+                        onImagesChange={setSelectedImages}
+                        maxImages={5}
+                    />
                     {/* Categories */}
                     <CategoryInput
                         inputLabel="Categories"
                         name="categoryIds"
-                        options={[]}
+                        options={categoryOptions}
                         value={selected}
                         onChange={setSelected}
                         validationErrors={state.validationErrors}
@@ -83,12 +186,65 @@ export default function CreateListing() {
                     )}
 
                     {/* Submit Button */}
-                    <button
-                        type="submit"
-                        className="bg-green text-white px-6 py-3 rounded-lg hover:opacity-90"
-                    >
-                        Create Listing
-                    </button>
+                    <div className="flex gap-4">
+                        <Button type="submit" buttonSize="lg">
+                            {isEditing ? 'Update Listing' : 'Create Listing'}
+                        </Button>
+                        {isEditing && (
+                            <Button 
+                                type="button"
+                                buttonVariant="secondary"
+                                buttonSize="lg"
+                                onClick={() => window.location.href = `/market/listing/${listingId}`}
+                            >
+                                Cancel
+                            </Button>
+                        )}
+                    </div>
+
+                    {/* Delete Section (only when editing) */}
+                    {isEditing && !showDeleteConfirm && (
+                        <div className="mt-8 pt-6 border-t">
+                            <h2 className="text-xl font-semibold mb-4">Delete</h2>
+                            <Button
+                                type="button"
+                                onClick={() => setShowDeleteConfirm(true)}
+                                buttonVariant="danger"
+                            >
+                                Delete Listing
+                            </Button>
+                        </div>
+                    )}
+
+                    {/* Delete Confirmation */}
+                    {isEditing && showDeleteConfirm && (
+                        <div className="mt-8 pt-6 border-t">
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                <p className="text-red-800 mb-4">
+                                    Are you sure you want to delete &quot;{title}&quot;? This action cannot be undone.
+                                </p>
+                                <div className="flex gap-2">
+                                    <Button
+                                        type="button"
+                                        onClick={handleDelete}
+                                        buttonVariant="danger"
+                                        showSpinner={isDeleting}
+                                        disabled={isDeleting}
+                                    >
+                                        Confirm Delete
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        buttonVariant="secondary"
+                                        disabled={isDeleting}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </form>
             </div>
         </main>
