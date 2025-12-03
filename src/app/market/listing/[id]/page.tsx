@@ -40,7 +40,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
     }
 
     return (
-        <main className="min-h-screen px-20 py-10">
+        <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
             <div className="w-full max-w-4xl mx-auto">
                 <Link href="/market" className="text-green hover:underline mb-4 inline-block">
                     ← Back to all listings
