@@ -8,73 +8,30 @@
 }
 
 @layer base {
-    html, body, h1, h2, h3, h4, h5, h6, p, a, span, div, input, button, textarea {
-        font-family: 'Montserrat', sans-serif !important;
-    }
-    /* Light theme defaults */
-    body {
-        background-color: #ffffff;
-        color: #111827; /* gray-900 */
-    }
-    a {
-        color: var(--color-green-700);
-    }
-
-    /* Dark theme overrides when `dark` class is present on <html> */
-    .dark body {
-        background-color: #000000; /* true black background */
-        color: #ffffff; /* light text */
-    }
-    .dark a {
-        color: #6ee7b7; /* lighter green link */
-    }
-    /* Override common Tailwind light backgrounds so panels/cards match dark theme */
-    .dark .bg-gray-100 {
-        background-color: #0a0a0a !important;
-    }
-    .dark .bg-white {
-        background-color: #0a0a0a !important;
-    }
-    /* Ensure any elements styled as text-black become light in dark mode */
-    .dark .text-black {
-        color: #ffffff !important;
-    }
-    /* Soften borders in dark mode */
-    .dark .border-gray-300,
-    .dark .border-gray-400 {
-        border-color: #2b2b2b !important;
-    }
-    /* Make all text white in dark mode */
-    .dark {
-        color: #ffffff !important;
-    }
-    .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6, .dark p, .dark span, .dark div {
-        color: #ffffff !important;
-    }
     h1 {
         font-size: var(--text-2xl);
         font-weight: var(--font-weight-semibold);
         color: var(--color-gray-950);
     }
+
     h2 {
         font-size: var(--text-xl);
         font-weight: var(--font-weight-semibold);
         color: var(--color-gray-950);
     }
+
     h3 {
         font-size: var(--text-lg);
         font-weight: var(--font-weight-semibold);
         color: var(--color-gray-950);
     }
+    
     p {
         font-size: var(--text-base);
     }
+    
     a {
         text-decoration: underline;
         color: var(--color-green-700);
-    }
-    /* Remove underlines from sidebar links */
-    #marketSidebar a {
-        text-decoration: none !important;
-    }
+    }   
 }
