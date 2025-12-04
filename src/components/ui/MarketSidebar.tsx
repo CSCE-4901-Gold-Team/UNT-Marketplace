@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import {IoMdCloseCircle} from "react-icons/io";
 import NavItem from "@/components/ui/NavItem";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function MarketSidebar({
     showSidebar,
@@ -32,23 +33,27 @@ export default function MarketSidebar({
 
                 {/* TOP MENU */}
                 <div id="marketSidebarTopMenu" className="flex flex-col gap-1 px-4 font-extrabold text-black">
-                    <div className="flex  justify-center items-center gap-3 mb-2">
-                        <p className=" px-3 font-extrabold montserrat text-2xl">UNT Marketplace</p>
-                        <Link href="/profile" className="flex-1 cursor-pointer overflow-hidden p-0  rounded-full border-0">
-                            <div className="flex items-center justify-center  rounded-xl ">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" strokeWidth="1.5" stroke="currentColor" className="size-7 border-0 rounded-full p-0" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                                </svg>
-                            </div>
-                        </Link>
-                        
+                    <div className="flex justify-between items-center gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                            <p className="px-2 font-extrabold montserrat text-2xl">UNT Marketplace</p>
+                            <Link href="/profile" className="cursor-pointer overflow-hidden p-0 rounded-full border-0">
+                                <div className="flex items-center justify-center rounded-xl">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" strokeWidth="1.5" stroke="currentColor" className="size-7 border-0 rounded-full p-0" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 14c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                                    </svg>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="pr-1">
+                            <DarkModeToggle />
+                        </div>
                     </div>
                     <input
-                            id="sidebar-search-2"
-                            type="text"
-                            placeholder="Search UNT Marketplace"
-                            className="px-10 ml-0 py-2 rounded-full bg-gray-200 border border-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
+                        id="sidebar-search-2"
+                        type="text"
+                        placeholder="Search UNT Marketplace"
+                        className="px-10 ml-0 py-2 rounded-full bg-gray-200 border border-gray-400 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green dark:text-white dark:placeholder-white/70 dark:border-white dark:focus:ring-white"
+                    />
 
                     {/* View Listings */}
                     <NavItem
