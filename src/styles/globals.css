@@ -8,30 +8,29 @@
 }
 
 @layer base {
+    html, body, h1, h2, h3, h4, h5, h6, p, a, span, div, input, button, textarea {
+        font-family: 'Montserrat', sans-serif !important;
+    }
     h1 {
         font-size: var(--text-2xl);
         font-weight: var(--font-weight-semibold);
         color: var(--color-gray-950);
     }
-
     h2 {
         font-size: var(--text-xl);
         font-weight: var(--font-weight-semibold);
         color: var(--color-gray-950);
     }
-
     h3 {
         font-size: var(--text-lg);
         font-weight: var(--font-weight-semibold);
         color: var(--color-gray-950);
     }
-    
     p {
         font-size: var(--text-base);
     }
-    
     a {
         text-decoration: underline;
         color: var(--color-green-700);
-    }   
+    }
 }

@@ -100,6 +100,14 @@ export default function MarketSection({
 
     return (
         <div id="marketSectionWrapper" className="flex flex-col gap-6">
+            <div>
+                <h1 className="ml-100">
+                    Listings
+                </h1>
+                <h2>
+                    Category
+                </h2>
+            </div>
 
             <div className="market-controls flex gap-6 justify-between items-center">
                 <div className="market-search-container">
