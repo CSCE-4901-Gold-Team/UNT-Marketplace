@@ -23,23 +23,7 @@ export default async function MarketLayout({
         redirect("/login");
     }
 
-    // Email not verified → block marketplace
-    if (!session.user.emailVerified) {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-100">
-                <div className="max-w-md rounded-2xl bg-white p-8 shadow-lg text-center">
-                    <h1 className="text-2xl font-semibold mb-4">Email Verification Required</h1>
-                    <p className="mb-6">Please verify your email to access the marketplace.</p>
-                    <Link
-                        href="/resend-verification"
-                        className="text-lg font-black px-3 py-1.5 bg-green-600 rounded text-white no-underline"
-                    >
-                        Resend Verification Email
-                    </Link>
-                </div>
-            </div>
-        );
-    }
+    // ...existing code...
 
     return (
         <div id="marketContainer" className="flex flex-col lg:flex-row min-h-screen items-stretch bg-white">

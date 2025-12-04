@@ -25,6 +25,8 @@ export default function MarketSidebar({
                     <IoMdCloseCircle />
                 </button>
 
+                <img src="/images/UNT.png" alt="UNT Logo" className="w-24 h-auto mx-auto mb-2 mt-8 " />
+
                 {/* Sidebar Logo */}
                 <div id="marketSidebarLogo" className="bg-green text-white p-4 px-1.5 shadow me-[-.5rem]">
                     <div className="text-3xl font-black text-center">UNT Marketplace</div>
