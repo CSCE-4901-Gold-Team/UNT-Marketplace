@@ -87,6 +87,24 @@ async function main() {
         update: {}
     });
 
+    const catBooks = await prisma.category.upsert({
+        where: { name: "Books" },
+        create: { name: "Books", slug: "books" },
+        update: {}
+    });
+
+    const catTV = await prisma.category.upsert({
+        where: { name: "TV" },
+        create: { name: "TV", slug: "tv" },
+        update: {}
+    });
+
+    const catSchoolBags = await prisma.category.upsert({
+        where: { name: "School Bags" },
+        create: { name: "School Bags", slug: "school-bags" },
+        update: {}
+    });
+
     /**
      * Listings
      */

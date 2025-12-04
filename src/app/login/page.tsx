@@ -37,6 +37,12 @@ export default function LoginPage() {
 
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
+
+            <div className="justify-center">   
+                    <img src="/images/StarR.png" alt="StarR Logo" className="h-15 w-auto mb-4 absolute translate-x-60" />
+                    <img src="/images/UNT.png" alt="UNT Logo" className="h-65 w-auto mb-0" />
+                    <img src="/images/Starl.png" alt="StarR Logo" className="h-15 w-auto mb-4 absolute -translate-x-10 top-0" />
+            </div>
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 

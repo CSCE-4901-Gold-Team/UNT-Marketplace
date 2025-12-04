@@ -33,6 +33,7 @@ export default function CreateListing() {
                         name="title"
                         type="text"
                         placeholder="MacBook Pro 2020"
+                        inputClasses="border-green"
                         validationErrors={state.validationErrors}
                         required
                     />
@@ -42,6 +43,7 @@ export default function CreateListing() {
                         inputLabel="Description"
                         name="description"
                         placeholder="Like new, charger included"
+                        inputClasses="text-gray-200 border-green"
                         validationErrors={state.validationErrors}
                         required
                     />
@@ -51,6 +53,7 @@ export default function CreateListing() {
                         inputLabel="Price"
                         name="price"
                         placeholder="0.00"
+                        inputClasses="text-gray-200 border-green"
                         validationErrors={state.validationErrors}
                         required
                     />
