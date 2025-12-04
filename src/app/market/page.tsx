@@ -7,11 +7,11 @@ import MarketSuspense from "@/components/suspense/MarketSuspense";
 import {getCurrentUserRole} from "@/actions/user-actions";
 
 export default async function MarketPage() {
-    const listingsResponse = getListings();
+    const listingsResponse = getListings("", {}, 0, 12);
     const userRole = getCurrentUserRole();
 
     return (
-        <main className="px-20 py-12">
+        <main className="px-8 py-4 lg:px-20 lg:py-12">
             <Suspense fallback={<MarketSuspense/>}>
                 <MarketSection
                     listingsResponse={listingsResponse}

@@ -24,7 +24,7 @@ export default function ListingCard({
                 <div className="h-[350px] bg-gray-300 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
                     {hasValidImage ? (
                         <Image
-                            src={listing.images[0].url}
+                            src={`${listing.images[0].url}`}
                             alt={listing.title}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"

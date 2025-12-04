@@ -86,6 +86,24 @@ async function main() {
         update: {}
     });
 
+    const catBooks = await prisma.category.upsert({
+        where: { name: "Books" },
+        create: { name: "Books", slug: "books" },
+        update: {}
+    });
+
+    const catTV = await prisma.category.upsert({
+        where: { name: "TV" },
+        create: { name: "TV", slug: "tv" },
+        update: {}
+    });
+
+    const catSchoolBags = await prisma.category.upsert({
+        where: { name: "School Bags" },
+        create: { name: "School Bags", slug: "school-bags" },
+        update: {}
+    });
+
     /**
      * Listings
      */
@@ -316,6 +334,41 @@ async function main() {
             }
         }
     });
+
+    for (let i = 1; i <= 31; i++) {
+        await prisma.listing.create({
+            data: {
+                title: `Extra Study Item #${i}`,
+                description: "Additional seeded available listing.",
+                price: 5 + i,
+                isProfessorOnly: false,
+                listingStatus: ListingStatus.AVAILABLE,
+                ownerId:
+                    i % 4 === 0 ? userJohn?.user.id :
+                        i % 4 === 1 ? userEmma?.user.id :
+                            i % 4 === 2 ? userMichael?.user.id :
+                                userSophia?.user.id,
+                categories: {
+                    connect: [
+                        {
+                            id:
+                                i % 4 === 0 ? catTextbooks.id :
+                                    i % 4 === 1 ? catNotes.id :
+                                        i % 4 === 2 ? catSupplies.id :
+                                            catLaptops.id
+                        }
+                    ]
+                },
+                images: {
+                    create: [
+                        {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
+                        {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
+                        {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    ]
+                }
+            }
+        });
+    }
 }
 
 main()

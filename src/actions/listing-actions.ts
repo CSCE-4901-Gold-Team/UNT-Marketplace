@@ -16,11 +16,18 @@ const prisma = new PrismaClient();
 /**
  * Returns all listings based on listing status and current user's role.
  *
- * @param searchQuery String to search for within listing body and titles
- * @param filters Filter parameters to filter listings by
+ * @param {string} searchQuery to search for within listing body and titles
+ * @param {ListingFilters} filters Filter parameters to filter listings by
+ * @param {number} skipN Optional pagination variable for skipping first n posts
+ * @param {number} takeN Optional pagination variable for taking n posts
  * @return Promise<ListingReturnType[]> Array of listings with their related images
  */
-export async function getListings(searchQuery?: string, filters?: ListingFilters): Promise<ListingObject[]> {
+export async function getListings(
+    searchQuery?: string,
+    filters?: ListingFilters,
+    skipN: number = 0,
+    takeN: number = 12
+): Promise<ListingObject[]> {
     // Validate session
     const session = await auth.api.getSession({
         headers: await headers()
@@ -50,6 +57,8 @@ export async function getListings(searchQuery?: string, filters?: ListingFilters
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
         // Admin/Faculty
         listings = await prisma.listing.findMany({
+            skip: skipN,
+            take: takeN,
             where: {
                 ...searchObject,
                 AND: [
@@ -68,6 +77,8 @@ export async function getListings(searchQuery?: string, filters?: ListingFilters
     } else {
         // All other roles
         listings = await prisma.listing.findMany({
+            skip: skipN,
+            take: takeN,
             where: {
                 ...searchObject,
                 AND: [

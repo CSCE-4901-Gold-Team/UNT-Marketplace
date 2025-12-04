@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import { FaFilter } from "react-icons/fa";
 import { $Enums } from "@/generated/prisma";
 import UserRole = $Enums.UserRole;
+import {DateHelper} from "@/utils/DateHelper";
 
 export default function MarketFilterControls({
     setFilterObjectAction,
@@ -58,6 +59,7 @@ export default function MarketFilterControls({
                         <div className="col-span-2">
                             <TextInput
                                 inputLabel="Posted After"
+                                value={DateHelper.formatYYYYMMDD(filterObject.dateMin)}
                                 type="date"
                                 setValue={(newValue) => {
                                     setFilterObjectAction({ ...filterObject, dateMin: new Date(newValue) })
@@ -68,6 +70,7 @@ export default function MarketFilterControls({
                             <TextInput
                                 inputLabel="Posted Before"
                                 type="date"
+                                value={DateHelper.formatYYYYMMDD(filterObject.dateMax)}
                                 setValue={(newValue) => {
                                     setFilterObjectAction({ ...filterObject, dateMax: new Date(newValue) })
                                 }}
