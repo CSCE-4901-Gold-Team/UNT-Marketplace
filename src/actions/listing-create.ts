@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma } from "@/generated/prisma";
 import { redirect } from "next/navigation";
 
 const CreateListingRequest = z.object({
@@ -104,6 +104,19 @@ export async function createListingAction(_initialState: FormResponse, formData:
 
         // Use the image path directly (base64 or file path)
         const imagePath = parsedFormData.data.imagePath || null;
+        let imagesParsed: string[] = [];
+        
+        // Parse images (could be JSON array or single string)
+        if (imagePath) {
+            try {
+                imagesParsed = JSON.parse(imagePath);
+                if (!Array.isArray(imagesParsed)) {
+                    imagesParsed = [imagePath];
+                }
+            } catch {
+                imagesParsed = [imagePath];
+            }
+        }
 
         // Create the listing
         const newListing = await prisma.listing.create({
@@ -117,12 +130,13 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 categories: {
                     connect: allCategoryIds.map(id => ({ id }))
                 },
-                ...(imagePath && {
+                ...(imagesParsed.length > 0 && {
                     images: {
-                        create: [{
-                            url: imagePath,
-                            imageType: "LISTING"
-                        }]
+                        create: imagesParsed.map((url, index) => ({
+                            url: url,
+                            imageType: "LISTING",
+                            sortOrder: index
+                        }))
                     }
                 })
             }

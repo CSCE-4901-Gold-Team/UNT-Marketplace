@@ -4,6 +4,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 export default function Button({
     children,
     buttonColor = "green",
+    buttonVariant = "primary",
     buttonStyle = "bg",
     buttonSize = "md",
     showSpinner = false,
@@ -13,7 +14,8 @@ export default function Button({
     buttonClasses = ""
 }: {
     children?: React.ReactNode;
-    buttonColor?: "blue" | "green";
+    buttonColor?: "blue" | "green" | "red" | "gray";
+    buttonVariant?: "primary" | "secondary" | "danger";
     buttonStyle?: "bg" | "border" | "icon" | "text";
     buttonSize?: "sm" | "md" | "lg";
     showSpinner?: boolean;
@@ -21,6 +23,15 @@ export default function Button({
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
 
     let classList = "rounded-md disabled:opacity-50 cursor-pointer text-center";
+
+    // Handle buttonVariant shorthand
+    if (buttonVariant === "danger") {
+        buttonColor = "red";
+    } else if (buttonVariant === "secondary") {
+        buttonColor = "gray";
+    } else if (buttonVariant === "primary") {
+        buttonColor = buttonColor || "green";
+    }
 
     switch (buttonColor) {
         case "green":
@@ -46,6 +57,26 @@ export default function Button({
                     break;
                 case "icon":
                     classList += " text-white bg-blue-500 hover:bg-blue-500";
+                    break;
+            }
+            break;
+        case "red":
+            switch (buttonStyle) {
+                case "bg":
+                    classList += " text-white bg-red-600 hover:bg-red-700";
+                    break;
+                case "border":
+                    classList += " text-red-600 border border-red-600 hover:bg-red-600 hover:text-white";
+                    break;
+            }
+            break;
+        case "gray":
+            switch (buttonStyle) {
+                case "bg":
+                    classList += " text-gray-700 bg-gray-200 hover:bg-gray-300";
+                    break;
+                case "border":
+                    classList += " text-gray-700 border border-gray-300 hover:bg-gray-50";
                     break;
             }
             break;

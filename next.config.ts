@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb', // Increase from default 1mb to handle base64 images
+    },
+  },
 };
 
 export default nextConfig;
