@@ -83,10 +83,6 @@ export default function MarketSidebar({
 
                 {/* BOTTOM MENU */}
                 <div id="marketSidebarBottomMenu" className="mt-auto flex flex-col gap-1 px-4 font-black text-gray-700">
-                    <div id="marketPersonalizedMessage" className="text-gray-400 text-xs text-center mb-3">
-                        <p>Welcome back, hold</p>
-                    </div>
-
                     <div className="border-t border-gray-300 pt-4 flex flex-col gap-1">
 
                         {/* Logout */}

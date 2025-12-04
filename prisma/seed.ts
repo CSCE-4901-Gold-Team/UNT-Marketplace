@@ -317,6 +317,41 @@ async function main() {
             }
         }
     });
+
+    for (let i = 1; i <= 31; i++) {
+        await prisma.listing.create({
+            data: {
+                title: `Extra Study Item #${i}`,
+                description: "Additional seeded available listing.",
+                price: 5 + i,
+                isProfessorOnly: false,
+                listingStatus: ListingStatus.AVAILABLE,
+                ownerId:
+                    i % 4 === 0 ? userJohn?.user.id :
+                        i % 4 === 1 ? userEmma?.user.id :
+                            i % 4 === 2 ? userMichael?.user.id :
+                                userSophia?.user.id,
+                categories: {
+                    connect: [
+                        {
+                            id:
+                                i % 4 === 0 ? catTextbooks.id :
+                                    i % 4 === 1 ? catNotes.id :
+                                        i % 4 === 2 ? catSupplies.id :
+                                            catLaptops.id
+                        }
+                    ]
+                },
+                images: {
+                    create: [
+                        {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
+                        {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
+                        {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                    ]
+                }
+            }
+        });
+    }
 }
 
 main()

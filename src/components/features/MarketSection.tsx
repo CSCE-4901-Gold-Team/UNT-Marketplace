@@ -135,6 +135,11 @@ export default function MarketSection({
                         <LoadingSpinner />
                     </div>
             }
+            {
+                allListingsLoaded && (
+                    <h2 className="text-gray-300 text-center mt-16">that&#39;s all folks</h2>
+                )
+            }
 
         </div>
     );

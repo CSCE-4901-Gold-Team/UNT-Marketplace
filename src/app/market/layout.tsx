@@ -50,7 +50,7 @@ export default async function MarketLayout({
             </div>
 
             {/* Main Content */}
-            <div id="marketContent" className="flex flex-col">
+            <div id="marketContent" className="flex flex-col w-full">
                 {children}
             </div>
         </div>
