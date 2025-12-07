@@ -106,7 +106,8 @@ export default function MarketSection({
     // Trigger search when category filter changes
     useEffect(() => {
         void searchListings();
-    }, [filterObject.categories, searchListings]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterObject.categories]);
 
     return (
         <div id="marketSectionWrapper" className="flex flex-col gap-6">
