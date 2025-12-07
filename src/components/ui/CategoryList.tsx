@@ -36,7 +36,6 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
         setCategories(data);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
-        console.error("CategoryList error:", errorMsg);
         setError(errorMsg);
       } finally {
         setLoading(false);
