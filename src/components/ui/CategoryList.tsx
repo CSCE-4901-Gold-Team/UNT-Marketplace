@@ -53,6 +53,14 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
     fetchCategories();
   }, []);
 
+  const handleCategoryClick = (slug: string) => {
+    if (onCategorySelect) {
+      // Toggle: if clicking the same category, deselect it
+      const newCategory = selectedCategory === slug ? null : slug;
+      onCategorySelect(newCategory);
+    }
+  };
+
   if (loading) return <div className=" py-4">Loading categories...</div>;
   if (error) return <div className="text-center py-4 text-red-500">Error: {error}</div>;
   if (categories.length === 0) return <div className="left-0  py-4">No categories found</div>;

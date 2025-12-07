@@ -11,9 +11,6 @@ import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
-import { useSearchParams } from "next/navigation";
-import CategoryList from "@/components/ui/CategoryList";
-
 import UserRole = $Enums.UserRole;
 import Link from "next/link";
 import {fireListingEvents} from "@/actions/analytics-actions";
@@ -35,27 +32,8 @@ export default function MarketSection({
     const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get("category"));
     const [filterObject, setFilterObject] = useState<ListingFilters>({
         priceMin: "",
-        priceMax: "",
-        categories: selectedCategory ? [selectedCategory] : undefined
+        priceMax: ""
     });
-
-    const impressedListingIdsRef = useRef<Set<string>>(new Set());
-
-    // Fire impressions whenever the listings array changes
-    useEffect(() => {
-        const toFire: string[] = [];
-
-        for (const listing of listings) {
-            if (!impressedListingIdsRef.current.has(listing.id)) {
-                impressedListingIdsRef.current.add(listing.id);
-                toFire.push(listing.id);
-            }
-        }
-
-        if (toFire.length === 0) return;
-
-        void fireListingEvents(EventType.LISTING_IMPRESSION, toFire);
-    }, [listings]);
 
     // Scroll observer
     const observerRef = useRef<IntersectionObserver | null>(null);
