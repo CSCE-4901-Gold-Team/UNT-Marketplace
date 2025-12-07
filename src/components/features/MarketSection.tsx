@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { ListingObject } from "@/models/ListingObject";
-import {use, useEffect, useRef, useState} from "react";
+import {use, useCallback, useEffect, useRef, useState} from "react";
 import ListingsContainer from "@/components/ui/ListingsContainer";
 import TextInput from "@/components/ui/TextInput";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
@@ -93,12 +93,7 @@ export default function MarketSection({
         };
     }, [allListingsLoaded, filterObject, listings, listingsLoading, newPageLoading, pageSize, searchQuery, skipIndex]);
 
-    // Trigger search when category filter changes
-    useEffect(() => {
-        void searchListings();
-    }, [filterObject.categories]);
-
-    async function searchListings() {
+    const searchListings = useCallback(async () => {
         if (listingsLoading || newPageLoading) return;
 
         setListingsLoading(true);
@@ -106,7 +101,17 @@ export default function MarketSection({
         setAllListingsLoaded(false);
         setListings(await getListings(searchQuery, filterObject, 0, pageSize));
         setListingsLoading(false);
-    }
+    }, [listingsLoading, newPageLoading, pageSize, searchQuery, filterObject]);
+
+    // Trigger search when category filter changes.
+    // Note: We intentionally only watch filterObject.categories (not the entire filterObject)
+    // because category changes should auto-search, while other filter changes (price, date)
+    // should only search when the user clicks the Search button in MarketFilterControls.
+    // searchListings is memoized with useCallback to prevent stale closures.
+    useEffect(() => {
+        void searchListings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filterObject.categories]);
 
     return (
         <div id="marketSectionWrapper" className="flex flex-col gap-6">

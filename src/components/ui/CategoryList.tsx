@@ -21,13 +21,9 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        console.log("Fetching categories...");
         const res = await fetch("/api/categories");
-        console.log("Response status:", res.status);
         
         if (!res.ok) {
-          const errorText = await res.text();
-          console.error("Error response:", errorText);
           throw new Error(`Failed to fetch categories: ${res.status}`);
         }
         
