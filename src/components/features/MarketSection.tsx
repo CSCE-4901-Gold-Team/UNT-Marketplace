@@ -121,7 +121,7 @@ export default function MarketSection({
                     selectedCategory={selectedCategory}
                     onCategorySelect={(category) => {
                         setSelectedCategory(category);
-                        setFilterObject({ ...filterObject, categories: category ? [category] : undefined });
+                        setFilterObject(prev => ({ ...prev, categories: category ? [category] : undefined }));
                     }}
                 />
             </div>
