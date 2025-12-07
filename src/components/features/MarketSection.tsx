@@ -93,6 +93,11 @@ export default function MarketSection({
         };
     }, [allListingsLoaded, filterObject, listings, listingsLoading, newPageLoading, pageSize, searchQuery, skipIndex]);
 
+    // Trigger search when category filter changes
+    useEffect(() => {
+        void searchListings();
+    }, [filterObject.categories]);
+
     async function searchListings() {
         if (listingsLoading || newPageLoading) return;
 
