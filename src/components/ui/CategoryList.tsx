@@ -41,7 +41,6 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
         }
         
         const data = await res.json();
-        console.log("Categories received:", data);
         setCategories(data);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : "Unknown error";
