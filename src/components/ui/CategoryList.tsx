@@ -22,6 +22,7 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
     const fetchCategories = async () => {
       try {
         console.log("Fetching categories...");
+        console.log("Fetching categories...");
         const res = await fetch("/api/categories");
         console.log("Response status:", res.status);
         
@@ -31,11 +32,19 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
           throw new Error(`Failed to fetch categories: ${res.status}`);
         }
         
+        console.log("Response status:", res.status);
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Failed to fetch categories: ${res.status}`);
+        }
+        
         const data = await res.json();
+        console.log("Categories received:", data);
         setCategories(data);
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Unknown error";
-        setError(errorMsg);
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
@@ -44,17 +53,9 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
     fetchCategories();
   }, []);
 
-  const handleCategoryClick = (slug: string) => {
-    if (onCategorySelect) {
-      // Toggle: if clicking the same category, deselect it
-      const newCategory = selectedCategory === slug ? null : slug;
-      onCategorySelect(newCategory);
-    }
-  };
-
-  if (loading) return <div className="py-4 text-gray-600 dark:text-gray-400">Loading categories...</div>;
-  if (error) return <div className="py-4 text-red-500 dark:text-red-400">Error: {error}</div>;
-  if (categories.length === 0) return <div className="py-4 text-gray-600 dark:text-gray-400">No categories found</div>;
+  if (loading) return <div className=" py-4">Loading categories...</div>;
+  if (error) return <div className="text-center py-4 text-red-500">Error: {error}</div>;
+  if (categories.length === 0) return <div className="left-0  py-4">No categories found</div>;
 
   return (
     <div className="flex flex-wrap gap-3 py-4">
