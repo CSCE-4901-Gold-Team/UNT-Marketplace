@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 
 interface Category {
   id: number;
@@ -9,7 +8,12 @@ interface Category {
   slug: string;
 }
 
-export default function CategoryList() {
+interface CategoryListProps {
+  selectedCategory?: string | null;
+  onCategorySelect?: (category: string | null) => void;
+}
+
+export default function CategoryList({ selectedCategory, onCategorySelect }: CategoryListProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,21 +46,36 @@ export default function CategoryList() {
     fetchCategories();
   }, []);
 
+  const handleCategoryClick = (slug: string) => {
+    if (onCategorySelect) {
+      // Toggle: if clicking the same category, deselect it
+      const newCategory = selectedCategory === slug ? null : slug;
+      onCategorySelect(newCategory);
+    }
+  };
+
   if (loading) return <div className="py-4 text-gray-600">Loading categories...</div>;
   if (error) return <div className="py-4 text-red-500">Error: {error}</div>;
   if (categories.length === 0) return <div className="py-4 text-gray-600">No categories found</div>;
 
   return (
     <div className="flex flex-wrap gap-3 py-4">
-      {categories.map((category) => (
-        <Link
-          key={category.id}
-          href={`/market?category=${category.slug}`}
-          className="px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 transition-colors dark:bg-green-700 dark:hover:bg-green-800"
-        >
-          {category.name}
-        </Link>
-      ))}
+      {categories.map((category) => {
+        const isSelected = selectedCategory === category.slug;
+        return (
+          <button
+            key={category.id}
+            onClick={() => handleCategoryClick(category.slug)}
+            className={`px-4 py-2 rounded-full transition-colors ${
+              isSelected
+                ? "bg-green-800 text-white dark:bg-green-900"
+                : "bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+            }`}
+          >
+            {category.name}
+          </button>
+        );
+      })}
     </div>
   );
 }

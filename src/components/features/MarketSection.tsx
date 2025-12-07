@@ -12,6 +12,7 @@ import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import CategoryList from "@/components/ui/CategoryList";
 import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
+import { useSearchParams } from "next/navigation";
 import UserRole = $Enums.UserRole;
 
 export default function MarketSection({
@@ -23,13 +24,16 @@ export default function MarketSection({
 }) {
     const [listings, setListings] = useState(use(listingsResponse)); // Listing object
     const userRole = use(userRoleResponse);
+    const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(""); // Search input state
     const [listingsLoading, setListingsLoading] = useState(false); // Listing loading state
     const [newPageLoading, setNewPageLoading] = useState(false);
     const [allListingsLoaded, setAllListingsLoaded] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get("category"));
     const [filterObject, setFilterObject] = useState<ListingFilters>({
         priceMin: "",
-        priceMax: ""
+        priceMax: "",
+        categories: selectedCategory ? [selectedCategory] : undefined
     });
 
     // Scroll observer
@@ -108,7 +112,13 @@ export default function MarketSection({
                 <h2>
                     Category
                 </h2>
-                <CategoryList />
+                <CategoryList 
+                    selectedCategory={selectedCategory}
+                    onCategorySelect={(category) => {
+                        setSelectedCategory(category);
+                        setFilterObject({ ...filterObject, categories: category ? [category] : undefined });
+                    }}
+                />
             </div>
 
             <div className="market-controls flex gap-0 justify-between items-center mr-0">
