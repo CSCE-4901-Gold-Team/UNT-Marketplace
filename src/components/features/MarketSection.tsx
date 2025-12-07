@@ -114,6 +114,7 @@ export default function MarketSection({
                 </div>
 
                 <div className="market-filter-container">
+                <div className="market-filter-container ml-0 translate-x-10">
                     <MarketFilterControls
                         filterObject={filterObject}
                         setFilterObjectAction={setFilterObject}
