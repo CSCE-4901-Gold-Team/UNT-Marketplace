@@ -60,6 +60,18 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
 
   return (
     <div className="flex flex-wrap gap-3 py-4">
+      {/* All button */}
+      <button
+        onClick={() => onCategorySelect?.(null)}
+        className={`px-4 py-2 rounded-full transition-colors ${
+          !selectedCategory
+            ? "bg-green-800 text-white dark:bg-green-900"
+            : "bg-green-600 text-white hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+        }`}
+      >
+        All
+      </button>
+      
       {categories.map((category) => {
         const isSelected = selectedCategory === category.slug;
         return (
