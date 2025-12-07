@@ -103,7 +103,11 @@ export default function MarketSection({
         setListingsLoading(false);
     }, [listingsLoading, newPageLoading, pageSize, searchQuery, filterObject]);
 
-    // Trigger search when category filter changes
+    // Trigger search when category filter changes.
+    // Note: We intentionally only watch filterObject.categories (not the entire filterObject)
+    // because category changes should auto-search, while other filter changes (price, date)
+    // should only search when the user clicks the Search button in MarketFilterControls.
+    // searchListings is memoized with useCallback to prevent stale closures.
     useEffect(() => {
         void searchListings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
