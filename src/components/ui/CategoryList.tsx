@@ -44,7 +44,8 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
         console.log("Categories received:", data);
         setCategories(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error");
+        const errorMsg = err instanceof Error ? err.message : "Unknown error";
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }
