@@ -24,7 +24,6 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
         const res = await fetch("/api/categories");
         
         if (!res.ok) {
-          const errorText = await res.text();
           throw new Error(`Failed to fetch categories: ${res.status}`);
         }
         
