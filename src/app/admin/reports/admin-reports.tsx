@@ -51,7 +51,7 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
     }, [userRole, router]);
 
     const handleViewListing = (listingId: string) => {
-        router.push(`/listing/${listingId}`);
+        router.push(`/market/listing/${listingId}`);
     };
 
     const handleDeleteListing = async (reportId: string, listingId: string) => {
