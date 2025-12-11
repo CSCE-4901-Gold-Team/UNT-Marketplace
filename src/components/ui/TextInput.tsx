@@ -7,18 +7,44 @@ import {ErrorHelper} from "@/utils/ErrorHelper";
 export default function TextInput({
     inputLabel,
     onChange,
+    onKeyDown,
     validationErrors,
     type = "text",
     required,
     value,
+    setValue,
+    checked,
+    setChecked,
     placeholder,
-    name
+    name,
+    inputClasses = "",
 }: {
     inputLabel?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    validationErrors?: z.core.$ZodIssue[]
+    onKeydown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    validationErrors?: z.core.$ZodIssue[];
+    inputClasses?: string;
+    setValue?: (newValue: string) => void;
+    setChecked?: (newValue: boolean) => void;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
-    
+    let inputElementClasses = "rounded-md px-3 py-2 border border-black " + inputClasses;
+
+    if (type === "checkbox") {
+        inputElementClasses += " w-auto";
+    } else {
+        inputElementClasses += " w-full";
+    }
+
+    function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
+        if (setValue && type !== "checkbox") {
+            setValue(e.target.value);
+        }
+        if (type === "checkbox" && setChecked) {
+            setChecked(e.currentTarget.checked);
+        }
+        if (onChange) onChange(e);
+    }
+
     return (
         <div>
             { !!inputLabel && (
@@ -27,11 +53,13 @@ export default function TextInput({
             <input
                 type={type}
                 value={value}
+                checked={checked}
                 placeholder={placeholder}
-                onChange={onChange}
+                onChange={handleInput}
+                onKeyDown={onKeyDown}
                 required={required}
                 name={name}
-                className="mt-1 w-full rounded-md px-3 py-2 border border-black"
+                className={inputElementClasses}
             />
 
             { !!name && !!validationErrors && 

@@ -32,9 +32,9 @@ export default function SignUpPage() {
             toastService.toast(registerFormResponse.message.content, registerFormResponse.message.type);
         }
         
-        // Redirect user on success
+        // Redirect user on success to verification page
         if (registerFormResponse.status === FormStatus.SUCCESS) {
-            router.push("/market");
+            router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
     }, [registerFormResponse, router]);
     
@@ -118,6 +118,7 @@ export default function SignUpPage() {
                             type="submit"
                             showSpinner={isPending || registerFormResponse.status === FormStatus.SUCCESS}
                             buttonSize="lg"
+                            buttonClasses="min-w-[200px]"
                         >
                             Register
                         </Button>

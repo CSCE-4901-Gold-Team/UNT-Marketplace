@@ -71,7 +71,8 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             validationErrors={loginFormResponse.validationErrors}
                         />
-                        <p className="text-end text-sm text-gray-50 mt-1"><Link href="/#">Forgot password</Link></p>
+                        <p className="text-end text-sm text-gray-50 mt-1"><Link href="/forgot-password" className="text-green-700 hover:underline">Forgot password</Link>
+                        </p>
                     </div>
 
                     <div className="text-center mt-8">
@@ -79,6 +80,7 @@ export default function LoginPage() {
                             type="submit"
                             showSpinner={isPending || loginFormResponse.status === FormStatus.SUCCESS}
                             buttonSize="lg"
+                            buttonClasses="min-w-[200px]"
                         >
                             Login
                         </Button>

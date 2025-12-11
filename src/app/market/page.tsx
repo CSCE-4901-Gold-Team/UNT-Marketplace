@@ -1,30 +1,23 @@
-﻿"use client"
+﻿"use server"
 
-import Link from "next/link";
+import {getListings} from "@/actions/listing-actions";
+import MarketSection from "@/components/features/MarketSection";
+import {Suspense} from "react";
+import MarketSuspense from "@/components/suspense/MarketSuspense";
+import {getCurrentUserRole} from "@/actions/user-actions";
 
-export default function Market() {
+export default async function MarketPage() {
+    const listingsResponse = getListings("", {}, 0, 12);
+    const userRole = getCurrentUserRole();
 
     return (
-        <main className="px-20 py-12 flex flex-col gap-6">
-
-            <div>
-                <h1 className="text-4xl">Current Listings</h1>
-            </div>
-
-            <div className="grid grid-cols-3 gap-6 opacity-20">
-
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-                <div className="bg-green rounded-3xl h-[300px]"></div>
-
-            </div>
-
+        <main className="px-8 py-4 lg:px-20 lg:py-12">
+            <Suspense fallback={<MarketSuspense/>}>
+                <MarketSection
+                    listingsResponse={listingsResponse}
+                    userRoleResponse={userRole}
+                />
+            </Suspense>
         </main>
     );
 }
