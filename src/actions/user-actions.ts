@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { $Enums, PrismaClient } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 import UserStatusType = $Enums.UserStatusType;
+import { enforceUserStatus } from "@/utils/StatusEnforcer";
 
 const prisma = new PrismaClient();
 

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { PrismaClient } from "@prisma/client";
 import { headers } from "next/headers";
 import { CreateReportSchema, CreateReportInput } from "@/schemas/report-schemas";
+import { enforceUserStatus } from "@/utils/StatusEnforcer";
 
 const prisma = new PrismaClient();
 
@@ -32,6 +33,17 @@ export async function submitListingReport(
                 success: false,
                 message: "You must be logged in to report a listing",
                 error: "NOT_AUTHENTICATED"
+            };
+        }
+
+        // Enforce user status - prevent suspended/banned users from reporting
+        try {
+            await enforceUserStatus(session.user.id);
+        } catch (error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : "Your account is restricted and cannot submit reports.",
+                error: "ACCOUNT_RESTRICTED"
             };
         }
 

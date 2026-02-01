@@ -356,7 +356,7 @@ export async function deleteListing(listingId: string) {
     return { success: true };
 }
 
-export async function suspendUser(userId: string) {
+export async function suspendUserWithExpiry(userId: string, expiresAt: Date) {
     // Validate session and admin role
     const session = await auth.api.getSession({
         headers: await headers()
@@ -374,11 +374,158 @@ export async function suspendUser(userId: string) {
     await prisma.userStatus.create({
         data: {
             userId,
-            status: UserStatusType.SUSPENDED
+            status: UserStatusType.SUSPENDED,
+            expiresAt: expiresAt
         }
     });
 
     return { success: true };
+}
+
+export async function banUserPermanently(userId: string) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    await prisma.userStatus.create({
+        data: {
+            userId,
+            status: UserStatusType.BANNED,
+            expiresAt: null
+        }
+    });
+
+    return { success: true };
+}
+
+export async function activateUser(userId: string) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    await prisma.userStatus.create({
+        data: {
+            userId,
+            status: UserStatusType.ACTIVE,
+            expiresAt: null
+        }
+    });
+
+    return { success: true };
+}
+
+export async function getUserSuspensionStatus(userId: string) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const userStatus = await prisma.userStatus.findFirst({
+        where: {
+            userId: userId
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+
+    if (!userStatus) {
+        return { status: 'ACTIVE', expiresAt: null, createdAt: null };
+    }
+
+    return {
+        status: userStatus.status,
+        expiresAt: userStatus.expiresAt,
+        createdAt: userStatus.createdAt
+    };
+}
+
+export async function getSuspendedUsers(limit: number = 50) {
+    // Validate session and admin role
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    // Get unique users with suspended or banned status, showing their latest status
+    const suspendedStatuses = await prisma.userStatus.findMany({
+        where: {
+            status: {
+                in: [UserStatusType.SUSPENDED, UserStatusType.BANNED]
+            }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        },
+        take: limit,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    role: true,
+                    createdAt: true
+                }
+            }
+        }
+    });
+
+    // Remove duplicates (keep only latest status per user)
+    const uniqueMap = new Map();
+    suspendedStatuses.forEach(status => {
+        if (!uniqueMap.has(status.userId)) {
+            uniqueMap.set(status.userId, status);
+        }
+    });
+
+    return Array.from(uniqueMap.values()).map(userStatus => ({
+        userId: userStatus.user.id,
+        name: userStatus.user.name,
+        email: userStatus.user.email,
+        role: userStatus.user.role,
+        status: userStatus.status,
+        expiresAt: userStatus.expiresAt,
+        suspendedAt: userStatus.createdAt,
+        userCreatedAt: userStatus.user.createdAt
+    }));
 }
 
 export async function resolveReport(reportId: string, action: 'RESOLVED' | 'DISMISSED') {

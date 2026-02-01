@@ -7,6 +7,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { PrismaClient, Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { enforceUserStatus } from "@/utils/StatusEnforcer";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -33,6 +34,19 @@ export async function createListingAction(_initialState: FormResponse, formData:
             message: {
                 type: "error",
                 content: "You must be logged in to create a listing."
+            }
+        };
+    }
+
+    // Enforce user status - check if suspended or banned
+    try {
+        await enforceUserStatus(session.user.id);
+    } catch (error) {
+        return {
+            status: FormStatus.ERROR,
+            message: {
+                type: "error",
+                content: error instanceof Error ? error.message : "Your account is restricted and cannot create listings."
             }
         };
     }
