@@ -156,8 +156,7 @@ export default function CreateListing() {
                             Professor Only
                         </label>
                     </div>
-
-                    {/* Image Upload */}
+                    
                     {/* Image Upload - Works for both create and edit */}
                     <ImageUpload
                         inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
