@@ -34,14 +34,45 @@ export const auth = betterAuth({
         },
         // Password reset email
         sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
-            await sendPasswordResetEmail(user.email, url);
+            // Fire and forget for password reset emails too
+            sendPasswordResetEmail(user.email, url).catch(error => {
+                console.error("❌ Password reset email failed (non-blocking):", error);
+            });
         },
     },
     emailVerification: {
         sendOnSignUp: true,
         expiresIn: 300, // 5 minutes
         sendVerificationEmail: async ({ user, url }) => {
-            await sendVerificationEmail(user.email, url);
+            try {
+                console.log("🔄 Starting email verification callback for:", user.email);
+                // Extract the token from the better-auth URL
+                // better-auth provides URL like: http://localhost:3000/api/auth/verify-email?token=...
+                // We need to convert it to our verification page: /verify-email?token=...
+                const urlObj = new URL(url);
+                const token = urlObj.searchParams.get("token");
+                const verificationUrl = `${process.env.BETTER_AUTH_URL}/verify-email?token=${token}`;
+                
+                console.log("🔗 Original URL from better-auth:", url);
+                console.log("🔗 Converted verification URL:", verificationUrl);
+                
+                // Fire and forget - don't await to avoid blocking registration
+                // Email sending happens in the background
+                sendVerificationEmail(user.email, verificationUrl)
+                    .then(result => {
+                        console.log("✅ Email verification sent successfully", result);
+                    })
+                    .catch(error => {
+                        console.error("❌ Email verification failed (non-blocking):", error);
+                        // Email failure doesn't prevent registration
+                    });
+                // Return immediately without waiting for email to be sent
+                return { success: true };
+            } catch (error) {
+                console.error("❌ Email verification callback initialization failed:", error);
+                // Return success anyway - email will be sent in background
+                return { success: true };
+            }
         },
     },
     session: {

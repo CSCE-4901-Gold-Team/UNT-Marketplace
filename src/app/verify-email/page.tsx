@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -25,9 +25,18 @@ function VerifyEmailContent() {
             }
 
             try {
-                await auth.api.verifyEmail({
-                    query: { token }
-                });
+                const response = await fetch(
+                    `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
+                    {
+                        method: "GET",
+                    }
+                );
+
+                if (!response.ok) {
+                    setStatus("error");
+                    setMessage("Email verification failed. The link may have expired.");
+                    return;
+                }
 
                 setStatus("success");
                 setMessage("Your email has been verified successfully!");
