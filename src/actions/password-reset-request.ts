@@ -30,7 +30,7 @@ export async function passwordResetRequestAction(initialState: FormResponse, for
 
     // Send password reset request
     try {
-        await auth.api.sendPasswordResetEmail({
+        await auth.api.resetPassword({
             body: {
                 email: parsedFormData.data.email,
                 redirectTo: `${process.env.APP_URL}/reset-password`,
