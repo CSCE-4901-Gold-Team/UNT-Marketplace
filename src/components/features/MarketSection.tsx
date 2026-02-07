@@ -12,6 +12,7 @@ import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
 import { useSearchParams } from "next/navigation";
+import CategoryList from "@/components/ui/CategoryList";
 import UserRole = $Enums.UserRole;
 
 export default function MarketSection({
