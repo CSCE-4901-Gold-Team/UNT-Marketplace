@@ -5,27 +5,24 @@ import React from "react";
 export default function DarkModeToggle() {
   // Start with light to match server-rendered markup and avoid hydration mismatch.
   const [isDark, setIsDark] = React.useState<boolean>(false);
+  const [mounted, setMounted] = React.useState(false);
 
+  // Read current theme state on mount (don't apply, DarkModeInit already did)
   React.useEffect(() => {
-    // Read persisted preference or media query after mount and apply it
+    setMounted(true);
     try {
       const stored = localStorage.getItem("theme");
       const prefersDark = stored === "dark" || (!stored && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
       setIsDark(prefersDark);
-      
-      // Apply theme immediately to avoid flash
-      const root = document.documentElement;
-      if (prefersDark) {
-        root.classList.add("dark");
-      } else {
-        root.classList.remove("dark");
-      }
     } catch (e) {
       // ignore
     }
   }, []);
 
+  // Apply theme changes when user toggles (skip on initial mount)
   React.useEffect(() => {
+    if (!mounted) return;
+    
     try {
       const root = document.documentElement;
       if (isDark) {
@@ -38,7 +35,7 @@ export default function DarkModeToggle() {
     } catch (e) {
       // ignore
     }
-  }, [isDark]);
+  }, [isDark, mounted]);
 
   const toggle = () => setIsDark((s) => !s);
 
