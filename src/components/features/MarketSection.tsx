@@ -11,6 +11,8 @@ import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
+import { useSearchParams } from "next/navigation";
+import CategoryList from "@/components/ui/CategoryList";
 import UserRole = $Enums.UserRole;
 import Link from "next/link";
 import {fireListingEvents} from "@/actions/analytics-actions";
