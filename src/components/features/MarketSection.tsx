@@ -9,7 +9,6 @@ import { getListings } from "@/actions/listing-actions";
 import Button from "@/components/ui/Button";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
-import CategoryList from "@/components/ui/CategoryList";
 import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
 import { useSearchParams } from "next/navigation";
@@ -129,7 +128,7 @@ export default function MarketSection({
             <div className="market-controls flex gap-0 justify-between items-center mr-0">
                 <div className="market-search-container translate-x-80 mr-0">
                     <div className="flex">
-                        <TextInput inputClasses="rounded-r-none border-r-0 border border-green text=green placeholder-green-600"
+                        <TextInput inputClasses="rounded-r-none border-r-0"
                             onChange={e => setSearchQuery(e.target.value)}
                             onKeyDown={e => { if (e.key === "Enter") { void searchListings() } }}
                             placeholder="Search..."
@@ -138,7 +137,7 @@ export default function MarketSection({
                     </div>
                 </div>
 
-                <div className="market-filter-container ml-0 translate-x-10">
+                <div className="market-filter-container ml-0 translate-x-120">
                     <MarketFilterControls
                         filterObject={filterObject}
                         setFilterObjectAction={setFilterObject}
@@ -150,13 +149,13 @@ export default function MarketSection({
 
             {
                 listingsLoading ? <LoadingSpinner /> :
-                    (listings.length === 0 ? <h2 className="text-gray-400 justify-center text-center ml-90 mt-16">No listings found</h2> :
+                    (listings.length === 0 ? <h2 className="text-gray-400 text-center mt-16">No listings found</h2> :
                         <ListingsContainer listings={listings} />)
             }
 
             {
                 !allListingsLoaded && !listingsLoading &&
-                    <div ref={sentinelRef} className="text-center ml-10 pt-12 pb-6">
+                    <div ref={sentinelRef} className="text-center pt-12 pb-6">
                         <LoadingSpinner />
                     </div>
             }
