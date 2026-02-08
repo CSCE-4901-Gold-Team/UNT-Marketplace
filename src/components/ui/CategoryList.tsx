@@ -89,3 +89,5 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
     </div>
   );
 }
+
+export { CategoryList };
