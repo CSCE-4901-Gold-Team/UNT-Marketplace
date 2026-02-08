@@ -1,7 +1,7 @@
 ﻿"use server";
 
 import {auth} from "@/lib/auth";
-import {$Enums, PrismaClient} from "@/generated/prisma";
+import {$Enums, PrismaClient} from "@prisma/client";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getCurrentUserRole} from "@/actions/user-actions";

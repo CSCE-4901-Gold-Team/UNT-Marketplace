@@ -1,5 +1,7 @@
-import { PrismaClient } from "@/generated/prisma";
+   import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const prisma = new PrismaClient();
 
@@ -8,6 +10,11 @@ export async function GET(
     { params }: { params: Promise<{ id: string }> }
 ) {
     const { id } = await params;
+    
+    // Get the current user session
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
     
     try {
         const listing = await prisma.listing.findUnique({
@@ -31,6 +38,22 @@ export async function GET(
 
         if (!listing) {
             return NextResponse.json({ error: "Listing not found" }, { status: 404 });
+        }
+
+        // Prevent students from accessing professor-only listings
+        if (listing.isProfessorOnly && session?.user?.role === "STUDENT") {
+            return NextResponse.json(
+                { error: "This listing is only available to faculty" },
+                { status: 403 }
+            );
+        }
+
+        // Prevent users from accessing other users' draft listings
+        if (listing.listingStatus === "DRAFT" && session?.user?.id !== listing.ownerId) {
+            return NextResponse.json(
+                { error: "Listing not found" },
+                { status: 404 }
+            );
         }
 
         return NextResponse.json({

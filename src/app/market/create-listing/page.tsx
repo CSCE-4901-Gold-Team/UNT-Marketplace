@@ -25,12 +25,12 @@ export default function CreateListing() {
     const searchParams = useSearchParams();
     const isEditing = searchParams.get('edit') === 'true';
     const listingId = searchParams.get('id');
-
+    
     const [state, formAction] = useActionState(
-        isEditing ? updateListingAction : createListingAction,
+        isEditing ? updateListingAction : createListingAction, 
         initialState
     );
-
+    
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
@@ -44,7 +44,6 @@ export default function CreateListing() {
     // Load listing data if editing
     useEffect(() => {
         if (isEditing && listingId) {
-            console.log('Fetching listing data for ID:', listingId);
             fetch(`/api/listing/${listingId}`)
                 .then(res => {
                     if (!res.ok) {
@@ -53,32 +52,23 @@ export default function CreateListing() {
                     return res.json();
                 })
                 .then(data => {
-                    console.log('Received listing data:', data);
                     setTitle(data.title || "");
                     setDescription(data.description || "");
                     setPrice(data.price || "");
                     setIsProfessorOnly(data.isProfessorOnly || false);
-
+                    
                     // Set category options and selected IDs
                     if (data.categories && data.categories.length > 0) {
                         setCategoryOptions(data.categories);
                         setSelected(data.categories.map((c: any) => c.id));
                     }
-
+                    
                     // Load existing images into selectedImages for editing
                     if (data.images && data.images.length > 0) {
                         const imageUrls = data.images.map((img: any) => img.url);
                         setSelectedImages(imageUrls);
                     }
 
-                    console.log('State updated:', {
-                        title: data.title,
-                        description: data.description,
-                        price: data.price,
-                        isProfessorOnly: data.isProfessorOnly,
-                        categories: data.categories,
-                        images: data.images
-                    });
                 })
                 .catch(err => {
                     console.error('Error loading listing:', err);
@@ -106,7 +96,7 @@ export default function CreateListing() {
                     
                     {/* Hidden field for listing ID when editing */}
                     {isEditing && <input type="hidden" name="listingId" value={listingId || ""} />}
-
+                    
                     {/* Title */}
                     <TextInput
                         inputLabel="Title"
@@ -156,8 +146,7 @@ export default function CreateListing() {
                             Professor Only
                         </label>
                     </div>
-
-                    {/* Image Upload */}
+                    
                     {/* Image Upload - Works for both create and edit */}
                     <ImageUpload
                         inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
@@ -191,7 +180,7 @@ export default function CreateListing() {
                             {isEditing ? 'Update Listing' : 'Create Listing'}
                         </Button>
                         {isEditing && (
-                            <Button
+                            <Button 
                                 type="button"
                                 buttonVariant="secondary"
                                 buttonSize="lg"

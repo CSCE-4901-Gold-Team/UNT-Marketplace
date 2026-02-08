@@ -5,7 +5,7 @@ import * as z from "zod";
 import {FormStatus} from "@/constants/FormStatus";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
-import {PrismaClient, Prisma} from "@/generated/prisma";
+import {PrismaClient, Prisma, $Enums} from "@/prisma/client";
 import {redirect} from "next/navigation";
 
 const UpdateListingRequest = z.object({
@@ -23,7 +23,6 @@ const UpdateListingRequest = z.object({
 );
 
 export async function updateListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
-    console.log("Update listing action called");
     
     const session = await auth.api.getSession({
         headers: await headers()
@@ -39,17 +38,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         };
     }
 
-    console.log("FormData entries:", {
-        listingId: formData.get("listingId"),
-        title: formData.get("title"),
-        description: formData.get("description"),
-        price: formData.get("price"),
-        isProfessorOnly: formData.get("isProfessorOnly"),
-        categoryIds: formData.get("categoryIds"),
-        newCategoryNames: formData.get("newCategoryNames"),
-        imagePath: formData.get("imagePath"),
-    });
-
     const parsedFormData = UpdateListingRequest.safeParse({
         listingId: formData.get("listingId"),
         title: formData.get("title"),
@@ -60,8 +48,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         newCategoryNames: JSON.parse(formData.get("newCategoryNames") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
     });
-
-    console.log("Parsed form data:", parsedFormData);
 
     if (!parsedFormData.success) {
         return {
@@ -137,7 +123,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
 
         // Handle image update if provided
         const imagePath = parsedFormData.data.imagePath;
-        console.log("Image path from form:", imagePath);
         
         let imagesParsed: string[] = [];
         
@@ -155,7 +140,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                     imagesParsed = [imagePath];
                 }
             }
-            console.log("Parsed images:", imagesParsed);
         }
 
         // Build update data
@@ -171,17 +155,18 @@ export async function updateListingAction(_initialState: FormResponse, formData:
 
         // Always update images when editing (user has full control in UI)
         if (imagesParsed.length > 0) {
-            console.log("Updating images");
             updateData.images = {
                 deleteMany: {},
                 create: imagesParsed.map((url, index) => ({
                     url: url,
-                    imageType: "LISTING" as const,
+                    imageType: $Enums.ImageType.LISTING,
                     sortOrder: index
                 }))
             };
         } else {
-            console.log("No images provided - will remove all existing images");
+            updateData.images = {
+                deleteMany: {}
+            };
             updateData.images = {
                 deleteMany: {}
             };
@@ -192,8 +177,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             where: { id: listingId },
             data: updateData
         });
-
-        console.log("Listing updated successfully");
 
         await prisma.$disconnect();
     } catch (error) {
