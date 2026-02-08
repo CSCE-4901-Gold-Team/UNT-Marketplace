@@ -18,8 +18,8 @@ export default function Loading() {
     ];
 
     return (
-        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12">
-            <div className="w-full max-w-1xl">
+        <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
+            <div className="w-full max-w-4xl">
 
                 <div>
                     <div className={`animate-pulse ${opacitySteps[0]}`}>
@@ -32,7 +32,7 @@ export default function Loading() {
                             key={index}
                             className={`${opacitySteps[index]}`}
                         >
-                            <div className={`h-6 bg-gray-300 rounded ${width} my-4 animate-pulse`}></div>
+                            <div className={`h-8 bg-gray-300 rounded ${width} my-4 animate-pulse`}></div>
                         </div>
                     ))}
                 </div>
