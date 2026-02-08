@@ -1,4 +1,5 @@
-﻿import { PrismaClient, $Enums } from '../src/generated/prisma';
+﻿import { PrismaClient } from "@prisma/client";
+import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
 import { auth } from "../src/lib/auth";

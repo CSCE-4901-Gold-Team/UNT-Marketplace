@@ -44,7 +44,6 @@ export default function CreateListing() {
     // Load listing data if editing
     useEffect(() => {
         if (isEditing && listingId) {
-            console.log('Fetching listing data for ID:', listingId);
             fetch(`/api/listing/${listingId}`)
                 .then(res => {
                     if (!res.ok) {
@@ -53,7 +52,6 @@ export default function CreateListing() {
                     return res.json();
                 })
                 .then(data => {
-                    console.log('Received listing data:', data);
                     setTitle(data.title || "");
                     setDescription(data.description || "");
                     setPrice(data.price || "");
@@ -71,14 +69,6 @@ export default function CreateListing() {
                         setSelectedImages(imageUrls);
                     }
                     
-                    console.log('State updated:', {
-                        title: data.title,
-                        description: data.description,
-                        price: data.price,
-                        isProfessorOnly: data.isProfessorOnly,
-                        categories: data.categories,
-                        images: data.images
-                    });
                 })
                 .catch(err => {
                     console.error('Error loading listing:', err);

@@ -1,11 +1,10 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { PrismaClient, $Enums } from "@/generated/prisma";
+import { PrismaClient, ListingStatus } from "@/prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
-import ListingStatus = $Enums.ListingStatus;
 
 const prisma = new PrismaClient();
 
