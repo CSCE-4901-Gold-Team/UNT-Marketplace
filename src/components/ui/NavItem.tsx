@@ -14,8 +14,12 @@ export default function NavItem({
 }) {
 
     return (
-        <Link href={link} onClick={() => setShowSidebarAction(false)}>
-            <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
+        <Link
+            href={link}
+            onClick={() => setShowSidebarAction(false)}
+            className="no-underline"
+        >
+            <div className="flex gap-3 px-3 py-4 rounded-xl hover:bg-gray-300">
                 {children}
             </div>
         </Link>
