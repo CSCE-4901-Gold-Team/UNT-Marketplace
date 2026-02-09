@@ -5,8 +5,9 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma, $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { getCurrentUserRole } from "@/actions/user-actions";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -61,10 +62,13 @@ export async function createListingAction(_initialState: FormResponse, formData:
         };
     }
 
-    if (parsedFormData.data.isProfessorOnly && session?.user?.role !== "PROFESSOR") {
-        return {
-            status: FormStatus.ERROR
-        };
+    if (parsedFormData.data.isProfessorOnly) {
+        const currentUserRole = await getCurrentUserRole();
+        if (currentUserRole !== $Enums.UserRole.FACULTY) {
+            return {
+                status: FormStatus.ERROR
+            };
+        }
     }
 
     const prisma = new PrismaClient();
