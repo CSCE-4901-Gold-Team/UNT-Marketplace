@@ -1,4 +1,4 @@
-   import { PrismaClient } from "@prisma/client";
+import { PrismaClient, $Enums } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -34,18 +34,29 @@ export async function GET(
             }
         });
 
-        await prisma.$disconnect();
-
         if (!listing) {
             return NextResponse.json({ error: "Listing not found" }, { status: 404 });
         }
 
         // Prevent students from accessing professor-only listings
-        if (listing.isProfessorOnly && session?.user?.role === "STUDENT") {
-            return NextResponse.json(
-                { error: "This listing is only available to faculty" },
-                { status: 403 }
-            );
+        if (listing.isProfessorOnly && session) {
+            const userObj = session.user as unknown as { id?: string };
+            const sessionObj = session as unknown as { userId?: string };
+            const userId = userObj.id ?? sessionObj.userId;
+
+            if (userId) {
+                const user = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: { role: true }
+                });
+
+                if (user?.role === $Enums.UserRole.STUDENT) {
+                    return NextResponse.json(
+                        { error: "This listing is only available to faculty" },
+                        { status: 403 }
+                    );
+                }
+            }
         }
 
         // Prevent users from accessing other users' draft listings
@@ -66,8 +77,9 @@ export async function GET(
             images: listing.images,
         });
     } catch (error) {
-        await prisma.$disconnect();
         console.error("Error fetching listing:", error);
         return NextResponse.json({ error: "Failed to fetch listing" }, { status: 500 });
+    } finally {
+        await prisma.$disconnect();
     }
 }
