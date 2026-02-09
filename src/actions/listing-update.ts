@@ -153,6 +153,17 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             }
         };
 
+        // Prevent students from setting professor-only flag
+        if (parsedFormData.data.isProfessorOnly && session?.user?.role !== "PROFESSOR") {
+            return {
+                status: FormStatus.ERROR,
+                message: {
+                    type: "error",
+                    content: "Only professor accounts can set a listing as professor-only."
+                }
+            }
+        };
+
         // Always update images when editing (user has full control in UI)
         if (imagesParsed.length > 0) {
             updateData.images = {
@@ -204,5 +215,5 @@ export async function updateListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect to the listing page after successful update
-    redirect(`/market/listing/${listingId}`);
+    redirect(`/market/listing/${listingId}?updated=true`);
 }
