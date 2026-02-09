@@ -32,6 +32,9 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
     const [suspensionModal, setSuspensionModal] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
     const [suspensionDays, setSuspensionDays] = useState(7);
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalReports, setTotalReports] = useState(0);
+    const REPORTS_PER_PAGE = 50;
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -43,8 +46,9 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
 
         const fetchReports = async () => {
             try {
-                const reportsData = await getPendingListingReports(50);
-                setReports(reportsData);
+                const reportsData = await getPendingListingReports(REPORTS_PER_PAGE + 1, (currentPage - 1) * REPORTS_PER_PAGE);
+                setReports(reportsData.slice(0, REPORTS_PER_PAGE));
+                setTotalReports(reportsData.length > REPORTS_PER_PAGE ? (currentPage * REPORTS_PER_PAGE) + 1 : (currentPage - 1) * REPORTS_PER_PAGE + reportsData.length);
 
                 // Check if listing parameter is in URL and select it
                 const listingParam = searchParams.get('listing');
@@ -62,7 +66,90 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
         };
 
         fetchReports();
-    }, [userRole, router, searchParams]);
+    }, [userRole, router, searchParams, currentPage]);
+
+    function renderPagination() {
+        const totalPages = Math.ceil(totalReports / REPORTS_PER_PAGE);
+        
+        if (totalPages <= 1) return null;
+
+        const getPageNumbers = () => {
+            const pages: (number | string)[] = [];
+            const maxVisible = 5;
+            
+            if (totalPages <= maxVisible) {
+                for (let i = 1; i <= totalPages; i++) {
+                    pages.push(i);
+                }
+            } else {
+                pages.push(1);
+                
+                if (currentPage > 3) {
+                    pages.push('...');
+                }
+                
+                const start = Math.max(2, currentPage - 1);
+                const end = Math.min(totalPages - 1, currentPage + 1);
+                
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+                
+                if (currentPage < totalPages - 2) {
+                    pages.push('...');
+                }
+                
+                pages.push(totalPages);
+            }
+            
+            return pages;
+        };
+
+        return (
+            <div className="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
+                <div className="text-sm text-gray-600">
+                    Showing {Math.min((currentPage - 1) * REPORTS_PER_PAGE + 1, totalReports)} - {Math.min(currentPage * REPORTS_PER_PAGE, totalReports)} of {totalReports} reports
+                </div>
+                
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1 || loading}
+                        className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
+                    >
+                        Previous
+                    </button>
+                    
+                    {getPageNumbers().map((page, index) => (
+                        typeof page === 'number' ? (
+                            <button
+                                key={index}
+                                onClick={() => setCurrentPage(page)}
+                                disabled={loading}
+                                className={`px-3 py-1 border rounded-lg transition text-sm ${
+                                    currentPage === page
+                                        ? 'bg-green text-white border-green'
+                                        : 'border-gray-300 hover:bg-gray-50'
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                                {page}
+                            </button>
+                        ) : (
+                            <span key={index} className="px-2 text-gray-400">...</span>
+                        )
+                    ))}
+                    
+                    <button
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={currentPage === totalPages || loading}
+                        className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm"
+                    >
+                        Next
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     const handleViewListing = (listingId: string) => {
         router.push(`/market/listing/${listingId}`);
@@ -237,6 +324,7 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
                         </table>
                     </div>
                 )}
+                {!searchQuery && renderPagination()}
             </div>
 
             {/* Report Details Modal */}

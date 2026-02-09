@@ -24,13 +24,13 @@ export async function getAdminStats() {
     }
 
     const [totalUsers, activeListings, pendingReports, totalTransactions] = await Promise.all([
-        prisma.user.count(),
+        prisma.user.count().catch(() => 0),
         prisma.listing.count({
             where: { listingStatus: ListingStatus.AVAILABLE }
-        }),
+        }).catch(() => 0),
         prisma.report.count({
             where: { status: ReportStatus.PENDING }
-        }),
+        }).catch(() => 0),
         // Transaction model to be added in future PR - currently returns 0
         Promise.resolve(0)
     ]);
@@ -43,7 +43,7 @@ export async function getAdminStats() {
     };
 }
 
-export async function getRecentlyListedItems(limit: number = 5) {
+export async function getRecentlyListedItems(limit: number = 5, skip: number = 0) {
     // Validate session and admin role
     const session = await auth.api.getSession({
         headers: await headers()
@@ -66,6 +66,7 @@ export async function getRecentlyListedItems(limit: number = 5) {
             createdAt: 'desc'
         },
         take: limit,
+        skip: skip,
         include: {
             owner: {
                 select: {
@@ -90,7 +91,7 @@ export async function getRecentlyListedItems(limit: number = 5) {
     }));
 }
 
-export async function getFirstListingsAwaitingApproval(limit: number = 10) {
+export async function getFirstListingsAwaitingApproval(limit: number = 10, skip: number = 0) {
     // Validate session and admin role
     const session = await auth.api.getSession({
         headers: await headers()
@@ -114,6 +115,7 @@ export async function getFirstListingsAwaitingApproval(limit: number = 10) {
             createdAt: 'asc'
         },
         take: limit,
+        skip: skip,
         include: {
             owner: {
                 select: {
@@ -138,7 +140,7 @@ export async function getFirstListingsAwaitingApproval(limit: number = 10) {
     }));
 }
 
-export async function getAllUsers(limit: number = 50) {
+export async function getAllUsers(limit: number = 50, skip: number = 0) {
     // Validate session and admin role
     const session = await auth.api.getSession({
         headers: await headers()
@@ -155,6 +157,7 @@ export async function getAllUsers(limit: number = 50) {
 
     const users = await prisma.user.findMany({
         take: limit,
+        skip: skip,
         orderBy: {
             createdAt: 'desc'
         },
@@ -221,7 +224,7 @@ export async function rejectFirstListing(listingId: string) {
     return { success: true };
 }
 
-export async function getPendingListingReports(limit: number = 50) {
+export async function getPendingListingReports(limit: number = 50, skip: number = 0) {
     // Validate session and admin role
     const session = await auth.api.getSession({
         headers: await headers()
@@ -244,6 +247,7 @@ export async function getPendingListingReports(limit: number = 50) {
             createdAt: 'desc'
         },
         take: limit,
+        skip: skip,
         include: {
             listing: {
                 select: {
@@ -469,7 +473,7 @@ export async function getUserSuspensionStatus(userId: string) {
     };
 }
 
-export async function getSuspendedUsers(limit: number = 50) {
+export async function getSuspendedUsers(limit: number = 50, skip: number = 0) {
     // Validate session and admin role
     const session = await auth.api.getSession({
         headers: await headers()
@@ -495,6 +499,7 @@ export async function getSuspendedUsers(limit: number = 50) {
             createdAt: 'desc'
         },
         take: limit,
+        skip: skip,
         include: {
             user: {
                 select: {
