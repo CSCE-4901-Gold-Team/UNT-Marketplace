@@ -77,5 +77,5 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
     }
 
     // Redirect to market page after successful deletion
-    redirect("/market");
+    redirect("/market?deleted=true");
 }

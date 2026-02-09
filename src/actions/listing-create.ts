@@ -61,6 +61,12 @@ export async function createListingAction(_initialState: FormResponse, formData:
         };
     }
 
+    if (parsedFormData.data.isProfessorOnly && session?.user?.role !== "PROFESSOR") {
+        return {
+            status: FormStatus.ERROR
+        };
+    }
+
     const prisma = new PrismaClient();
     let newListingId: string;
 
@@ -157,5 +163,5 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect after successfully creating and disconnecting (outside try-catch)
-    redirect(`/market/listing/${newListingId}`);
+    redirect(`/market/listing/${newListingId}?created=true`);
 }

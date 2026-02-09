@@ -4,6 +4,8 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import ImageCarousel from "@/components/ui/ImageCarousel";
+import { Suspense } from "react";
+import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 
 const prisma = new PrismaClient();
 
@@ -52,6 +54,9 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
 
     return (
         <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
+            <Suspense fallback={null}>
+                <ListingSuccessToast />
+            </Suspense>
             <div className="w-full max-w-4xl">
                 <Link href="/market" className="text-green hover:underline mb-4 inline-block">
                     ← Back to all listings

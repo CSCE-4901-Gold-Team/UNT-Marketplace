@@ -15,6 +15,7 @@ import Button from "@/components/ui/Button";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import React from "react";
+import { toastService } from "@/lib/toast-service";
 
 
 const initialState: FormResponse = {
@@ -26,7 +27,7 @@ export default function CreateListing() {
     const isEditing = searchParams.get('edit') === 'true';
     const listingId = searchParams.get('id');
     
-    const [state, formAction] = useActionState(
+    const [state, formAction, isPending] = useActionState(
         isEditing ? updateListingAction : createListingAction, 
         initialState
     );
@@ -40,10 +41,12 @@ export default function CreateListing() {
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoadingData, setIsLoadingData] = useState(false);
 
     // Load listing data if editing
     useEffect(() => {
         if (isEditing && listingId) {
+            setIsLoadingData(true);
             fetch(`/api/listing/${listingId}`)
                 .then(res => {
                     if (!res.ok) {
@@ -72,6 +75,9 @@ export default function CreateListing() {
                 })
                 .catch(err => {
                     console.error('Error loading listing:', err);
+                })
+                .finally(() => {
+                    setIsLoadingData(false);
                 });
         }
     }, [isEditing, listingId]);
@@ -165,18 +171,14 @@ export default function CreateListing() {
                         validationErrors={state.validationErrors}
                     />
 
-                    {/* Error/Success Messages */}
-                    {state.message && (
-                        <div className={`p-4 rounded-lg ${
-                            state.message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-                        }`}>
-                            {state.message.content}
-                        </div>
-                    )}
-
                     {/* Submit Button */}
                     <div className="flex gap-4">
-                        <Button type="submit" buttonSize="lg">
+                        <Button 
+                            type="submit" 
+                            buttonSize="lg"
+                            showSpinner={isPending || state.status === FormStatus.SUCCESS}
+                            disabled={isPending || isLoadingData || state.status === FormStatus.SUCCESS}
+                        >
                             {isEditing ? 'Update Listing' : 'Create Listing'}
                         </Button>
                         {isEditing && (
@@ -185,6 +187,7 @@ export default function CreateListing() {
                                 buttonVariant="secondary"
                                 buttonSize="lg"
                                 onClick={() => window.location.href = `/market/listing/${listingId}`}
+                                disabled={isPending || isLoadingData || state.status === FormStatus.SUCCESS}
                             >
                                 Cancel
                             </Button>
