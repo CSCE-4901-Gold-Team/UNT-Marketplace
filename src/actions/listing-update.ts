@@ -5,7 +5,7 @@ import * as z from "zod";
 import {FormStatus} from "@/constants/FormStatus";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
-import {PrismaClient, Prisma, $Enums} from "@/prisma/client";
+import { PrismaClient, Prisma, $Enums } from "@prisma/client";
 import {redirect} from "next/navigation";
 
 const UpdateListingRequest = z.object({

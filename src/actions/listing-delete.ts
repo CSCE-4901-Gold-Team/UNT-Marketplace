@@ -4,7 +4,7 @@ import {FormResponse} from "@/types/FormResponse";
 import {FormStatus} from "@/constants/FormStatus";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
-import {PrismaClient} from "@/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import {redirect} from "next/navigation";
 
 export async function deleteListingAction(listingId: string): Promise<FormResponse> {
