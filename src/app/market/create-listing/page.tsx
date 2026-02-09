@@ -1,10 +1,9 @@
 "use client"
 
-import { useActionState, useState } from "react";
+import React, { useActionState, useEffect, useState } from "react";
 import { createListingAction } from "@/actions/listing-create";
 import { updateListingAction } from "@/actions/listing-update";
 import { deleteListingAction } from "@/actions/listing-delete";
-import Image from "next/image";
 import { FormStatus } from "@/constants/FormStatus";
 import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
@@ -13,9 +12,6 @@ import CategoryInput from "@/components/ui/CategoryInput";
 import ImageUpload from "@/components/ui/ImageUpload";
 import Button from "@/components/ui/Button";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
-import React from "react";
-import { toastService } from "@/lib/toast-service";
 
 
 const initialState: FormResponse = {
@@ -42,6 +38,9 @@ export default function CreateListing() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    const canSetProfessorOnly = userRole === "FACULTY" || userRole === "ADMIN";
 
     // Load listing data if editing
     useEffect(() => {
@@ -81,6 +80,19 @@ export default function CreateListing() {
                 });
         }
     }, [isEditing, listingId]);
+
+    useEffect(() => {
+        fetch("/api/user-role")
+            .then((res) => res.ok ? res.json() : Promise.reject(new Error("Failed to load role")))
+            .then((data) => setUserRole(data?.role ?? null))
+            .catch(() => setUserRole(null));
+    }, []);
+
+    useEffect(() => {
+        if (!canSetProfessorOnly) {
+            setIsProfessorOnly(false);
+        }
+    }, [canSetProfessorOnly]);
 
     const handleDelete = async () => {
         if (!listingId) return;
@@ -138,20 +150,22 @@ export default function CreateListing() {
                     />
 
                     {/* Professor Only Checkbox */}
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isProfessorOnly"
-                            name="isProfessorOnly"
-                            checked={isProfessorOnly}
-                            onChange={(e) => setIsProfessorOnly(e.target.checked)}
-                            value="true"
-                            className="w-4 h-4"
-                        />
-                        <label htmlFor="isProfessorOnly" className="text-sm">
-                            Professor Only
-                        </label>
-                    </div>
+                    {canSetProfessorOnly && (
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="isProfessorOnly"
+                                name="isProfessorOnly"
+                                checked={isProfessorOnly}
+                                onChange={(e) => setIsProfessorOnly(e.target.checked)}
+                                value="true"
+                                className="w-4 h-4"
+                            />
+                            <label htmlFor="isProfessorOnly" className="text-sm">
+                                Professor Only
+                            </label>
+                        </div>
+                    )}
                     
                     {/* Image Upload - Works for both create and edit */}
                     <ImageUpload

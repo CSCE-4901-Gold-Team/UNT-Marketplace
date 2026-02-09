@@ -1,12 +1,13 @@
 "use server";
 
-import {FormResponse} from "@/types/FormResponse";
+import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
-import {FormStatus} from "@/constants/FormStatus";
-import {auth} from "@/lib/auth";
-import {headers} from "next/headers";
+import { FormStatus } from "@/constants/FormStatus";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { PrismaClient, Prisma, $Enums } from "@prisma/client";
-import {redirect} from "next/navigation";
+import { redirect } from "next/navigation";
+import { getCurrentUserRole } from "@/actions/user-actions";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),
@@ -154,15 +155,18 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         };
 
         // Prevent students from setting professor-only flag
-        if (parsedFormData.data.isProfessorOnly && session?.user?.role !== "PROFESSOR") {
-            return {
-                status: FormStatus.ERROR,
-                message: {
-                    type: "error",
-                    content: "Only professor accounts can set a listing as professor-only."
-                }
+        if (parsedFormData.data.isProfessorOnly) {
+            const currentUserRole = await getCurrentUserRole();
+            if (currentUserRole !== $Enums.UserRole.FACULTY) {
+                return {
+                    status: FormStatus.ERROR,
+                    message: {
+                        type: "error",
+                        content: "Only faculty accounts can set a listing as professor-only."
+                    }
+                };
             }
-        };
+        }
 
         // Always update images when editing (user has full control in UI)
         if (imagesParsed.length > 0) {
@@ -175,9 +179,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 }))
             };
         } else {
-            updateData.images = {
-                deleteMany: {}
-            };
             updateData.images = {
                 deleteMany: {}
             };
