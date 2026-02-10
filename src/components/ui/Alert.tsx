@@ -22,9 +22,6 @@ export default function Alert({
         case "warning":
             alertClasses += "text-yellow-800 border-yellow-300 bg-yellow-50";
             break;
-        case "info":
-            alertClasses += "border-gray-300 bg-gray-50";
-            break;
     }
 
     return (
