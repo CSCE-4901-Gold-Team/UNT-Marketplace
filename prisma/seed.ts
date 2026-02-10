@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from "@prisma/client";
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
@@ -7,6 +7,23 @@ import { auth } from "../src/lib/auth";
 const prisma = new PrismaClient()
 
 async function main() {
+    const testUser = await auth.api.signUpEmail({
+        body: {
+            name: "Test User",
+            email: "test.user@my.unt.edu",
+            password: "rootroot",
+        },
+    });
+
+    await prisma.user.update({
+        where: {
+            id: testUser.user.id
+        },
+        data: {
+            emailVerified: true
+        }
+    });
+
     /**
      * Users
      */
@@ -101,9 +118,9 @@ async function main() {
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -120,9 +137,9 @@ async function main() {
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -139,9 +156,9 @@ async function main() {
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -158,9 +175,9 @@ async function main() {
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -177,9 +194,9 @@ async function main() {
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -196,9 +213,9 @@ async function main() {
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -215,9 +232,9 @@ async function main() {
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -234,9 +251,9 @@ async function main() {
             categories: { connect: [{ id: catTextbooks.id }, { id: catNotes.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -253,9 +270,9 @@ async function main() {
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -272,9 +289,9 @@ async function main() {
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -291,9 +308,9 @@ async function main() {
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -310,9 +327,9 @@ async function main() {
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -344,9 +361,9 @@ async function main() {
                 },
                 images: {
                     create: [
-                        {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                        {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                        {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                        {url: "/sampleImage1.jpg", imageType: ImageType.LISTING},
+                        {url: "/sampleImage2.jpg", imageType: ImageType.LISTING},
+                        {url: "/sampleImage3.jpg", imageType: ImageType.LISTING}
                     ]
                 }
             }

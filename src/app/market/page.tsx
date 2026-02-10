@@ -5,6 +5,7 @@ import MarketSection from "@/components/features/MarketSection";
 import {Suspense} from "react";
 import MarketSuspense from "@/components/suspense/MarketSuspense";
 import {getCurrentUserRole} from "@/actions/user-actions";
+import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 
 export default async function MarketPage() {
     const listingsResponse = getListings("", {}, 0, 12);

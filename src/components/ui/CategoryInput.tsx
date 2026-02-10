@@ -73,8 +73,9 @@ export default function CategoryInput({
                     <div className="text-sm text-gray-500 dark:text-gray-400">At least one category is required</div>
                 )}
 
-                {localOptions.map((opt) => (
-                    <button
+                {/* Selected existing categories - render as chips */}
+                {localOptions.filter(opt => selected.includes(opt.id)).map((opt) => (
+                    <span
                         key={opt.id}
                         type="button"
                         onClick={() => toggle(opt.id)}
@@ -86,10 +87,18 @@ export default function CategoryInput({
                         aria-pressed={selected.includes(opt.id)}
                     >
                         {opt.name}
-                    </button>
+                        <button
+                            type="button"
+                            onClick={() => toggle(opt.id)}
+                            className="ml-2 text-sm text-green-600"
+                            aria-label={`Remove ${opt.name}`}
+                        >
+                            ×
+                        </button>
+                    </span>
                 ))}
 
-                {/* render newly added names as selected chips */}
+                {/* Newly added names as selected chips */}
                 {newNames.map((n) => (
                     <span
                         key={n}
@@ -105,6 +114,19 @@ export default function CategoryInput({
                             ×
                         </button>
                     </span>
+                ))}
+
+                {/* Unselected existing categories - render as buttons */}
+                {localOptions.filter(opt => !selected.includes(opt.id)).map((opt) => (
+                    <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => toggle(opt.id)}
+                        className="px-3 py-1 rounded-md border transition-colors text-sm bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                        aria-pressed={false}
+                    >
+                        {opt.name}
+                    </button>
                 ))}
             </div>
 
