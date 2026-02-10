@@ -108,17 +108,6 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                     </div>
                 )}
 
-                <div className="border-t pt-6 mt-6">
-                    <h2 className="text-xl font-semibold mb-4">Seller Information</h2>
-                    <div className="bg-gray-50 rounded p-4">
-                        <p className="font-medium">{listing.owner.name}</p>
-                        <p className="text-gray-600">{listing.owner.email}</p>
-                        <p className="text-sm text-gray-500 mt-2">
-                            Posted: {new Date(listing.createdAt).toLocaleDateString()}
-                        </p>
-                    </div>
-                </div>
-
                 {!isOwner && (
                     <div className="flex gap-4 mt-6">
                         <button className="flex-1 bg-green text-white py-3 rounded-lg hover:opacity-90">
