@@ -36,10 +36,10 @@ export default function ListingCard({
                 </div>
             </div>
             <div className="listing-info mt-1">
-                <p className="font-bold text-lg">
+                <p className="font-bold text-lg text-black dark:text-white">
                     {listingPrice}
                 </p>
-                <p>{listing.title}</p>
+                <p className="text-black dark:text-white">{listing.title}</p>
             </div>
             <Link href={listingUrl} className="top-0 left-0 right-0 bottom-0 absolute"></Link>
         </div>

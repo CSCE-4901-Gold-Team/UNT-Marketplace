@@ -64,7 +64,7 @@ export default function CategoryInput({
 
     return (
         <div className="flex flex-col">
-            <label className="mb-2 font-medium" htmlFor={name}>
+            <label className="mb-2 font-medium text-black dark:text-gray-200" htmlFor={name}>
                 {inputLabel}
             </label>
 

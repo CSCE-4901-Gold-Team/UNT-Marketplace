@@ -48,7 +48,7 @@ export default function TextInput({
     return (
         <div>
             { !!inputLabel && (
-                <label className="block text-sm font-medium dark:text-gray-200">{ inputLabel }</label>
+                <label className="block text-sm font-medium text-black dark:text-gray-200">{ inputLabel }</label>
             )}
             <input
                 type={type}
