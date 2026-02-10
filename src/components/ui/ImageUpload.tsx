@@ -51,7 +51,7 @@ export default function ImageUpload({
     return (
         <div className="space-y-2">
             {inputLabel && (
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label className="block text-sm font-medium text-black dark:text-gray-200">
                     {inputLabel}
                 </label>
             )}
