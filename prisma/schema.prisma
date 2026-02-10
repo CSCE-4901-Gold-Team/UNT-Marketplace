@@ -31,6 +31,9 @@ model User {
     accounts      Account[]
     listings      Listing[]
     role          UserRole  @default(STUDENT)
+    conversationsAsUser1 Conversation[] @relation("User1Conversations")
+    conversationsAsUser2 Conversation[] @relation("User2Conversations")
+    messages      Message[]
 
     @@map("user")
 }
@@ -58,6 +61,7 @@ model Listing {
     owner      User       @relation(fields: [ownerId], references: [id])
     images     Image[]
     categories Category[]
+    conversations Conversation[]
 }
 
 enum ListingStatus {
@@ -88,8 +92,48 @@ model Category {
     listings Listing[]
 }
 
+// -------- Messaging System --------
+
+model Conversation {
+    id        String    @id @default(cuid())
+    user1Id   String
+    user2Id   String
+    listingId String?
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @default(now()) @updatedAt
+    
+    // Relations
+    user1     User      @relation("User1Conversations", fields: [user1Id], references: [id])
+    user2     User      @relation("User2Conversations", fields: [user2Id], references: [id])
+    listing   Listing?  @relation(fields: [listingId], references: [id])
+    messages  Message[]
+
+    @@unique([user1Id, user2Id, listingId])
+    @@index([user1Id])
+    @@index([user2Id])
+    @@map("conversation")
+}
+
+model Message {
+    id             String       @id @default(cuid())
+    conversationId String
+    senderId       String
+    content        String
+    read           Boolean      @default(false)
+    createdAt      DateTime     @default(now())
+    updatedAt      DateTime     @default(now()) @updatedAt
+
+    // Relations
+    conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender         User         @relation(fields: [senderId], references: [id])
+
+    @@index([conversationId])
+    @@index([senderId])
+    @@index([createdAt])
+    @@map("message")
+}
+
 // -------- Future Features (to be added in separate PRs) --------
-// - Messaging system (Conversation, Message)
 // - Reviews and ratings (Review)
 // - Reports and moderation (Report)
 // - Notifications (Notification)
