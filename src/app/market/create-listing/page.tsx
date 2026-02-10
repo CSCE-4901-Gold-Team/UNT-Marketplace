@@ -106,19 +106,17 @@ export default function CreateListing() {
     };
 
     return (
-        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 transition-colors">
+        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 text-black dark:text-white transition-colors">
             <div className="w-full max-w-1xl">
-                <h1 className="text-4xl mb-6">Create New Listing</h1>
+                <h1 className="text-4xl mb-6 text-black dark:text-white">Create New Listing</h1>
 
-                <form action={formAction} className="flex flex-col gap-4">
-                    
-                    {/* Hidden field for listing ID when editing */}
-                    {isEditing && <input type="hidden" name="listingId" value={listingId || ""} />}
+                <form action={formAction} className="max-w-2xl flex flex-col gap-4 text-black dark:text-white">
                     
                     {/* Title */}
                     <TextInput
                         inputLabel="Title"
                         name="title"
+                        className="text-black"
                         type="text"
                         placeholder="MacBook Pro 2020"
                         value={title}

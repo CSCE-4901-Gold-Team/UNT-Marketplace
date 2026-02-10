@@ -139,20 +139,32 @@ export default function MarketSection({
                 <h1 className="ml-100 mb-20">
                     Listings
                 </h1>
-                <h2>
-                    Category
-                </h2>
-                <CategoryList 
-                    selectedCategory={selectedCategory}
-                    onCategorySelect={(category) => {
-                        setSelectedCategory(category);
-                        setFilterObject(prev => ({ ...prev, categories: category ? [category] : undefined }));
-                    }}
-                />
+                <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                        <h2>
+                            Category
+                        </h2>
+                        <CategoryList 
+                            selectedCategory={selectedCategory}
+                            onCategorySelect={(category) => {
+                                setSelectedCategory(category);
+                                setFilterObject(prev => ({ ...prev, categories: category ? [category] : undefined }));
+                            }}
+                        />
+                    </div>
+                    <div className="market-filter-container">
+                        <MarketFilterControls
+                            filterObject={filterObject}
+                            setFilterObjectAction={setFilterObject}
+                            refreshListingsAction={searchListings}
+                            userRole={userRole}
+                        />
+                    </div>
+                </div>
             </div>
 
-            <div className="market-controls flex gap-0 justify-between items-center mr-0">
-                <div className="market-search-container translate-x-80 mr-0">
+            <div className="market-controls flex gap-0 justify-start items-center">
+                <div className="market-search-container translate-x-80">
                     <div className="flex">
                         <TextInput inputClasses="rounded-r-none border-r-0"
                             onChange={e => setSearchQuery(e.target.value)}
