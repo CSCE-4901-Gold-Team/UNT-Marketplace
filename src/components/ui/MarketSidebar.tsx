@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {IoMdCloseCircle} from "react-icons/io";
 import NavItem from "@/components/ui/NavItem";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
+import BackgroundToggleButton from "@/components/ui/BackgroundToggleButton";
 import { usePathname } from "next/navigation";
 import UNTLogo from "@/assets/UNT 16.png";
 
@@ -32,27 +32,16 @@ export default function MarketSidebar({
 
                 {/* Sidebar Logo */}
                 <div id="marketSidebarLogo" className="bg-gradient-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
-                    <div className="flex justify-center mb-2">
-                        <Image src={UNTLogo} alt="UNT Logo" width={80} height={80} priority />
+                    <div className="flex justify-center">
+                        <Image src={UNTLogo} alt="UNT Logo" width={200} height={200} priority />
                     </div>
-                    <div className="text-3xl font-black text-center tracking-tight">UNT Marketplace</div>
-                    <div className="text-sm text-end me-4 opacity-90 font-semibold">Buy. Sell. Swap.</div>
                 </div>
 
                 {/* TOP MENU */}
                 <div id="marketSidebarTopMenu" className="flex flex-col gap-3 px-4 font-black text-gray-700">
                      <div className="flex items-center justify-between px-2 mb-1">
-                        <div className="text-base font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marketplace</div>
+                        <div className="text-base font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marketplace</div>
                         <div className="flex items-center gap-2">
-                            {/* Profile Picture */}
-                            <Link href="/profile" className="no-underline">
-                                <div className="w-8 h-8 rounded-full bg-green-600 dark:bg-green-700 flex items-center justify-center text-white font-bold text-sm hover:bg-green-700 dark:hover:bg-green-600 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                    </svg>
-                                </div>
-                            </Link>
-                            
                             {/* Settings */}
                             <Link href="/profile" className="no-underline">
                                 <button className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
@@ -63,8 +52,8 @@ export default function MarketSidebar({
                                 </button>
                             </Link>
                             
-                            {/* Dark Mode Toggle */}
-                            <DarkModeToggle />
+                            {/* Background Toggle Button (Moon/Sun) */}
+                            <BackgroundToggleButton />
                         </div>
                     </div>
 
