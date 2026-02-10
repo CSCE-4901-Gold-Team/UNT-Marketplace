@@ -7,7 +7,7 @@ export default function DarkModeToggle() {
   const [mounted, setMounted] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
 
-  // Read current theme state on mount (don't apply, DarkModeInit already did)
+  // Initialize theme on mount
   React.useEffect(() => {
     setMounted(true);
     try {
