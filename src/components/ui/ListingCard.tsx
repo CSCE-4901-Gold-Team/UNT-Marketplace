@@ -21,7 +21,7 @@ export default function ListingCard({
     return (
         <div className="listing group relative">
             <div className="listing-image">
-                <div className="h-[350px] bg-gray-300 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
+                <div className="h-[350px] bg-gray-300 dark:bg-gray-700 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
                     {hasValidImage ? (
                         <Image
                             src={`${listing.images[0].url}`}
@@ -31,7 +31,7 @@ export default function ListingCard({
                             unoptimized
                         />
                     ) : (
-                        <div className="w-full h-full bg-gray-300" />
+                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700" />
                     )}
                 </div>
             </div>

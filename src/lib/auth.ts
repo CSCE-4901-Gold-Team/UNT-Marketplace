@@ -19,7 +19,18 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: true,
+        requireEmailVerification: false,
+        // Domain validation
+        validateEmail: async (email: string) => {
+            const domain = email.split("@")[1];
+            if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
+                return {
+                    valid: false,
+                    error: `Only ${ALLOWED_EMAIL_DOMAINS.join(" or ")} email addresses are allowed`,
+                };
+            }
+            return { valid: true };
+        },
         // Password reset email
         sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
             // Fire and forget for password reset emails too
@@ -29,7 +40,7 @@ export const auth = betterAuth({
         },
     },
     emailVerification: {
-        sendOnSignUp: true,
+        sendOnSignUp: false,
         expiresIn: 300, // 5 minutes
         sendVerificationEmail: async ({ user, url }) => {
             try {

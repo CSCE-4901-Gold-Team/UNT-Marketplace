@@ -7,6 +7,7 @@ import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
 import Card from "@/components/ui/Card";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 function VerifyEmailContent() {
     const router = useRouter();
@@ -53,7 +54,10 @@ function VerifyEmailContent() {
     }, [token]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+            <div className="absolute top-4 right-4">
+                <DarkModeToggle />
+            </div>
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Email Verification</h1>
 
@@ -82,7 +86,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
     return (
         <Suspense fallback={
-            <div className="flex min-h-screen items-center justify-center bg-gray-100">
+            <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors">
                 <div className="text-center">Loading...</div>
             </div>
         }>
