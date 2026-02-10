@@ -55,11 +55,8 @@ export const auth = betterAuth({
                         // Email failure doesn't prevent registration
                     });
                 // Return immediately without waiting for email to be sent
-                return { success: true };
             } catch (error) {
                 console.error("❌ Email verification callback initialization failed:", error);
-                // Return success anyway - email will be sent in background
-                return { success: true };
             }
         },
     },
