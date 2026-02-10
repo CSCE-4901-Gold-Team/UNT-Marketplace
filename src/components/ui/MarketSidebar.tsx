@@ -5,6 +5,9 @@ import Link from "next/link";
 import Image from "next/image";
 import {IoMdCloseCircle} from "react-icons/io";
 import NavItem from "@/components/ui/NavItem";
+import BackgroundToggleButton from "@/components/ui/BackgroundToggleButton";
+import { usePathname } from "next/navigation";
+import UNTLogo from "@/assets/UNT 16.png";
 
 export default function MarketSidebar({
     showSidebar,
@@ -29,11 +32,11 @@ export default function MarketSidebar({
 
                 {/* Sidebar Logo */}
                 <div id="marketSidebarLogo" className="bg-gradient-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
-                    <div className="flex justify-center mb-2">
-                        <Image src={UNTLogo} alt="UNT Logo" width={80} height={80} priority />
+                    <div className="flex justify-center">
+                        <Image src={UNTLogo} alt="UNT Logo" width={200} height={200} priority />
                     </div>
-                    <div className="text-3xl font-black text-center">UNT Marketplace</div>
-                    <div className="text-md text-end me-6">Buy. Sell. Swap.</div>
+                    <div className="text-3xl font-black text-center tracking-tight">UNT Marketplace</div>
+                    <div className="text-sm text-end me-4 opacity-90 font-semibold">Buy. Sell. Swap.</div>
                 </div>
 
                 {/* MARKETPLACE SECTION */}
