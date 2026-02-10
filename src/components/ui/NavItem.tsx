@@ -8,12 +8,10 @@ export default function NavItem({
     children,
     link,
     setShowSidebarAction,
-    className,
 }: {
     children?: React.ReactNode;
     link: string;
     setShowSidebarAction: (newVal: boolean) => void;
-    className?: string;
 }) {
     const pathname = usePathname();
     const isActive = pathname === link || (link.includes('?') && pathname === link.split('?')[0]);
