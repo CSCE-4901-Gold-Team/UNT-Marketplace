@@ -106,9 +106,9 @@ export default function CreateListing() {
     };
 
     return (
-        <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
-            <div className="w-full max-w-4xl">
-                <h1 className="text-4xl mb-6">{isEditing ? 'Edit Listing' : 'Create New Listing'}</h1>
+        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 transition-colors">
+            <div className="w-full max-w-1xl">
+                <h1 className="text-4xl mb-6">Create New Listing</h1>
 
                 <form action={formAction} className="flex flex-col gap-4">
                     
@@ -185,40 +185,12 @@ export default function CreateListing() {
                         validationErrors={state.validationErrors}
                     />
 
-                    {/* Submit Button */}
-                    <div className="flex gap-4">
-                        <Button 
-                            type="submit" 
-                            buttonSize="lg"
-                            showSpinner={isPending || state.status === FormStatus.SUCCESS}
-                            disabled={isPending || isLoadingData || state.status === FormStatus.SUCCESS}
-                        >
-                            {isEditing ? 'Update Listing' : 'Create Listing'}
-                        </Button>
-                        {isEditing && (
-                            <Button 
-                                type="button"
-                                buttonVariant="secondary"
-                                buttonSize="lg"
-                                onClick={() => window.location.href = `/market/listing/${listingId}`}
-                                disabled={isPending || isLoadingData || state.status === FormStatus.SUCCESS}
-                            >
-                                Cancel
-                            </Button>
-                        )}
-                    </div>
-
-                    {/* Delete Section (only when editing) */}
-                    {isEditing && !showDeleteConfirm && (
-                        <div className="mt-8 pt-6 border-t">
-                            <h2 className="text-xl font-semibold mb-4">Delete</h2>
-                            <Button
-                                type="button"
-                                onClick={() => setShowDeleteConfirm(true)}
-                                buttonVariant="danger"
-                            >
-                                Delete Listing
-                            </Button>
+                    {/* Error/Success Messages */}
+                    {state.message && (
+                        <div className={`p-4 rounded-lg ${
+                            state.message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                        }`}>
+                            {state.message.content}
                         </div>
                     )}
 

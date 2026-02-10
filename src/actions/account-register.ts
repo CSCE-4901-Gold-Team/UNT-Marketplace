@@ -113,7 +113,7 @@ export async function registerAction(
         message: {
             type: "success",
             content:
-                "Registration successful! Please check your email to verify your account.",
+                "Registration successful! You can now log in.",
         },
     };
 }
