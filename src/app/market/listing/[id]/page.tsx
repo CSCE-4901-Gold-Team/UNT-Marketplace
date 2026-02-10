@@ -1,19 +1,12 @@
 import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import ImageCarousel from "@/components/ui/ImageCarousel";
-import { Suspense } from "react";
-import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
+import Image from "next/image";
 
 const prisma = new PrismaClient();
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const session = await auth.api.getSession({
-        headers: await headers()
-    });
     const listing = await prisma.listing.findUnique({
         where: {
             id: id
@@ -35,10 +28,6 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                 select: {
                     id: true,
                     url: true,
-                    sortOrder: true,
-                },
-                orderBy: {
-                    sortOrder: 'asc',
                 }
             }
         }
@@ -50,13 +39,8 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         notFound();
     }
 
-    const isOwner = session?.user?.id === listing.ownerId;
-
     return (
         <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
-            <Suspense fallback={null}>
-                <ListingSuccessToast />
-            </Suspense>
             <div className="w-full max-w-4xl mx-auto">
                 <Link href="/market" className="text-green hover:underline mb-4 inline-block">
                     ← Back to all listings
@@ -118,7 +102,6 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                             </p>
                         </div>
                     </div>
-                )}
 
                     <div className="flex gap-4 mt-6">
                         <button className="flex-1 bg-green text-white py-3 rounded-lg hover:opacity-90">
