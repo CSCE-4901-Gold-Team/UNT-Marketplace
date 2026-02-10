@@ -33,12 +33,9 @@ export default function SignUpPage() {
             toastService.toast(registerFormResponse.message.content, registerFormResponse.message.type);
         }
         
-        // On success, redirect to email verification page (user needs to check email)
+        // Redirect user on success to verification page
         if (registerFormResponse.status === FormStatus.SUCCESS) {
-            // Don't redirect immediately - let the page show a message that redirects after delay
-            setTimeout(() => {
-                router.push("/");
-            }, 3000); // Redirect after 3 seconds
+            router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
     }, [registerFormResponse, router]);
     
@@ -53,8 +50,7 @@ export default function SignUpPage() {
                 {registerFormResponse.status === FormStatus.SUCCESS &&
                     <Alert alertType="success">
                         <h3>Registration success!</h3>
-                        <p>Check your email for a verification link. Click the link to verify your account.</p>
-                        <p style={{marginTop: '10px', fontSize: '14px'}}>You will be redirected to home in a moment...</p>
+                        <p>If you&#39;re not redirected <Link href="/">click here</Link></p>
                     </Alert>
                 }
 

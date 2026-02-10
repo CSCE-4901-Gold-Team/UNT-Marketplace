@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
