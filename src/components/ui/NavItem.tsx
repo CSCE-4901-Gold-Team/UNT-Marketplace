@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function NavItem({
     children,
@@ -14,6 +15,8 @@ export default function NavItem({
     setShowSidebarAction: (newVal: boolean) => void;
     className?: string;
 }) {
+    const pathname = usePathname();
+    const isActive = pathname === link || (link.includes('?') && pathname === link.split('?')[0]);
 
     const containerClasses = [
         "flex gap-3 px-3 py-4 rounded-xl hover:bg-gray-300",
@@ -21,8 +24,12 @@ export default function NavItem({
     ].filter(Boolean).join(" ");
 
     return (
-        <Link href={link} onClick={() => setShowSidebarAction(false)}>
-            <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
+        <Link href={link} onClick={() => setShowSidebarAction(false)} className="no-underline">
+            <div className={`flex items-center gap-3 px-3 py-3.5 rounded-xl transition-colors ${
+                isActive 
+                    ? "bg-green-600 text-white dark:bg-green-700" 
+                    : "hover:bg-gray-300 dark:hover:bg-gray-700"
+            }`}>
                 {children}
             </div>
         </Link>
