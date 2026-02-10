@@ -34,27 +34,38 @@ export const auth = betterAuth({
         sendVerificationEmail: async ({ user, url }) => {
             try {
                 console.log("🔄 Starting email verification callback for:", user.email);
-                // Extract the token from the better-auth URL
-                // better-auth provides URL like: http://localhost:3000/api/auth/verify-email?token=...
-                // We need to convert it to our verification page: /verify-email?token=...
-                const urlObj = new URL(url);
-                const token = urlObj.searchParams.get("token");
-                const verificationUrl = `${process.env.BETTER_AUTH_URL}/verify-email?token=${token}`;
-                
-                console.log("🔗 Original URL from better-auth:", url);
-                console.log("🔗 Converted verification URL:", verificationUrl);
-                
-                // Fire and forget - don't await to avoid blocking registration
-                // Email sending happens in the background
+                console.log("🔗 URL from better-auth:", url);
+
+                // Resolve the base URL dynamically.
+                // Vercel sets VERCEL_URL automatically (without protocol) on every deployment.
+                const baseUrl =
+                    process.env.BETTER_AUTH_URL ||
+                    process.env.APP_URL ||
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
+                    "http://localhost:3000";
+
+                // better-auth may pass a relative or absolute URL – handle both.
+                let token: string | null = null;
+                try {
+                    const urlObj = new URL(url);
+                    token = urlObj.searchParams.get("token");
+                } catch {
+                    // Relative URL – use baseUrl so the constructor succeeds.
+                    const urlObj = new URL(url, baseUrl);
+                    token = urlObj.searchParams.get("token");
+                }
+
+                const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+                console.log("🔗 Verification URL:", verificationUrl);
+
+                // Fire and forget – don't await to avoid blocking registration
                 sendVerificationEmail(user.email, verificationUrl)
                     .then(result => {
                         console.log("✅ Email verification sent successfully", result);
                     })
                     .catch(error => {
                         console.error("❌ Email verification failed (non-blocking):", error);
-                        // Email failure doesn't prevent registration
                     });
-                // Return immediately without waiting for email to be sent
             } catch (error) {
                 console.error("❌ Email verification callback initialization failed:", error);
             }
