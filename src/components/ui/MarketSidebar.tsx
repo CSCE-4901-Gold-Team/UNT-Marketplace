@@ -32,7 +32,7 @@ export default function MarketSidebar({
                 </div>
 
                 {/* TOP MENU */}
-                <div id="marketSidebarTopMenu" className="flex flex-col gap-1 px-4 font-black text-gray-700">
+                <div id="marketSidebarTopMenu" className="flex flex-col gap-3 px-4 font-black text-gray-700">
 
                     {/* View Listings */}
                     <NavItem
@@ -54,30 +54,15 @@ export default function MarketSidebar({
                         link="/market/create-listing"
                         setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
                     >
-                        <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     strokeWidth="1.5" stroke="currentColor" className="size-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round"
-                                          d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                            </div>
-                            <div>Create Listing</div>
-                        </div>
-                    </NavItem>
-
-                    {/* You can replace these with real menu items later */}
-                    <div className="flex gap-2 px-1.5 py-3 rounded-xl">
                         <div>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                 viewBox="0 0 24 24" strokeWidth="1.5"
-                                 stroke="currentColor" className="size-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                      d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
                         </div>
-                        <div>Menu Item Label</div>
-                    </div>
+                        <div>Create Listing</div>
+                    </NavItem>
 
                 </div>
 

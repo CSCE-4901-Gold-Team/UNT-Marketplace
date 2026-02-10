@@ -21,11 +21,11 @@ export default function CreateListing() {
     const [selectedImage, setSelectedImage] = useState<string>("");
 
     return (
-        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12">
-            <div className="w-full max-w-1xl">
+        <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
+            <div className="w-full max-w-4xl">
                 <h1 className="text-4xl mb-6">Create New Listing</h1>
 
-                <form action={formAction} className="max-w-2xl flex flex-col gap-4">
+                <form action={formAction} className="flex flex-col gap-4">
                     
                     {/* Title */}
                     <TextInput
