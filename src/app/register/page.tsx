@@ -35,10 +35,7 @@ export default function SignUpPage() {
         
         // Redirect user on success to verification page
         if (registerFormResponse.status === FormStatus.SUCCESS) {
-            // Don't redirect immediately - let the page show a message that redirects after delay
-            setTimeout(() => {
-                router.push("/market");
-            }, 3000); // Redirect after 3 seconds
+            router.push(`/verify-email?email=${encodeURIComponent(email)}`);
         }
     }, [registerFormResponse, router]);
     

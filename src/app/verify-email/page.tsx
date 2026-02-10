@@ -28,18 +28,9 @@ function VerifyEmailContent() {
 
             try {
                 setLoading(true);
-                const response = await fetch(
-                    `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
-                    {
-                        method: "GET",
-                    }
-                );
-
-                if (!response.ok) {
-                    setStatus("error");
-                    setMessage("Email verification failed. The link may have expired.");
-                    return;
-                }
+                await auth.api.verifyEmail({
+                    query: { token }
+                });
 
                 setStatus("success");
                 setMessage("Your email has been verified successfully!");
