@@ -5,6 +5,7 @@ import MarketSection from "@/components/features/MarketSection";
 import {Suspense} from "react";
 import MarketSuspense from "@/components/suspense/MarketSuspense";
 import {getCurrentUserRole} from "@/actions/user-actions";
+import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 
 export default async function MarketPage() {
     const listingsResponse = getListings("", {}, 0, 12);
@@ -12,6 +13,9 @@ export default async function MarketPage() {
 
     return (
         <main className="px-8 py-4 lg:px-20 lg:py-12">
+            <Suspense fallback={null}>
+                <ListingSuccessToast />
+            </Suspense>
             <Suspense fallback={<MarketSuspense/>}>
                 <MarketSection
                     listingsResponse={listingsResponse}
