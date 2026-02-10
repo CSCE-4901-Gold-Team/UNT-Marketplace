@@ -58,14 +58,14 @@ export const auth = betterAuth({
                 const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
                 console.log("🔗 Verification URL:", verificationUrl);
 
-                // Fire and forget – don't await to avoid blocking registration
-                sendVerificationEmail(user.email, verificationUrl)
-                    .then(result => {
-                        console.log("✅ Email verification sent successfully", result);
-                    })
-                    .catch(error => {
-                        console.error("❌ Email verification failed (non-blocking):", error);
-                    });
+                // Await the email send so Vercel doesn't terminate the
+                // serverless function before SendGrid responds.
+                const result = await sendVerificationEmail(user.email, verificationUrl);
+                if (result.success) {
+                    console.log("✅ Email verification sent successfully", result);
+                } else {
+                    console.error("❌ Email verification failed:", result.error);
+                }
             } catch (error) {
                 console.error("❌ Email verification callback initialization failed:", error);
             }
