@@ -124,7 +124,7 @@ export default function CreateListing() {
     };
 
     return (
-        <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
+        <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 transition-colors">
             <div className="w-full max-w-4xl">
                 <h1 className="text-4xl mb-6">{isEditing ? 'Edit Listing' : 'Create New Listing'}</h1>
 

@@ -11,6 +11,7 @@ import Link from "next/link";
 import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -36,7 +37,10 @@ export default function LoginPage() {
     }, [loginFormResponse, router]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+            <div className="absolute top-4 right-4">
+                <DarkModeToggle />
+            </div>
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 
@@ -83,7 +87,7 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             validationErrors={loginFormResponse.validationErrors}
                         />
-                        <p className="text-end text-sm text-gray-50 mt-1"><Link href="/forgot-password" className="text-green-700 hover:underline">Forgot password</Link>
+                        <p className="text-end text-sm mt-1"><Link href="/forgot-password" className="text-green-700 dark:text-green-400 hover:underline">Forgot password</Link>
                         </p>
                     </div>
 

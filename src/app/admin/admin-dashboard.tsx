@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { $Enums } from "@prisma/client";
 import { getAdminStats, getRecentlyListedItems, getFirstListingsAwaitingApproval, getAllUsers, approveFirstListing, rejectFirstListing, getSuspendedUsers, deleteListing } from "@/actions/admin-actions";
 import { updateAdminUser, suspendUser, banUser, setUserActive } from "@/actions/user-actions";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 interface User {
     id: string;
@@ -365,11 +366,14 @@ export default function Admin({ userRole }: { userRole: string | null }) {
     }
 
     return (
-        <main className="px-20 py-12 flex flex-col gap-6">
+        <main className="px-20 py-12 flex flex-col gap-6 bg-white dark:bg-gray-900 min-h-screen transition-colors">
+            <div className="absolute top-4 right-4">
+                <DarkModeToggle />
+            </div>
             <div className="flex justify-between items-start">
                 <div>
                     <h1 className="text-4xl font-bold">Admin Dashboard</h1>
-                    <p className="text-gray-600 mt-2">Overview of marketplace activity and management tools</p>
+                    <p className="text-gray-600 dark:text-gray-400 mt-2">Overview of marketplace activity and management tools</p>
                 </div>
                 <button
                     onClick={() => router.push("/market")}
@@ -383,37 +387,37 @@ export default function Admin({ userRole }: { userRole: string | null }) {
 
             {/* Stats Cards */}
             <div className="grid grid-cols-5 gap-6">
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="text-gray-500 text-sm font-semibold mb-2">Total Users</div>
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
+                    <div className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2">Total Users</div>
                     <div className="text-3xl font-black text-green">{loading ? "-" : stats.totalUsers.toLocaleString()}</div>
-                    <div className="text-xs text-gray-400 mt-1">Registered on platform</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">Registered on platform</div>
                 </div>
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="text-gray-500 text-sm font-semibold mb-2">Active Listings</div>
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
+                    <div className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2">Active Listings</div>
                     <div className="text-3xl font-black text-green">{loading ? "-" : stats.activeListings}</div>
-                    <div className="text-xs text-gray-400 mt-1">Currently available</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">Currently available</div>
                 </div>
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="text-gray-500 text-sm font-semibold mb-2">Pending Approvals</div>
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
+                    <div className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2">Pending Approvals</div>
                     <div className="text-3xl font-black text-orange-500">{loading ? "-" : pendingListings.length}</div>
-                    <div className="text-xs text-gray-400 mt-1">First listings to review</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">First listings to review</div>
                 </div>
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="text-gray-500 text-sm font-semibold mb-2">Pending Reports</div>
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
+                    <div className="text-gray-500 dark:text-gray-400 text-sm font-semibold mb-2">Pending Reports</div>
                     <div className="text-3xl font-black text-red-500">{loading ? "-" : stats.pendingReports}</div>
                     <div className="text-xs text-gray-400 mt-1">Reported listings</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition" onClick={() => setShowSuspendedUsers(!showSuspendedUsers)}>
                     <div className="text-gray-500 text-sm font-semibold mb-2">Suspended Users</div>
                     <div className="text-3xl font-black text-orange-600">{loading ? "-" : stats.suspendedCount}</div>
-                    <div className="text-xs text-gray-400 mt-1">Suspended or banned</div>
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">Suspended or banned</div>
                 </div>
             </div>
 
             {/* Recent Activity */}
             <div>
                 <h2 className="text-2xl font-bold mb-4">Recently Listed Items</h2>
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
                     <div className="mb-4">
                         <input
                             type="text"
@@ -425,31 +429,31 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                     </div>
                     <div className="flex flex-col gap-4">
                         {loading ? (
-                            <div className="text-gray-500 text-center py-8">Loading...</div>
+                            <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading...</div>
                         ) : filteredListings.length === 0 ? (
-                            <div className="text-gray-500 text-center py-8">{listingSearchQuery ? 'No listings match your search' : 'No recent listings'}</div>
+                            <div className="text-gray-500 dark:text-gray-400 text-center py-8">{listingSearchQuery ? 'No listings match your search' : 'No recent listings'}</div>
                         ) : (
                             filteredListings.map((listing, index) => (
                                 <div key={listing.id}>
                                     <div
                                         onClick={() => setExpandedListingId(expandedListingId === listing.id ? null : listing.id)}
-                                        className={`flex items-center justify-between py-3 px-2 cursor-pointer hover:bg-gray-50 rounded-lg transition ${index !== filteredListings.length - 1 ? 'border-b border-gray-100' : ''
+                                        className={`flex items-center justify-between py-3 px-2 cursor-pointer hover:bg-gray-50 rounded-lg transition ${index !== filteredListings.length - 1 ? 'border-b border-gray-100 dark:border-gray-700' : ''
                                             }`}
                                     >
                                         <div className="flex items-center gap-4 flex-1">
-                                            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                            <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center transition-colors">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5 text-green">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                                 </svg>
                                             </div>
                                             <div className="flex-1">
                                                 <div className="font-semibold">{listing.title}</div>
-                                                <div className="text-sm text-gray-500">{listing.price} · {listing.category}</div>
-                                                <div className="text-xs text-gray-400">by {listing.sellerName} ({listing.seller})</div>
+                                                <div className="text-sm text-gray-500 dark:text-gray-400">{listing.price} · {listing.category}</div>
+                                                <div className="text-xs text-gray-400 dark:text-gray-500">by {listing.sellerName} ({listing.seller})</div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
-                                            <div className="text-sm text-gray-400">{listing.date}</div>
+                                            <div className="text-sm text-gray-400 dark:text-gray-500">{listing.date}</div>
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 fill="none"
@@ -491,8 +495,8 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             <div>
                 <h2 className="text-2xl font-bold mb-4">First Listings Awaiting Approval</h2>
 
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="grid grid-cols-6 font-semibold text-gray-700 mb-3">
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
+                    <div className="grid grid-cols-6 font-semibold text-gray-700 dark:text-gray-300 mb-3">
                         <div>Listing Title</div>
                         <div>Seller</div>
                         <div>Category</div>
@@ -500,17 +504,17 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                         <div>Date Submitted</div>
                         <div>Action</div>
                     </div>
-                    <div className="h-px my-3 bg-gray-200" />
+                    <div className="h-px my-3 bg-gray-200 dark:bg-gray-700" />
 
                     {loading ? (
-                        <div className="text-gray-500 text-center py-8">Loading...</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading...</div>
                     ) : pendingListings.length === 0 ? (
-                        <div className="text-gray-500 text-center py-8">No pending listings</div>
+                        <div className="text-gray-500 dark:text-gray-400 text-center py-8">No pending listings</div>
                     ) : (
                         pendingListings.map((listing) => (
                             <div
                                 key={listing.id}
-                                className="grid grid-cols-6 py-3 items-center hover:bg-green-50 rounded-xl px-2 transition"
+                                className="grid grid-cols-6 py-3 items-center hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl px-2 transition"
                             >
                                 <div className="truncate" title={listing.title}>{listing.title}</div>
                                 <div className="truncate text-sm" title={listing.seller}>{listing.seller}</div>
@@ -593,7 +597,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             <div>
                 <h2 className="text-2xl font-bold mb-4">User Directory</h2>
 
-                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
+                <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-6 transition-colors">
                     <div className="mb-4">
                         <input
                             type="text"
@@ -604,7 +608,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                         />
                     </div>
                     <div className="overflow-x-auto">
-                        <div className="grid grid-cols-7 font-semibold text-gray-700 mb-3">
+                        <div className="grid grid-cols-7 font-semibold text-gray-700 dark:text-gray-300 mb-3">
                             <div>Name</div>
                             <div>Email</div>
                             <div>Role</div>
@@ -613,18 +617,18 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                             <div>Reports</div>
                             <div>Action</div>
                         </div>
-                        <div className="h-px my-3 bg-gray-200" />
+                        <div className="h-px my-3 bg-gray-200 dark:bg-gray-700" />
 
                         {loading ? (
-                            <div className="text-gray-500 text-center py-8">Loading...</div>
+                            <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading...</div>
                         ) : filteredUsers.length === 0 ? (
-                            <div className="text-gray-500 text-center py-8">{userSearchQuery ? 'No users match your search' : 'No users found'}</div>
+                            <div className="text-gray-500 dark:text-gray-400 text-center py-8">{userSearchQuery ? 'No users match your search' : 'No users found'}</div>
                         ) : (
                             filteredUsers.map((user) => (
                                 <div key={user.id}>
                                     <div
                                         onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
-                                        className="grid grid-cols-7 py-3 hover:bg-green-50 rounded-xl px-2 transition items-center cursor-pointer"
+                                        className="grid grid-cols-7 py-3 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-xl px-2 transition items-center cursor-pointer"
                                     >
                                         <div className="truncate">{user.name}</div>
                                         <div className="truncate text-sm">{user.email}</div>
@@ -681,8 +685,8 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             {/* User Info Modal */}
             {
                 selectedUser && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-2xl w-[450px] p-6 shadow-lg">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center z-50">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl w-[450px] p-6 shadow-lg transition-colors">
                             <h3 className="text-2xl font-bold mb-4 text-center">Edit User Info</h3>
                             <div className="flex flex-col gap-4">
                                 <label className="flex flex-col text-sm">
@@ -691,7 +695,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                                         name="name"
                                         value={selectedUser.name}
                                         onChange={handleChange}
-                                        className="border border-gray-300 rounded-xl p-2 mt-1"
+                                        className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-xl p-2 mt-1 transition-colors"
                                     />
                                 </label>
                                 <label className="flex flex-col text-sm">
@@ -700,7 +704,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                                         name="email"
                                         value={selectedUser.email}
                                         onChange={handleChange}
-                                        className="border border-gray-300 rounded-xl p-2 mt-1"
+                                        className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-xl p-2 mt-1 transition-colors"
                                     />
                                 </label>
                                 <label className="flex flex-col text-sm">
@@ -709,7 +713,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                                         name="role"
                                         value={selectedUser.role}
                                         onChange={handleChange}
-                                        className="border border-gray-300 rounded-xl p-2 mt-1"
+                                        className="border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-xl p-2 mt-1 transition-colors"
                                     >
                                         <option>STUDENT</option>
                                         <option>FACULTY</option>
@@ -721,7 +725,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                             <div className="flex justify-end gap-3 mt-6">
                                 <button
                                     onClick={() => setSelectedUser(null)}
-                                    className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300 transition"
+                                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                                 >
                                     Cancel
                                 </button>

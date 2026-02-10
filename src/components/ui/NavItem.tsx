@@ -16,7 +16,7 @@ export default function NavItem({
 }) {
 
     const containerClasses = [
-        "flex gap-3 px-3 py-4 rounded-xl hover:bg-gray-300",
+        "flex gap-3 px-3 py-4 rounded-xl dark:hover:bg-gray-700 transition-colors hover:bg-gray-300",
         className,
     ].filter(Boolean).join(" ");
 
@@ -24,7 +24,7 @@ export default function NavItem({
         <Link
             href={link}
             onClick={() => setShowSidebarAction(false)}
-            className="no-underline"
+            className="no-underline "
         >
             <div className={containerClasses}>
                 {children}

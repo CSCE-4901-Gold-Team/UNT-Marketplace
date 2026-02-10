@@ -70,7 +70,7 @@ export default function CategoryInput({
 
             <div className="flex flex-wrap gap-2 mb-2">
                 {localOptions.length === 0 && newNames.length === 0 && (
-                    <div className="text-sm text-gray-500">At least one category is required</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">At least one category is required</div>
                 )}
 
                 {/* Selected existing categories - render as chips */}
@@ -95,7 +95,7 @@ export default function CategoryInput({
                 {newNames.map((n) => (
                     <span
                         key={n}
-                        className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-green-50 text-green-800 border border-green-100 text-sm"
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-100 dark:border-green-700 text-sm"
                     >
                         {n}
                         <button

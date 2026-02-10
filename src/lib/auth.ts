@@ -28,7 +28,7 @@ export const auth = betterAuth({
         },
     },
     emailVerification: {
-        sendOnSignUp: true,
+        sendOnSignUp: false,
         expiresIn: 300, // 5 minutes
         sendVerificationEmail: async ({ user, url }) => {
             try {
