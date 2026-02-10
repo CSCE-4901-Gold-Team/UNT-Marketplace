@@ -1,8 +1,5 @@
 ﻿import { test, expect } from '@playwright/test';
 import {PrismaClient} from "@prisma/client";
-import {use} from "react";
-
-const prisma = new PrismaClient();
 
 test('Has registration inputs', async ({ page }) => {
     await page.goto('/register');
