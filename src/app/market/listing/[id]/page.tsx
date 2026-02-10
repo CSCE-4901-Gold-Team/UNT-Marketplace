@@ -57,40 +57,40 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
             <Suspense fallback={null}>
                 <ListingSuccessToast />
             </Suspense>
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-4xl mx-auto">
                 <Link href="/market" className="text-green hover:underline mb-4 inline-block">
                     ← Back to all listings
                 </Link>
 
-                <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
+                <div className="bg-white rounded-lg shadow-lg p-8">
+                    <div className="flex justify-between items-start mb-4">
+                        <h1 className="text-4xl font-bold">{listing.title}</h1>
+                        {isOwner && (
+                            <Link 
+                                href={`/market/create-listing?edit=true&id=${listing.id}`}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Edit
+                            </Link>
+                        )}
+                    </div>
+                    
+                    {/* Image Carousel */}
+                    <ImageCarousel images={listing.images} alt={listing.title} />
 
-                <div className="flex justify-between items-start mb-4">
-                    {isOwner && (
-                        <Link
-                            href={`/market/create-listing?edit=true&id=${listing.id}`}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                        >
-                            Edit
-                        </Link>
-                    )}
-                </div>
+                    <div className="flex items-center justify-between mb-6 pb-6 border-b">
+                        <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
+                        {listing.isProfessorOnly && (
+                            <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded">
+                                Professor Only
+                            </span>
+                        )}
+                    </div>
 
-                {/* Image Carousel */}
-                <ImageCarousel images={listing.images} alt={listing.title} />
-
-                <div className="flex items-center justify-between mb-6 pb-6 border-b">
-                    <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
-                    {listing.isProfessorOnly && (
-                        <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded">
-                            Professor Only
-                        </span>
-                    )}
-                </div>
-
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Description</h2>
-                    <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
-                </div>
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold mb-2">Description</h2>
+                        <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
+                    </div>
 
                 {listing.categories.length > 0 && (
                     <div className="mb-6">
@@ -108,16 +108,17 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                     </div>
                 )}
 
-                {!isOwner && (
-                    <div className="flex gap-4 mt-6">
-                        <button className="flex-1 bg-green text-white py-3 rounded-lg hover:opacity-90">
-                            Contact Seller
-                        </button>
-                        <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                            Share
-                        </button>
-                    </div>
-                )}
+                    {!isOwner && (
+                        <div className="flex gap-4 mt-6">
+                            <button className="flex-1 bg-green text-white py-3 rounded-lg hover:opacity-90">
+                                Contact Seller
+                            </button>
+                            <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
+                                Share
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </main>
     );

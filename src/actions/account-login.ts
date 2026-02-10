@@ -1,10 +1,10 @@
-﻿"use server";
+"use server";
 
 import {FormResponse} from "@/types/FormResponse";
 import * as z from "zod";
 import {ZodValidators} from "@/utils/ZodValidators";
 import {FormStatus} from "@/constants/FormStatus";
-import {auth} from "@/lib/auth";
+import {auth, prisma} from "@/lib/auth";
 import {APIError} from "better-auth";
 
 const LoginRequest = z.object({
@@ -28,6 +28,22 @@ export async function loginAction(initialState: FormResponse, formData: FormData
                 type: "error",
                 content: "One or more validation errors have occured."
             }
+        };
+    }
+
+    // Check if email is verified before allowing login
+    const user = await prisma.user.findUnique({
+        where: { email: parsedFormData.data.email },
+        select: { emailVerified: true },
+    });
+
+    if (user && !user.emailVerified) {
+        return {
+            status: FormStatus.ERROR,
+            message: {
+                type: "error",
+                content: "Please verify your email before logging in. Check your inbox for a verification link, or visit the resend verification page.",
+            },
         };
     }
 
