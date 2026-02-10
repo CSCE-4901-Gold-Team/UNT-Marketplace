@@ -21,7 +21,11 @@ export default function NavItem({
     ].filter(Boolean).join(" ");
 
     return (
-        <Link href={link} onClick={() => setShowSidebarAction(false)}>
+        <Link 
+            href={link} 
+            onClick={() => setShowSidebarAction(false)}
+            className="no-underline"
+        >
             <div className={containerClasses}>
                 {children}
             </div>

@@ -92,32 +92,21 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                         <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
                     </div>
 
-                    {listing.categories.length > 0 && (
-                        <div className="mb-6">
-                            <h2 className="text-xl font-semibold mb-2">Categories</h2>
-                            <div className="flex flex-wrap gap-2">
-                                {listing.categories.map((category) => (
-                                    <span
-                                        key={category.id}
-                                        className="bg-gray-100 text-gray-700 px-3 py-1 rounded"
-                                    >
-                                        {category.name}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="border-t pt-6 mt-6">
-                        <h2 className="text-xl font-semibold mb-4">Seller Information</h2>
-                        <div className="bg-gray-50 rounded p-4">
-                            <p className="font-medium">{listing.owner.name}</p>
-                            <p className="text-gray-600">{listing.owner.email}</p>
-                            <p className="text-sm text-gray-500 mt-2">
-                                Posted: {new Date(listing.createdAt).toLocaleDateString()}
-                            </p>
+                {listing.categories.length > 0 && (
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold mb-2">Categories</h2>
+                        <div className="flex flex-wrap gap-2">
+                            {listing.categories.map((category) => (
+                                <span
+                                    key={category.id}
+                                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded"
+                                >
+                                    {category.name}
+                                </span>
+                            ))}
                         </div>
                     </div>
+                )}
 
                     {!isOwner && (
                         <div className="flex gap-4 mt-6">
