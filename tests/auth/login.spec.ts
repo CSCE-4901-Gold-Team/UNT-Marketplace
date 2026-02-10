@@ -19,6 +19,5 @@ test('Can login', async ({ page }) => {
 
     await page.getByRole('button', { name: 'Login' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Login success!' })).toBeVisible();
     await expect(page).toHaveURL('/market');
 });

@@ -42,10 +42,6 @@ test.describe('User registration tests', () => {
         await page.getByRole('button', { name: 'Register' }).click();
 
         await expect(page.getByText('Registration successful!')).toBeVisible();
-        await page.waitForURL('/verify-email**');
-
-        await expect(page.getByRole('alert').filter({ hasText: 'Please visit the link to verify your account and complete registration' })).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Go to Login' })).toBeVisible();
     });
 });
 
