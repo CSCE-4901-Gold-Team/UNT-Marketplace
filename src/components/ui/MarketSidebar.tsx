@@ -31,10 +31,9 @@ export default function MarketSidebar({
                 </button>
 
                 {/* Sidebar Logo */}
-                <div id="marketSidebarLogo" className="bg-gradient-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
-                    <div className="flex justify-center">
-                        <Image src={UNTLogo} alt="UNT Logo" width={200} height={200} priority />
-                    </div>
+                <div id="marketSidebarLogo" className="bg-green text-white p-4 px-1.5 shadow me-[-.5rem]">
+                    <div className="text-3xl font-black text-center">UNT Marketplace</div>
+                    <div className="text-md text-end me-6">Buy. Sell. Swap.</div>
                 </div>
 
                 {/* MARKETPLACE SECTION */}
@@ -77,11 +76,24 @@ export default function MarketSidebar({
                             setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 strokeWidth="1.5" stroke="currentColor" className="size-7">
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round"
                                       d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
-                            <span className="text-base">Create Listing</span>
+                            <span>Create Listing</span>
+                        </NavItem>
+
+                        {/* My Listings */}
+                        <NavItem
+                            link="/market?filter=my-listings"
+                            setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+                            </svg>
+                            <span>My Listings</span>
                         </NavItem>
 
                         {/* Messages */}
@@ -91,6 +103,13 @@ export default function MarketSidebar({
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  strokeWidth="1.5" stroke="currentColor" className="size-7">
+                        {/* Favorites */}
+                        <NavItem
+                            link="/market?filter=favorites"
+                            setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round"
                                       d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                             </svg>
