@@ -47,6 +47,18 @@ export default function LoginPage() {
                     </Alert>
                 }
 
+                { loginFormResponse.status === FormStatus.ERROR && loginFormResponse.message?.content.includes("verify your email") &&
+                    <Alert alertType="error">
+                        <h3>Email Not Verified</h3>
+                        <p>You must verify your email before logging in.</p>
+                        <p className="mt-2">
+                            <Link href="/resend-verification" className="text-green-700 font-semibold hover:underline">
+                                Resend Verification Email
+                            </Link>
+                        </p>
+                    </Alert>
+                }
+
                 <form action={loginFormAction} className="space-y-4">
 
                     <div>
