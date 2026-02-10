@@ -15,7 +15,7 @@ export default function NavItem({
 
     return (
         <Link href={link} onClick={() => setShowSidebarAction(false)}>
-            <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
+            <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors">
                 {children}
             </div>
         </Link>

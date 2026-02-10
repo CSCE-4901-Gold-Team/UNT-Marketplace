@@ -52,9 +52,9 @@ export default function CategoryList({ selectedCategory, onCategorySelect }: Cat
     }
   };
 
-  if (loading) return <div className="py-4 text-gray-600">Loading categories...</div>;
-  if (error) return <div className="py-4 text-red-500">Error: {error}</div>;
-  if (categories.length === 0) return <div className="py-4 text-gray-600">No categories found</div>;
+  if (loading) return <div className="py-4 text-gray-600 dark:text-gray-400">Loading categories...</div>;
+  if (error) return <div className="py-4 text-red-500 dark:text-red-400">Error: {error}</div>;
+  if (categories.length === 0) return <div className="py-4 text-gray-600 dark:text-gray-400">No categories found</div>;
 
   return (
     <div className="flex flex-wrap gap-3 py-4">

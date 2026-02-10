@@ -21,7 +21,7 @@ export default function CreateListing() {
     const [selectedImage, setSelectedImage] = useState<string>("");
 
     return (
-        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12">
+        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 transition-colors">
             <div className="w-full max-w-1xl">
                 <h1 className="text-4xl mb-6">Create New Listing</h1>
 
@@ -76,7 +76,7 @@ export default function CreateListing() {
                     {/* Error/Success Messages */}
                     {state.message && (
                         <div className={`p-4 rounded-lg ${
-                            state.message.type === "error" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+                            state.message.type === "error" ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300" : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                         }`}>
                             {state.message.content}
                         </div>
