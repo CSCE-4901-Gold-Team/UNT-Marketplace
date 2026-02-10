@@ -183,6 +183,19 @@ export default function CreateListing() {
                         validationErrors={state.validationErrors}
                     />
 
+                    {/* Hidden field for images JSON */}
+                    <input type="hidden" name="imagePath" value={JSON.stringify(selectedImages)} />
+
+                    {/* Submit Button */}
+                    <Button
+                        type="submit"
+                        buttonVariant="primary"
+                        showSpinner={isPending}
+                        disabled={isPending || isLoadingData}
+                    >
+                        {isPending ? "Submitting..." : isEditing ? "Update Listing" : "Create Listing"}
+                    </Button>
+
                     {/* Error/Success Messages */}
                     {state.message && (
                         <div className={`p-4 rounded-lg ${
@@ -190,6 +203,17 @@ export default function CreateListing() {
                         }`}>
                             {state.message.content}
                         </div>
+                    )}
+
+                    {/* Delete Button for Editing Mode */}
+                    {isEditing && !showDeleteConfirm && (
+                        <Button
+                            type="button"
+                            onClick={() => setShowDeleteConfirm(true)}
+                            buttonVariant="danger"
+                        >
+                            Delete Listing
+                        </Button>
                     )}
 
                     {/* Delete Confirmation */}
