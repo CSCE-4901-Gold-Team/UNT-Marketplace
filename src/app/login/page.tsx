@@ -2,6 +2,7 @@
 
 import React, {useActionState, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
 import {FormResponse} from "@/types/FormResponse";
@@ -12,6 +13,7 @@ import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
 import DarkModeToggle from "@/components/ui/DarkModeToggle";
+import UNTLogo from "@/assets/UNT 16.png";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -42,6 +44,9 @@ export default function LoginPage() {
                 <DarkModeToggle />
             </div>
             <Card>
+                <div className="flex justify-center mb-6">
+                    <Image src={UNTLogo} alt="UNT Logo" width={150} height={150} priority />
+                </div>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 
                 { loginFormResponse.status === FormStatus.SUCCESS &&
