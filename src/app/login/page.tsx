@@ -1,8 +1,7 @@
-﻿"use client";
+﻿﻿"use client";
 
 import React, {useActionState, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
 import {FormResponse} from "@/types/FormResponse";
@@ -13,7 +12,6 @@ import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
 import DarkModeToggle from "@/components/ui/DarkModeToggle";
-import UNTLogo from "@/assets/UNT 16.png";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -39,20 +37,29 @@ export default function LoginPage() {
     }, [loginFormResponse, router]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-white dark:bg-gray-900 px-4 gap-5 transition-colors">
             <div className="absolute top-4 right-4">
                 <DarkModeToggle />
             </div>
             <Card>
-                <div className="flex justify-center mb-6">
-                    <Image src={UNTLogo} alt="UNT Logo" width={150} height={150} priority />
-                </div>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 
                 { loginFormResponse.status === FormStatus.SUCCESS &&
                     <Alert alertType="success">
                         <h3>Login success!</h3>
                         <p>If you&#39;re not redirected <Link href="/">click here</Link></p>
+                    </Alert>
+                }
+
+                { loginFormResponse.status === FormStatus.ERROR && loginFormResponse.message?.content.includes("verify your email") &&
+                    <Alert alertType="error">
+                        <h3>Email Not Verified</h3>
+                        <p>You must verify your email before logging in.</p>
+                        <p className="mt-2">
+                            <Link href="/resend-verification" className="text-green-700 dark:text-green-400 font-semibold hover:underline">
+                                Resend Verification Email
+                            </Link>
+                        </p>
                     </Alert>
                 }
 
@@ -97,7 +104,9 @@ export default function LoginPage() {
                 </form>
             </Card>
 
-            <p><Link href="/register">Don&#39;t have an account?</Link></p>
+            <p className="text-gray-700 dark:text-gray-300">
+                <Link href="/register" className="text-green-700 dark:text-green-400 hover:underline font-semibold">Don&#39;t have an account?</Link>
+            </p>
         </div>
     );
 }

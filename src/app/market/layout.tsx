@@ -26,7 +26,7 @@ export default async function MarketLayout({
     // Email not verified → block marketplace
     if (!session.user.emailVerified) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+            <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900">
                 <div className="max-w-md rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-lg text-center">
                     <h1 className="text-2xl font-semibold mb-4 dark:text-white">Email Verification Required</h1>
                     <p className="mb-6 dark:text-gray-300">Please verify your email to access the marketplace.</p>

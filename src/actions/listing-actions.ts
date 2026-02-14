@@ -53,8 +53,8 @@ export async function getListings(
     // Build search object if it's included
     const searchObject = searchQuery ? {
         OR: [
-            {title: {search: searchQuery}},
-            {description: {search: searchQuery}}
+            {title: {contains: searchQuery, mode: 'insensitive'}},
+            {description: {contains: searchQuery, mode: 'insensitive'}}
         ]
     } : {};
 

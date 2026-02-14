@@ -11,6 +11,7 @@ import Link from "next/link";
 import { toastService } from "@/lib/toast-service";
 import { resendVerificationAction } from "@/actions/resend-verification";
 import Card from "@/components/ui/Card";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function ResendVerificationPage() {
     const [email, setEmail] = useState("");
@@ -32,13 +33,16 @@ export default function ResendVerificationPage() {
     }, [formResponse]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-white dark:bg-gray-900 px-4 gap-5 transition-colors">
+            <div className="absolute top-4 right-4">
+                <DarkModeToggle />
+            </div>
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">
                     Resend Verification Email
                 </h1>
 
-                <p className="text-center text-gray-600 mb-6">
+                <p className="text-center text-gray-600 dark:text-gray-300 mb-6">
                     Enter your email address and we&#39;ll send you a new verification
                     link.
                 </p>
@@ -83,8 +87,8 @@ export default function ResendVerificationPage() {
                 </form>
             </Card>
 
-            <p>
-                <Link href="/login">Back to Login</Link>
+            <p className="text-gray-700 dark:text-gray-300">
+                <Link href="/login" className="text-green-700 dark:text-green-400 hover:underline font-semibold">Back to Login</Link>
             </p>
         </div>
     );
