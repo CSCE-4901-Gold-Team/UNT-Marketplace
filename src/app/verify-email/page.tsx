@@ -54,7 +54,7 @@ function VerifyEmailContent() {
     }, [token]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-white dark:bg-gray-900 px-4 gap-5 transition-colors">
             <div className="absolute top-4 right-4">
                 <DarkModeToggle />
             </div>
@@ -86,7 +86,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
     return (
         <Suspense fallback={
-            <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors">
+            <div className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900 transition-colors">
                 <div className="text-center">Loading...</div>
             </div>
         }>

@@ -20,7 +20,7 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
-        requireEmailVerification: false,
+        requireEmailVerification: true,
         // Domain validation
         validateEmail: async (email: string) => {
             const domain = email.split("@")[1];
@@ -38,7 +38,7 @@ export const auth = betterAuth({
         },
     },
     emailVerification: {
-        sendOnSignUp: false,
+        sendOnSignUp: true,
         expiresIn: 300, // 5 minutes
         sendVerificationEmail: async ({ user, url }) => {
             await sendVerificationEmail(user.email, url);

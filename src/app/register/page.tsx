@@ -40,7 +40,7 @@ export default function SignUpPage() {
     }, [registerFormResponse, router]);
     
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-white dark:bg-gray-900 px-4 gap-5 transition-colors">
             <div className="absolute top-4 right-4">
                 <DarkModeToggle />
             </div>
@@ -130,7 +130,9 @@ export default function SignUpPage() {
                 </form>
             </Card>
 
-            <p><Link href="/login">Already have an account?</Link></p>
+            <p className="text-gray-700 dark:text-gray-300">
+                <Link href="/login" className="text-green-700 dark:text-green-400 hover:underline font-semibold">Already have an account?</Link>
+            </p>
         </div>
     );
 }

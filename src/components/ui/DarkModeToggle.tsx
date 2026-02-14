@@ -11,7 +11,7 @@ export default function DarkModeToggle() {
     setMounted(true);
     try {
       const stored = localStorage.getItem("theme");
-      const prefersDark = stored === "dark" || (!stored && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      const prefersDark = stored === "dark";
       setIsDark(prefersDark);
       
       // Apply initial theme
@@ -30,16 +30,26 @@ export default function DarkModeToggle() {
       const newDarkState = !isDark;
       setIsDark(newDarkState);
       
-      // Apply theme immediately
+      // Apply theme immediately to html element
+      const root = document.documentElement;
       if (newDarkState) {
-        document.documentElement.classList.add("dark");
+        root.classList.add("dark");
         localStorage.setItem("theme", "dark");
       } else {
-        document.documentElement.classList.remove("dark");
+        root.classList.remove("dark");
         localStorage.setItem("theme", "light");
       }
+      
+      // Force a small delay to ensure the class is applied
+      requestAnimationFrame(() => {
+        if (newDarkState) {
+          root.classList.add("dark");
+        } else {
+          root.classList.remove("dark");
+        }
+      });
     } catch (e) {
-      // ignore
+      console.error("Theme toggle error:", e);
     }
   };
 
@@ -48,11 +58,11 @@ export default function DarkModeToggle() {
     return (
       <button
         type="button"
-        className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+        className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md transition-all"
         aria-label="Toggle theme"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-gray-900 dark:text-gray-400">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-gray-700 dark:text-gray-300">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
         </svg>
       </button>
     );
@@ -63,17 +73,17 @@ export default function DarkModeToggle() {
       type="button"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       onClick={toggle}
-      className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+      className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 shadow-sm hover:shadow-md transition-all hover:scale-105 active:scale-95"
     >
       {isDark ? (
-        // Sun icon (light)
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-yellow-400">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2m0 14v2m9-9h-2M5 12H3m15.364-6.364-1.414 1.414M7.05 16.95l-1.414 1.414M18.364 18.364l-1.414-1.414M7.05 7.05L5.636 5.636" />
+        // Sun icon (light mode)
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-yellow-500">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
         </svg>
       ) : (
-        // Moon icon (dark)
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-gray-900 dark:text-gray-400">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        // Moon icon (dark mode)
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6 text-indigo-600">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
         </svg>
       )}
     </button>

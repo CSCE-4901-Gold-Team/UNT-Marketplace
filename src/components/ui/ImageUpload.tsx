@@ -97,15 +97,8 @@ export default function ImageUpload({
                             onChange={handleFileChange}
                             className="hidden"
                         />
-                    </svg>
-                    Choose Image
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
-                </label>
+                    </label>
+                )}
 
                 {/* Error message */}
                 {error && (

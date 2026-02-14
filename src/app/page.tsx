@@ -11,7 +11,7 @@ export default async function Home() {
     });
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <main className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900">
             <div className="absolute top-4 right-4">
                 <DarkModeToggle />
             </div>

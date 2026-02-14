@@ -7,22 +7,31 @@ import { auth } from "../src/lib/auth";
 const prisma = new PrismaClient()
 
 async function main() {
+   // Verify all existing users first
+    await prisma.user.updateMany({
+        data: {
+            emailVerified: true
+        }
+    });
+
     const testUser = await auth.api.signUpEmail({
         body: {
             name: "Test User",
             email: "test.user@my.unt.edu",
             password: "rootroot",
         },
-    });
+    }).catch(() => null);
 
-    await prisma.user.update({
-        where: {
-            id: testUser.user.id
-        },
-        data: {
-            emailVerified: true
-        }
-    });
+    if (testUser) {
+        await prisma.user.update({
+            where: {
+                id: testUser.user.id
+            },
+            data: {
+                emailVerified: true
+            }
+        });
+    }
 
     /**
      * Users
@@ -35,7 +44,13 @@ async function main() {
             image: "https://example.com/images/john.png",
             callbackURL: "https://example.com/callback",
         },
-    });
+    }).catch(() => null);
+    if (userJohn) {
+        await prisma.user.update({
+            where: { id: userJohn.user.id },
+            data: { emailVerified: true }
+        });
+    }
 
     const userEmma = await auth.api.signUpEmail({
         body: {
@@ -45,7 +60,13 @@ async function main() {
             image: "https://example.com/images/emma.png",
             callbackURL: "https://example.com/callback",
         },
-    });
+    }).catch(() => null);
+    if (userEmma) {
+        await prisma.user.update({
+            where: { id: userEmma.user.id },
+            data: { emailVerified: true }
+        });
+    }
 
     const userMichael = await auth.api.signUpEmail({
         body: {
@@ -55,7 +76,13 @@ async function main() {
             image: "https://example.com/images/michael.png",
             callbackURL: "https://example.com/callback",
         },
-    });
+    }).catch(() => null);
+    if (userMichael) {
+        await prisma.user.update({
+            where: { id: userMichael.user.id },
+            data: { emailVerified: true }
+        });
+    }
 
     const userSophia = await auth.api.signUpEmail({
         body: {
@@ -65,7 +92,13 @@ async function main() {
             image: "https://example.com/images/sophia.png",
             callbackURL: "https://example.com/callback",
         },
-    });
+    }).catch(() => null);
+    if (userSophia) {
+        await prisma.user.update({
+            where: { id: userSophia.user.id },
+            data: { emailVerified: true }
+        });
+    }
 
     const userLiam = await auth.api.signUpEmail({
         body: {
@@ -75,7 +108,22 @@ async function main() {
             image: "https://example.com/images/liam.png",
             callbackURL: "https://example.com/callback",
         },
-    });
+    }).catch(() => null);
+    if (userLiam) {
+        await prisma.user.update({
+            where: { id: userLiam.user.id },
+            data: { emailVerified: true }
+        });
+    }
+
+    /**
+     * Users - Get existing users by email
+     */
+    const john = await prisma.user.findUnique({ where: { email: "john.smith@example.com" } });
+    const emma = await prisma.user.findUnique({ where: { email: "emma.johnson@example.com" } });
+    const michael = await prisma.user.findUnique({ where: { email: "michael.brown@example.com" } });
+    const sophia = await prisma.user.findUnique({ where: { email: "sophia.davis@example.com" } });
+    const liam = await prisma.user.findUnique({ where: { email: "liam.wilson@example.com" } });
 
     /**
      * Categories
@@ -114,7 +162,7 @@ async function main() {
             price: 25.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userJohn?.user.id,
+            ownerId: john?.id!,
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
@@ -133,7 +181,7 @@ async function main() {
             price: 5.50,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userEmma?.user.id,
+            ownerId: emma?.id!,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -152,7 +200,7 @@ async function main() {
             price: 18.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userMichael?.user.id,
+            ownerId: michael?.id!,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
@@ -171,7 +219,7 @@ async function main() {
             price: 10.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userSophia?.user.id,
+            ownerId: sophia?.id!,
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
@@ -190,7 +238,7 @@ async function main() {
             price: 15.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userLiam?.user.id,
+            ownerId: liam?.id!,
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
@@ -209,7 +257,7 @@ async function main() {
             price: 0,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userEmma?.user.id,
+            ownerId: emma?.id!,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -228,7 +276,7 @@ async function main() {
             price: 220.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userJohn?.user.id,
+            ownerId: john?.id!,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
@@ -247,7 +295,7 @@ async function main() {
             price: 30.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userSophia?.user.id,
+            ownerId: sophia?.id!,
             categories: { connect: [{ id: catTextbooks.id }, { id: catNotes.id }] },
             images: {
                 create: [
@@ -266,7 +314,7 @@ async function main() {
             price: 20.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userMichael?.user.id,
+            ownerId: michael?.id!,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -285,7 +333,7 @@ async function main() {
             price: 450.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.ARCHIVED,
-            ownerId: userLiam?.user.id,
+            ownerId: liam?.id!,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
@@ -304,7 +352,7 @@ async function main() {
             price: 8.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.SOLD,
-            ownerId: userEmma?.user.id,
+            ownerId: emma?.id!,
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
@@ -323,7 +371,7 @@ async function main() {
             price: 6.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.DRAFT,
-            ownerId: userJohn?.user.id,
+            ownerId: john?.id!,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -344,10 +392,10 @@ async function main() {
                 isProfessorOnly: false,
                 listingStatus: ListingStatus.AVAILABLE,
                 ownerId:
-                    i % 4 === 0 ? userJohn?.user.id :
-                        i % 4 === 1 ? userEmma?.user.id :
-                            i % 4 === 2 ? userMichael?.user.id :
-                                userSophia?.user.id,
+                    i % 4 === 0 ? john?.id! :
+                        i % 4 === 1 ? emma?.id! :
+                            i % 4 === 2 ? michael?.id! :
+                                sophia?.id!,
                 categories: {
                     connect: [
                         {

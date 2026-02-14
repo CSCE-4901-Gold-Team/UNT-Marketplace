@@ -18,7 +18,7 @@ export default async function ProfilePage() {
   const { name, email, image } = session.user;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 transition-colors">
+    <main className="flex min-h-screen items-center justify-center bg-white dark:bg-gray-900 transition-colors">
       <div className="absolute top-4 right-4">
         <DarkModeToggle />
       </div>

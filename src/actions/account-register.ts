@@ -118,7 +118,7 @@ export async function registerAction(
         message: {
             type: "success",
             content:
-                "Registration successful! You can now log in.",
+                "Registration successful! Please check your email for a verification link.",
         },
     };
 }
