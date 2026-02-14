@@ -3,11 +3,19 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import ListingDetailClient from "./ListingDetailClient";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import ImageCarousel from "@/components/ui/ImageCarousel";
+import { Suspense } from "react";
+import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 
 const prisma = new PrismaClient();
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
     const listing = await prisma.listing.findUnique({
         where: {
             id: id
@@ -29,6 +37,10 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                 select: {
                     id: true,
                     url: true,
+                    sortOrder: true,
+                },
+                orderBy: {
+                    sortOrder: 'asc',
                 }
             }
         }
@@ -40,42 +52,47 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         notFound();
     }
 
+    const isOwner = session?.user?.id === listing.ownerId;
+
     return (
         <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
-            <div className="w-full max-w-4xl">
+            <Suspense fallback={null}>
+                <ListingSuccessToast />
+            </Suspense>
+            <div className="w-full max-w-4xl mx-auto">
                 <Link href="/market" className="text-green hover:underline mb-4 inline-block">
                     ← Back to all listings
                 </Link>
 
-                <h1 className="text-4xl font-bold mb-4">{listing.title}</h1>
-
-                {/* Image Display */}
-                {listing.images.length > 0 && (
-                    <div className="mb-6 relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
-                        <Image
-                            src={listing.images[0].url}
-                            alt={listing.title}
-                            fill
-                            className="object-cover"
-                            priority
-                            unoptimized
-                        />
+                <div className="bg-white rounded-lg shadow-lg p-8">
+                    <div className="flex justify-between items-start mb-4">
+                        <h1 className="text-4xl font-bold">{listing.title}</h1>
+                        {isOwner && (
+                            <Link 
+                                href={`/market/create-listing?edit=true&id=${listing.id}`}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            >
+                                Edit
+                            </Link>
+                        )}
                     </div>
-                )}
+                    
+                    {/* Image Carousel */}
+                    <ImageCarousel images={listing.images} alt={listing.title} />
 
-                <div className="flex items-center justify-between mb-6 pb-6 border-b">
-                    <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
-                    {listing.isProfessorOnly && (
-                        <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded">
-                            Professor Only
-                        </span>
-                    )}
-                </div>
+                    <div className="flex items-center justify-between mb-6 pb-6 border-b">
+                        <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
+                        {listing.isProfessorOnly && (
+                            <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded">
+                                Professor Only
+                            </span>
+                        )}
+                    </div>
 
-                <div className="mb-6">
-                    <h2 className="text-xl font-semibold mb-2">Description</h2>
-                    <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
-                </div>
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold mb-2">Description</h2>
+                        <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
+                    </div>
 
                 {listing.categories.length > 0 && (
                     <div className="mb-6">

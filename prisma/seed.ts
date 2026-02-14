@@ -1,4 +1,4 @@
-﻿import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from "@prisma/client";
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;

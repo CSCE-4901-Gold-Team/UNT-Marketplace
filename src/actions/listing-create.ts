@@ -5,9 +5,10 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient, Prisma, $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
+import { getCurrentUserRole } from "@/actions/user-actions";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -75,6 +76,15 @@ export async function createListingAction(_initialState: FormResponse, formData:
         };
     }
 
+    if (parsedFormData.data.isProfessorOnly) {
+        const currentUserRole = await getCurrentUserRole();
+        if (currentUserRole !== $Enums.UserRole.FACULTY) {
+            return {
+                status: FormStatus.ERROR
+            };
+        }
+    }
+
     const prisma = new PrismaClient();
     let newListingId: string;
 
@@ -118,6 +128,19 @@ export async function createListingAction(_initialState: FormResponse, formData:
 
         // Use the image path directly (base64 or file path)
         const imagePath = parsedFormData.data.imagePath || null;
+        let imagesParsed: string[] = [];
+        
+        // Parse images (could be JSON array or single string)
+        if (imagePath) {
+            try {
+                imagesParsed = JSON.parse(imagePath);
+                if (!Array.isArray(imagesParsed)) {
+                    imagesParsed = [imagePath];
+                }
+            } catch {
+                imagesParsed = [imagePath];
+            }
+        }
 
         // Create the listing
         const newListing = await prisma.listing.create({
@@ -131,12 +154,13 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 categories: {
                     connect: allCategoryIds.map(id => ({ id }))
                 },
-                ...(imagePath && {
+                ...(imagesParsed.length > 0 && {
                     images: {
-                        create: [{
-                            url: imagePath,
-                            imageType: "LISTING"
-                        }]
+                        create: imagesParsed.map((url, index) => ({
+                            url: url,
+                            imageType: "LISTING",
+                            sortOrder: index
+                        }))
                     }
                 })
             }
@@ -157,5 +181,5 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect after successfully creating and disconnecting (outside try-catch)
-    redirect(`/market/listing/${newListingId}`);
+    redirect(`/market/listing/${newListingId}?created=true`);
 }
