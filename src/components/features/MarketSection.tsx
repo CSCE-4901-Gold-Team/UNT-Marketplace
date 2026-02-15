@@ -12,6 +12,7 @@ import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
+import Link from "next/link";
 
 export default function MarketSection({
     listingsResponse,
@@ -113,7 +114,14 @@ export default function MarketSection({
                     </div>
                 </div>
 
-                <div className="market-filter-container">
+                <div className="market-filter-container flex gap-4 items-center">
+                    {userRole === "ADMIN" && (
+                        <Link href="/admin">
+                            <Button buttonStyle="bg" title="Admin Panel">
+                                Admin Panel
+                            </Button>
+                        </Link>
+                    )}
                     <MarketFilterControls
                         filterObject={filterObject}
                         setFilterObjectAction={setFilterObject}

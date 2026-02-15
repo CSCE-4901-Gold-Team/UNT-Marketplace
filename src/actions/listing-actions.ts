@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import {auth} from "@/lib/auth";
 import {$Enums, PrismaClient} from "@prisma/client";
@@ -10,6 +10,7 @@ import ListingStatus = $Enums.ListingStatus;
 import {ListingObject, ListingWithRelations} from "@/models/ListingObject";
 import {ListingFilters} from "@/types/ListingFilters";
 import {ListingUtils} from "@/utils/ListingUtils";
+import { enforceUserStatus, checkUserStatus } from "@/utils/StatusEnforcer";
 
 const prisma = new PrismaClient();
 
@@ -37,6 +38,10 @@ export async function getListings(
         redirect("/sign-in");
     }
 
+    // Enforce user status - allow viewing listings even if suspended
+    // (but you can change this if needed)
+    const statusCheck = await checkUserStatus(session.user.id);
+    
     // Get role of current user
     const currentUserRole = await getCurrentUserRole();
 

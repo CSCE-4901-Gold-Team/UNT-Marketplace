@@ -32,6 +32,7 @@ model User {
     listings      Listing[]
     role          UserRole     @default(STUDENT)
     statuses      UserStatus[]
+    reports       Report[]
 
     @@map("user")
 }
@@ -76,6 +77,7 @@ model Listing {
     owner      User       @relation(fields: [ownerId], references: [id])
     images     Image[]
     categories Category[]
+    reports    Report[]
 }
 
 enum ListingStatus {
@@ -104,6 +106,41 @@ model Category {
     name     String    @unique
     slug     String    @unique
     listings Listing[]
+}
+
+model Report {
+    id        String         @id @default(cuid())
+    listingId String
+    reporterId String
+    reason    ReportReason
+    details   String?
+    status    ReportStatus   @default(PENDING)
+    createdAt DateTime       @default(now())
+    updatedAt DateTime       @default(now()) @updatedAt
+
+    listing   Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    reporter  User           @relation(fields: [reporterId], references: [id])
+
+    @@unique([listingId, reporterId])
+    @@map("report")
+}
+
+enum ReportReason {
+    FRAUDULENT
+    OFFENSIVE_CONTENT
+    INAPPROPRIATE
+    INCORRECT_DESCRIPTION
+    DUPLICATE_LISTING
+    NOT_AVAILABLE
+    SCAM
+    OTHER
+}
+
+enum ReportStatus {
+    PENDING
+    UNDER_REVIEW
+    RESOLVED
+    DISMISSED
 }
 
 // -------- Auth / Identity Management --------
