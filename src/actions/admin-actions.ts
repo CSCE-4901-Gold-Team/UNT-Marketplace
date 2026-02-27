@@ -1,12 +1,11 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { PrismaClient, ListingStatus, ReportStatus, UserStatusType } from "@prisma/client";
+import { ListingStatus, ReportStatus, UserStatusType } from "@prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function getAdminStats() {
     // Validate session and admin role

@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,8 +7,7 @@ import { headers } from "next/headers";
 import ImageCarousel from "@/components/ui/ImageCarousel";
 import { Suspense } from "react";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -45,8 +43,6 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
             }
         }
     });
-
-    await prisma.$disconnect();
 
     if (!listing) {
         notFound();

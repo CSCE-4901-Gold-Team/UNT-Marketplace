@@ -5,9 +5,10 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { PrismaClient, Prisma, $Enums } from "@prisma/client";
+import { Prisma, $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
+import { prisma } from "@/lib/prisma";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),
@@ -61,7 +62,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         };
     }
 
-    const prisma = new PrismaClient();
+    // use shared singleton
     const listingId = parsedFormData.data.listingId;
 
     try {
@@ -72,7 +73,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         });
 
         if (!existingListing) {
-            await prisma.$disconnect();
             return {
                 status: FormStatus.ERROR,
                 message: {
@@ -83,7 +83,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         }
 
         if (existingListing.ownerId !== session.user.id) {
-            await prisma.$disconnect();
             return {
                 status: FormStatus.ERROR,
                 message: {
@@ -190,9 +189,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             data: updateData
         });
 
-        await prisma.$disconnect();
     } catch (error) {
-        await prisma.$disconnect();
         console.error("Error updating listing:", error);
         
         // Check if it's a payload size error

@@ -1,12 +1,11 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 
-import { PrismaClient } from "@prisma/client";
 import { nextCookies } from "better-auth/next-js";
 import { sendPasswordResetEmail, sendVerificationEmail } from "@/lib/email-service";
+import { prisma } from "@/lib/prisma";
 
-// Prisma client
-export const prisma = new PrismaClient();
+export { prisma };
 
 export const ALLOWED_UNT_DOMAINS = ["my.unt.edu", "unt.edu"];
 

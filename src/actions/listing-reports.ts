@@ -1,12 +1,10 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { PrismaClient } from "@prisma/client";
 import { headers } from "next/headers";
 import { CreateReportSchema, CreateReportInput } from "@/schemas/report-schemas";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 interface SubmitReportResult {
     success: boolean;
@@ -111,7 +109,5 @@ export async function submitListingReport(
             message: "An error occurred while submitting your report",
             error: error instanceof Error ? error.message : "UNKNOWN_ERROR"
         };
-    } finally {
-        await prisma.$disconnect();
     }
 }

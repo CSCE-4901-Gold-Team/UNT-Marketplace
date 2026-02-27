@@ -71,15 +71,12 @@ export async function getOrCreateConversation(listingId: string): Promise<{ conv
     if (!listing) throw new Error("Listing not found");
     if (listing.ownerId === user.id) throw new Error("Cannot message yourself");
 
-    // Look for an existing conversation between these two users for this listing
+    // Look for an existing conversation between these two users for this listing.
+    // We find a conversation linked to this listing where the current user is a
+    // participant, then verify the listing owner is also a participant.
     const existing = await prisma.conversation.findFirst({
         where: {
             listingId,
-            participants: {
-                every: {
-                    userId: { in: [user.id, listing.ownerId] },
-                },
-            },
             AND: [
                 { participants: { some: { userId: user.id } } },
                 { participants: { some: { userId: listing.ownerId } } },
