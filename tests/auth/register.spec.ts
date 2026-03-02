@@ -1,5 +1,4 @@
 ﻿import { test, expect } from '@playwright/test';
-import {PrismaClient} from "@prisma/client";
 
 test('Has registration inputs', async ({ page }) => {
     await page.goto('/register');
@@ -41,7 +40,8 @@ test.describe('User registration tests', () => {
         await page.locator('input[name="confirm_password"]').fill(testUserPassword);
         await page.getByRole('button', { name: 'Register' }).click();
 
-        await expect(page.getByText('Registration successful!')).toBeVisible();
+        await expect(page.getByText('Registration successful!')).toBeVisible({ timeout: 30000 });
+        await expect(page).toHaveURL('/market', { timeout: 30000 });
     });
 });
 

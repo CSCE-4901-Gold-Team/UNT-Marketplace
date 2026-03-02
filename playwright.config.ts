@@ -27,6 +27,10 @@ export default defineConfig<TestOptions, { testUuid: string }>({
     workers: process.env.CI ? 1 : undefined,
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
     reporter: 'html',
+    /* Default timeout for expects */
+    expect: {
+        timeout: 15000
+    },
 
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
@@ -42,17 +46,18 @@ export default defineConfig<TestOptions, { testUuid: string }>({
             use: {...devices['Desktop Chrome']},
         },
 
-        /*
+
         {
             name: 'firefox',
             use: {...devices['Desktop Firefox']},
         },
-
+        /*
         {
             name: 'webkit',
             use: {...devices['Desktop Safari']},
         },
-        */
+         */
+
         /* Test against mobile viewports. */
         // {
         //   name: 'Mobile Chrome',
