@@ -6,14 +6,11 @@ ALTER TABLE "report" DROP CONSTRAINT "report_reporterId_fkey";
 
 -- CreateTable
 CREATE TABLE "ListingEvent" (
-    "id" TEXT NOT NULL,
     "listingId" TEXT NOT NULL,
     "userId" TEXT,
     "sessionId" TEXT NOT NULL,
     "eventType" "EventType" NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "ListingEvent_pkey" PRIMARY KEY ("id")
+    "createdAt" DATE NOT NULL DEFAULT CURRENT_DATE
 );
 
 -- CreateIndex
@@ -24,6 +21,9 @@ CREATE INDEX "ListingEvent_userId_idx" ON "ListingEvent"("userId");
 
 -- CreateIndex
 CREATE INDEX "ListingEvent_createdAt_idx" ON "ListingEvent"("createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ListingEvent_sessionId_listingId_eventType_createdAt_key" ON "ListingEvent"("sessionId", "listingId", "eventType", "createdAt");
 
 -- AddForeignKey
 ALTER TABLE "report" ADD CONSTRAINT "report_reporterId_fkey" FOREIGN KEY ("reporterId") REFERENCES "user"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
