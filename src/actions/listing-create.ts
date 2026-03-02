@@ -5,10 +5,11 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { PrismaClient, Prisma, $Enums } from "@prisma/client";
+import { Prisma, $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
+import { prisma } from "@/lib/prisma";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -85,7 +86,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         }
     }
 
-    const prisma = new PrismaClient();
     let newListingId: string;
 
     try {
@@ -167,9 +167,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         });
 
         newListingId = newListing.id;
-        await prisma.$disconnect();
     } catch (error) {
-        await prisma.$disconnect();
         console.error("Error creating listing:", error);
         return {
             status: FormStatus.ERROR,
@@ -180,6 +178,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         };
     }
 
-    // Redirect after successfully creating and disconnecting (outside try-catch)
+    // Redirect after successful creation (outside try-catch)
     redirect(`/market/listing/${newListingId}?created=true`);
 }

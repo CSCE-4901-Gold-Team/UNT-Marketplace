@@ -3,9 +3,8 @@
  * Utility for checking and enforcing user suspension and ban statuses
  */
 
-import { PrismaClient, UserStatusType } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { UserStatusType } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 export interface UserStatusCheck {
     isActive: boolean;

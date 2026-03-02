@@ -4,8 +4,8 @@ import {FormResponse} from "@/types/FormResponse";
 import {FormStatus} from "@/constants/FormStatus";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
-import { PrismaClient } from "@prisma/client";
 import {redirect} from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 export async function deleteListingAction(listingId: string): Promise<FormResponse> {
     const session = await auth.api.getSession({
@@ -22,8 +22,6 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
         };
     }
 
-    const prisma = new PrismaClient();
-
     try {
         // Verify the listing exists and belongs to the user
         const listing = await prisma.listing.findUnique({
@@ -32,7 +30,6 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
         });
 
         if (!listing) {
-            await prisma.$disconnect();
             return {
                 status: FormStatus.ERROR,
                 message: {
@@ -43,7 +40,6 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
         }
 
         if (listing.ownerId !== session.user.id) {
-            await prisma.$disconnect();
             return {
                 status: FormStatus.ERROR,
                 message: {
@@ -63,9 +59,7 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
             where: { id: listingId }
         });
 
-        await prisma.$disconnect();
     } catch (error) {
-        await prisma.$disconnect();
         console.error("Error deleting listing:", error);
         return {
             status: FormStatus.ERROR,

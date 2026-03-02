@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,8 +7,7 @@ import { headers } from "next/headers";
 import ImageCarousel from "@/components/ui/ImageCarousel";
 import { Suspense } from "react";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -45,8 +43,6 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
             }
         }
     });
-
-    await prisma.$disconnect();
 
     if (!listing) {
         notFound();
@@ -109,16 +105,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                         </div>
                     </div>
                 )}
-                    <ListingDetailClient listingId={id} />
-                </div>
-
-                <div className="flex gap-4 mt-6">
-                    <button className="flex-1 bg-green text-white py-3 rounded-lg hover:opacity-90">
-                        Contact Seller
-                    </button>
-                    <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                        Share
-                    </button>
+                    <ListingDetailClient listingId={id} isOwner={isOwner} />
                 </div>
             </div>
         </main>

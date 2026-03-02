@@ -2,79 +2,108 @@
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
-import { auth } from "../src/lib/auth";
+// Import Better Auth's own hashPassword so seeded passwords are
+// hashed with the exact same algorithm the sign-in flow expects.
+import { hashPassword } from "better-auth/crypto";
+import { generateId } from "better-auth";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
+
+/**
+ * Create a user + credential account directly in the database,
+ * bypassing the Better Auth HTTP layer (and email-sending side-effects).
+ */
+async function createUser({
+    name,
+    email,
+    password,
+    emailVerified = true,
+    role = "STUDENT",
+    image,
+}: {
+    name: string;
+    email: string;
+    password: string;
+    emailVerified?: boolean;
+    role?: "STUDENT" | "ADMIN" | "FACULTY";
+    image?: string;
+}) {
+    const userId = generateId();
+    const accountId = generateId();
+    const hashedPassword = await hashPassword(password);
+
+    const user = await prisma.user.create({
+        data: {
+            id: userId,
+            name,
+            email,
+            emailVerified,
+            role,
+            image,
+        },
+    });
+
+    await prisma.account.create({
+        data: {
+            id: accountId,
+            accountId: userId,
+            providerId: "credential",
+            userId,
+            password: hashedPassword,
+        },
+    });
+
+    return user;
+}
 
 async function main() {
-    const testUser = await auth.api.signUpEmail({
-        body: {
-            name: "Test User",
-            email: "test.user@my.unt.edu",
-            password: "rootroot",
-        },
+    // ---- Seed users ----
+    const testUser = await createUser({
+        name: "Test User",
+        email: "test.user@my.unt.edu",
+        password: "rootroot",
     });
 
-    await prisma.user.update({
-        where: {
-            id: testUser.user.id
-        },
-        data: {
-            emailVerified: true
-        }
+    const adminUser = await createUser({
+        name: "Admin",
+        email: "admin@my.unt.edu",
+        password: "testtest",
+        role: "ADMIN",
     });
 
-    /**
-     * Users
-     */
-    const userJohn = await auth.api.signUpEmail({
-        body: {
-            name: "John Smith",
-            email: "john.smith@example.com",
-            password: "XAvAyN9h4uFR7u",
-            image: "https://example.com/images/john.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userJohn = await createUser({
+        name: "John Smith",
+        email: "john.smith@my.unt.edu",
+        password: "XAvAyN9h4uFR7u",
+        image: "https://example.com/images/john.png",
     });
 
-    const userEmma = await auth.api.signUpEmail({
-        body: {
-            name: "Emma Johnson",
-            email: "emma.johnson@example.com",
-            password: "tXn3bL2rV8pH5y",
-            image: "https://example.com/images/emma.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userEmma = await createUser({
+        name: "Emma Johnson",
+        email: "emma.johnson@my.unt.edu",
+        password: "tXn3bL2rV8pH5y",
+        image: "https://example.com/images/emma.png",
     });
 
-    const userMichael = await auth.api.signUpEmail({
-        body: {
-            name: "Michael Brown",
-            email: "michael.brown@example.com",
-            password: "Pa9tLyXr3fQn7u",
-            image: "https://example.com/images/michael.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userMichael = await createUser({
+        name: "Michael Brown",
+        email: "michael.brown@my.unt.edu",
+        password: "Pa9tLyXr3fQn7u",
+        image: "https://example.com/images/michael.png",
     });
 
-    const userSophia = await auth.api.signUpEmail({
-        body: {
-            name: "Sophia Davis",
-            email: "sophia.davis@example.com",
-            password: "hT5uEr1bM9oK2v",
-            image: "https://example.com/images/sophia.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userSophia = await createUser({
+        name: "Sophia Davis",
+        email: "sophia.davis@my.unt.edu",
+        password: "hT5uEr1bM9oK2v",
+        image: "https://example.com/images/sophia.png",
     });
 
-    const userLiam = await auth.api.signUpEmail({
-        body: {
-            name: "Liam Wilson",
-            email: "liam.wilson@example.com",
-            password: "kN7tBv2rX3yP6q",
-            image: "https://example.com/images/liam.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userLiam = await createUser({
+        name: "Liam Wilson",
+        email: "liam.wilson@my.unt.edu",
+        password: "kN7tBv2rX3yP6q",
+        image: "https://example.com/images/liam.png",
     });
 
     /**
@@ -114,7 +143,7 @@ async function main() {
             price: 25.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userJohn?.user.id,
+            ownerId: userJohn.id,
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
@@ -133,7 +162,7 @@ async function main() {
             price: 5.50,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userEmma?.user.id,
+            ownerId: userEmma.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -152,7 +181,7 @@ async function main() {
             price: 18.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userMichael?.user.id,
+            ownerId: userMichael.id,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
@@ -171,7 +200,7 @@ async function main() {
             price: 10.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userSophia?.user.id,
+            ownerId: userSophia.id,
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
@@ -190,7 +219,7 @@ async function main() {
             price: 15.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userLiam?.user.id,
+            ownerId: userLiam.id,
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
@@ -209,7 +238,7 @@ async function main() {
             price: 0,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userEmma?.user.id,
+            ownerId: userEmma.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -228,7 +257,7 @@ async function main() {
             price: 220.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userJohn?.user.id,
+            ownerId: userJohn.id,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
@@ -247,7 +276,7 @@ async function main() {
             price: 30.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userSophia?.user.id,
+            ownerId: userSophia.id,
             categories: { connect: [{ id: catTextbooks.id }, { id: catNotes.id }] },
             images: {
                 create: [
@@ -266,7 +295,7 @@ async function main() {
             price: 20.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userMichael?.user.id,
+            ownerId: userMichael.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -285,7 +314,7 @@ async function main() {
             price: 450.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.ARCHIVED,
-            ownerId: userLiam?.user.id,
+            ownerId: userLiam.id,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
@@ -304,7 +333,7 @@ async function main() {
             price: 8.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.SOLD,
-            ownerId: userEmma?.user.id,
+            ownerId: userEmma.id,
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
@@ -323,7 +352,7 @@ async function main() {
             price: 6.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.DRAFT,
-            ownerId: userJohn?.user.id,
+            ownerId: userJohn.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
@@ -344,10 +373,10 @@ async function main() {
                 isProfessorOnly: false,
                 listingStatus: ListingStatus.AVAILABLE,
                 ownerId:
-                    i % 4 === 0 ? userJohn?.user.id :
-                        i % 4 === 1 ? userEmma?.user.id :
-                            i % 4 === 2 ? userMichael?.user.id :
-                                userSophia?.user.id,
+                    i % 4 === 0 ? userJohn.id :
+                        i % 4 === 1 ? userEmma.id :
+                            i % 4 === 2 ? userMichael.id :
+                                userSophia.id,
                 categories: {
                     connect: [
                         {
@@ -361,22 +390,27 @@ async function main() {
                 },
                 images: {
                     create: [
-                        {url: "/sampleImage1.jpg", imageType: ImageType.LISTING},
-                        {url: "/sampleImage2.jpg", imageType: ImageType.LISTING},
-                        {url: "/sampleImage3.jpg", imageType: ImageType.LISTING}
+                        { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                        { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                        { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                     ]
                 }
             }
         });
     }
+
+    console.log("✅ Seed complete.");
+    console.log(`   test.user@my.unt.edu  / rootroot`);
+    console.log(`   admin@my.unt.edu      / testtest  (ADMIN)`);
 }
 
 main()
     .then(async () => {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     })
     .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+        console.error(e);
+        await prisma.$disconnect();
+        process.exit(1);
+    });
+

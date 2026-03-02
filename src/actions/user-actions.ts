@@ -3,12 +3,11 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { $Enums, PrismaClient } from "@prisma/client";
+import { $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 import UserStatusType = $Enums.UserStatusType;
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 /**
  * Returns the role of the session's user

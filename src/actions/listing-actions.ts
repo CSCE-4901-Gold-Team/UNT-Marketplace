@@ -1,7 +1,7 @@
 "use server";
 
 import {auth} from "@/lib/auth";
-import {$Enums, PrismaClient} from "@prisma/client";
+import {$Enums} from "@prisma/client";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getCurrentUserRole} from "@/actions/user-actions";
@@ -11,8 +11,7 @@ import {ListingObject, ListingWithRelations} from "@/models/ListingObject";
 import {ListingFilters} from "@/types/ListingFilters";
 import {ListingUtils} from "@/utils/ListingUtils";
 import { enforceUserStatus, checkUserStatus } from "@/utils/StatusEnforcer";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 /**
  * Returns all listings based on listing status and current user's role.
