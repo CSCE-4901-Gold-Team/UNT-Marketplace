@@ -2,12 +2,26 @@
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
+import EventType = $Enums.EventType;
 // Import Better Auth's own hashPassword so seeded passwords are
 // hashed with the exact same algorithm the sign-in flow expects.
 import { hashPassword } from "better-auth/crypto";
 import { generateId } from "better-auth";
 
 const prisma = new PrismaClient();
+
+function startOfDay(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function daysAgoStart(daysAgo: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
 
 /**
  * Create a user + credential account directly in the database,
@@ -136,6 +150,25 @@ async function main() {
     /**
      * Listings
      */
+    const adminAnalyticsListing = await prisma.listing.create({
+        data: {
+            title: "Admin Demo Listing - Analytics Enabled",
+            description: "Demo listing owned by admin for analytics dashboard testing.",
+            price: 99.99,
+            isProfessorOnly: false,
+            listingStatus: ListingStatus.AVAILABLE,
+            ownerId: adminUser.id,
+            categories: { connect: [{ id: catTextbooks.id }, { id: catSupplies.id }] },
+            images: {
+                create: [
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
+                ]
+            }
+        }
+    });
+
     await prisma.listing.create({
         data: {
             title: "Calculus I Textbook",
@@ -398,6 +431,61 @@ async function main() {
             }
         });
     }
+
+    // Seed analytics for the admin-owned listing (last 14 days).
+    // Because ListingEvent is deduped by (sessionId, listingId, eventType, createdAt),
+    // we create unique sessionIds per event instance to model volume.
+    const analyticsRows: {
+        listingId: string;
+        userId: string | null;
+        sessionId: string;
+        eventType: EventType;
+        createdAt: Date;
+    }[] = [];
+
+    for (let dayOffset = 13; dayOffset >= 0; dayOffset--) {
+        const date = startOfDay(daysAgoStart(dayOffset));
+
+        // Simple trend: newer days have more activity.
+        const impressions = 6 + (13 - dayOffset); // 6..19
+        const views = Math.max(1, Math.floor(impressions * 0.55));
+        const contacts = Math.max(0, Math.floor(views * 0.25));
+
+        for (let i = 0; i < impressions; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-imp-${dayOffset}-${i}`,
+                eventType: EventType.LISTING_IMPRESSION,
+                createdAt: date,
+            });
+        }
+
+        for (let i = 0; i < views; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-view-${dayOffset}-${i}`,
+                eventType: EventType.LISTING_VIEW,
+                createdAt: date,
+            });
+        }
+
+        for (let i = 0; i < contacts; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-contact-${dayOffset}-${i}`,
+                eventType: EventType.CONTACT_SELLER,
+                createdAt: date,
+            });
+        }
+    }
+
+    await prisma.listingEvent.createMany({
+        data: analyticsRows,
+        skipDuplicates: true,
+    });
 
     console.log("✅ Seed complete.");
     console.log(`   test.user@my.unt.edu  / rootroot`);

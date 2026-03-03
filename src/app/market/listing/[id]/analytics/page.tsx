@@ -21,7 +21,7 @@ export default async function ListingAnalyticsPage({
                 <Link href={`/market/listing/${id}`} className="text-green hover:underline mb-4 inline-block">
                     ← Back to listing
                 </Link>
-                <ListingAnalyticsDashboard analytics={result.data}/>
+                <ListingAnalyticsDashboard analytics={result.data!}/>
             </div>
         </main>
     );

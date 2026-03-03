@@ -25,7 +25,7 @@ export default function ListingAnalyticsDashboard({analytics}: { analytics: List
                     <p className="text-2xl font-bold">{analytics.totals.views}</p>
                 </div>
                 <div className="rounded-lg border p-4">
-                    <p className="text-sm text-gray-500">Contact Seller</p>
+                    <p className="text-sm text-gray-500">Contact</p>
                     <p className="text-2xl font-bold">{analytics.totals.contactSeller}</p>
                 </div>
             </div>
@@ -66,7 +66,7 @@ export default function ListingAnalyticsDashboard({analytics}: { analytics: List
                                         <div
                                             className="w-2 rounded bg-blue-500"
                                             style={{height: `${contactH}px`}}
-                                            title={`Contact Seller: ${day.contactSeller}`}
+                                            title={`Contacts: ${day.contactSeller}`}
                                         />
                                     </div>
                                     <span className="text-[10px] text-gray-500">
@@ -85,7 +85,7 @@ export default function ListingAnalyticsDashboard({analytics}: { analytics: List
                             <span className="inline-block w-3 h-3 rounded bg-green-500"/> Views
                         </span>
                         <span className="inline-flex items-center gap-1">
-                            <span className="inline-block w-3 h-3 rounded bg-blue-500"/> Contact Seller
+                            <span className="inline-block w-3 h-3 rounded bg-blue-500"/> Contacts
                         </span>
                     </div>
                 </div>
