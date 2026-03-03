@@ -58,6 +58,34 @@ export async function getListings(
         ]
     } : {};
 
+    const isMyListingsView = filters?.mine === true;
+
+    if (isMyListingsView) {
+        listings = await prisma.listing.findMany({
+            skip: skipN,
+            take: takeN,
+            where: {
+                ...searchObject,
+                AND: [
+                    { ownerId: session.user.id },
+                    ...filterObject
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                images: true,
+                categories: true,
+            }
+        });
+
+        return listings.map(listing => ({
+            ...listing,
+            price: listing.price.toNumber(),
+        }));
+    }
+
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
         // Admin/Faculty
         listings = await prisma.listing.findMany({

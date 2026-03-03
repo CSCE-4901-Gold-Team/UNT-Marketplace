@@ -6,9 +6,20 @@ import {Suspense} from "react";
 import MarketSuspense from "@/components/suspense/MarketSuspense";
 import {getCurrentUserRole} from "@/actions/user-actions";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
+import {ListingFilters} from "@/types/ListingFilters";
 
-export default async function MarketPage() {
-    const listingsResponse = getListings("", {}, 0, 12);
+export default async function MarketPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ mine?: string }>;
+}) {
+    const params = await searchParams;
+    const isMyListingsView = params.mine === "1";
+    const initialFilters: ListingFilters = {
+        mine: isMyListingsView,
+    };
+
+    const listingsResponse = getListings("", initialFilters, 0, 12);
     const userRole = getCurrentUserRole();
 
     return (
@@ -18,8 +29,10 @@ export default async function MarketPage() {
             </Suspense>
             <Suspense fallback={<MarketSuspense/>}>
                 <MarketSection
+                    key={isMyListingsView ? "market-mine" : "market-all"}
                     listingsResponse={listingsResponse}
                     userRoleResponse={userRole}
+                    initialFilters={initialFilters}
                 />
             </Suspense>
         </main>

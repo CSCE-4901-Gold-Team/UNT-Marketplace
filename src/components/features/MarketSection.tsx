@@ -17,10 +17,12 @@ import {fireListingEvents} from "@/actions/analytics-actions";
 
 export default function MarketSection({
     listingsResponse,
-    userRoleResponse
+    userRoleResponse,
+    initialFilters,
 }: {
     listingsResponse: Promise<ListingObject[]>;
     userRoleResponse: Promise<UserRole>;
+    initialFilters?: ListingFilters;
 }) {
     const [listings, setListings] = useState(use(listingsResponse)); // Listing object
     const userRole = use(userRoleResponse);
@@ -30,7 +32,8 @@ export default function MarketSection({
     const [allListingsLoaded, setAllListingsLoaded] = useState(false);
     const [filterObject, setFilterObject] = useState<ListingFilters>({
         priceMin: "",
-        priceMax: ""
+        priceMax: "",
+        ...initialFilters,
     });
 
     const impressedListingIdsRef = useRef<Set<string>>(new Set());
