@@ -152,7 +152,7 @@ async function main() {
      */
     const adminAnalyticsListing = await prisma.listing.create({
         data: {
-            title: "Admin Demo Listing - Analytics Enabled",
+            title: "Admin Listing",
             description: "Demo listing owned by admin for analytics dashboard testing.",
             price: 99.99,
             isProfessorOnly: false,
