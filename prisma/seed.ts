@@ -432,7 +432,7 @@ async function main() {
         });
     }
 
-    // Seed analytics for the admin-owned listing (last 14 days).
+    // Seed analytics for the admin-owned listing (last 90 days).
     // Because ListingEvent is deduped by (sessionId, listingId, eventType, createdAt),
     // we create unique sessionIds per event instance to model volume.
     const analyticsRows: {
@@ -443,13 +443,18 @@ async function main() {
         createdAt: Date;
     }[] = [];
 
-    for (let dayOffset = 13; dayOffset >= 0; dayOffset--) {
+    const analyticsWindowDays = 90;
+
+    for (let dayOffset = analyticsWindowDays - 1; dayOffset >= 0; dayOffset--) {
         const date = startOfDay(daysAgoStart(dayOffset));
 
-        // Simple trend: newer days have more activity.
-        const impressions = 6 + (13 - dayOffset); // 6..19
-        const views = Math.max(1, Math.floor(impressions * 0.55));
-        const contacts = Math.max(0, Math.floor(views * 0.25));
+        // Randomized daily volume
+        const impressions = 20 + Math.floor(Math.random() * 81); // 20..100
+        const viewRate = 0.35 + Math.random() * 0.4; // 35%..75%
+        const contactRate = 0.08 + Math.random() * 0.22; // 8%..30%
+
+        const views = Math.max(1, Math.floor(impressions * viewRate));
+        const contacts = Math.max(0, Math.floor(views * contactRate));
 
         for (let i = 0; i < impressions; i++) {
             analyticsRows.push({
