@@ -13,6 +13,7 @@ import { ListingFilters } from "@/types/ListingFilters";
 import { $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 import Link from "next/link";
+import {fireListingImpressions} from "@/actions/analytics-actions";
 
 export default function MarketSection({
     listingsResponse,
@@ -31,6 +32,24 @@ export default function MarketSection({
         priceMin: "",
         priceMax: ""
     });
+
+    const impressedListingIdsRef = useRef<Set<string>>(new Set());
+
+    // Fire impressions whenever the listings array changes
+    useEffect(() => {
+        const toFire: string[] = [];
+
+        for (const listing of listings) {
+            if (!impressedListingIdsRef.current.has(listing.id)) {
+                impressedListingIdsRef.current.add(listing.id);
+                toFire.push(listing.id);
+            }
+        }
+
+        if (toFire.length === 0) return;
+
+        void fireListingImpressions(toFire);
+    }, [listings]);
 
     // Scroll observer
     const observerRef = useRef<IntersectionObserver | null>(null);
@@ -95,6 +114,10 @@ export default function MarketSection({
         setListingsLoading(true);
         setSkipIndex(pageSize);
         setAllListingsLoaded(false);
+
+        // New result set => reset local tracking
+        impressedListingIdsRef.current = new Set();
+
         setListings(await getListings(searchQuery, filterObject, 0, pageSize));
         setListingsLoading(false);
     }
