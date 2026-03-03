@@ -38,8 +38,6 @@ export async function fireListingEvents(type: EventType, listingIds: string[]) {
         skipDuplicates: true,
     });
 
-    console.log(uniqueListingIds, type, result);
-
     return {status: 200};
 }
 
