@@ -27,7 +27,7 @@ export async function fireListingEvents(type: EventType, listingIds: string[]) {
 
     const today = startOfToday();
 
-    const result = await prisma.listingEvent.createMany({
+    await prisma.listingEvent.createMany({
         data: uniqueListingIds.map((listingId) => ({
             sessionId: session.session.id,
             userId: session.user?.id ?? null,
@@ -61,6 +61,13 @@ export async function fireListingImpression(listingId: string) {
  */
 export async function fireListingView(listingId: string) {
     return fireEvent(EventType.LISTING_VIEW, listingId);
+}
+
+/**
+ * Contact seller clicks from listing detail
+ */
+export async function fireContactSeller(listingId: string) {
+    return fireEvent(EventType.CONTACT_SELLER, listingId);
 }
 
 /**
