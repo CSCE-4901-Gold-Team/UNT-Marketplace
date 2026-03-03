@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import ListingDetailClient from "./ListingDetailClient";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -64,12 +63,20 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                     <div className="flex justify-between items-start mb-4">
                         <h1 className="text-4xl font-bold">{listing.title}</h1>
                         {isOwner && (
-                            <Link 
-                                href={`/market/create-listing?edit=true&id=${listing.id}`}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                            >
-                                Edit
-                            </Link>
+                            <div className="flex gap-2">
+                                <Link
+                                    href={`/market/listing/${listing.id}/analytics`}
+                                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200"
+                                >
+                                    View Analytics
+                                </Link>
+                                <Link 
+                                    href={`/market/create-listing?edit=true&id=${listing.id}`}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
                         )}
                     </div>
                     

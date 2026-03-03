@@ -28,8 +28,6 @@ export async function registerAction(
     formData: FormData
 ): Promise<FormResponse> {
 
-    console.log("Registration attempt started");
-
     // Parse form data
     const parsedFormData = RegisterRequest.safeParse({
         email: formData.get("email"),
@@ -38,9 +36,6 @@ export async function registerAction(
         first_name: formData.get("first_name"),
         last_name: formData.get("last_name"),
     });
-
-    console.log("Form data parsed:", parsedFormData.success ? "Success" : "Failed");
-
 
     if (!parsedFormData.success) {
         return {

@@ -2,12 +2,26 @@
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
+import EventType = $Enums.EventType;
 // Import Better Auth's own hashPassword so seeded passwords are
 // hashed with the exact same algorithm the sign-in flow expects.
 import { hashPassword } from "better-auth/crypto";
 import { generateId } from "better-auth";
 
 const prisma = new PrismaClient();
+
+function startOfDay(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function daysAgoStart(daysAgo: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
 
 /**
  * Create a user + credential account directly in the database,
@@ -136,6 +150,25 @@ async function main() {
     /**
      * Listings
      */
+    const adminAnalyticsListing = await prisma.listing.create({
+        data: {
+            title: "Admin Listing",
+            description: "Demo listing owned by admin for analytics dashboard testing.",
+            price: 99.99,
+            isProfessorOnly: false,
+            listingStatus: ListingStatus.AVAILABLE,
+            ownerId: adminUser.id,
+            categories: { connect: [{ id: catTextbooks.id }, { id: catSupplies.id }] },
+            images: {
+                create: [
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
+                ]
+            }
+        }
+    });
+
     await prisma.listing.create({
         data: {
             title: "Calculus I Textbook",
@@ -398,6 +431,66 @@ async function main() {
             }
         });
     }
+
+    // Seed analytics for the admin-owned listing (last 90 days).
+    // Because ListingEvent is deduped by (sessionId, listingId, eventType, createdAt),
+    // we create unique sessionIds per event instance to model volume.
+    const analyticsRows: {
+        listingId: string;
+        userId: string | null;
+        sessionId: string;
+        eventType: EventType;
+        createdAt: Date;
+    }[] = [];
+
+    const analyticsWindowDays = 90;
+
+    for (let dayOffset = analyticsWindowDays - 1; dayOffset >= 0; dayOffset--) {
+        const date = startOfDay(daysAgoStart(dayOffset));
+
+        // Randomized daily volume
+        const impressions = 20 + Math.floor(Math.random() * 81); // 20..100
+        const viewRate = 0.35 + Math.random() * 0.4; // 35%..75%
+        const contactRate = 0.08 + Math.random() * 0.22; // 8%..30%
+
+        const views = Math.max(1, Math.floor(impressions * viewRate));
+        const contacts = Math.max(0, Math.floor(views * contactRate));
+
+        for (let i = 0; i < impressions; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-imp-${dayOffset}-${i}`,
+                eventType: EventType.LISTING_IMPRESSION,
+                createdAt: date,
+            });
+        }
+
+        for (let i = 0; i < views; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-view-${dayOffset}-${i}`,
+                eventType: EventType.LISTING_VIEW,
+                createdAt: date,
+            });
+        }
+
+        for (let i = 0; i < contacts; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-contact-${dayOffset}-${i}`,
+                eventType: EventType.CONTACT_SELLER,
+                createdAt: date,
+            });
+        }
+    }
+
+    await prisma.listingEvent.createMany({
+        data: analyticsRows,
+        skipDuplicates: true,
+    });
 
     console.log("✅ Seed complete.");
     console.log(`   test.user@my.unt.edu  / rootroot`);

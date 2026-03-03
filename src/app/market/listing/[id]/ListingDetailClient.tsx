@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import {useEffect, useState, useTransition} from "react";
 import ReportListingModal from "@/components/ui/ReportListingModal";
-import { getOrCreateConversation } from "@/actions/chat-actions";
-import { useRouter } from "next/navigation";
+import {getOrCreateConversation} from "@/actions/chat-actions";
+import {useRouter} from "next/navigation";
+import {EventType} from "@prisma/client";
+import {fireContactSeller, fireEvent} from "@/actions/analytics-actions";
 
 interface ListingDetailClientProps {
     listingId: string;
@@ -16,10 +18,16 @@ export default function ListingDetailClient({ listingId, isOwner }: ListingDetai
     const [contactError, setContactError] = useState<string | null>(null);
     const router = useRouter();
 
+    useEffect(() => {
+        void fireEvent(EventType.LISTING_VIEW, listingId);
+    }, [listingId]);
+
     const handleContactSeller = () => {
         setContactError(null);
         startTransition(async () => {
             try {
+                void fireContactSeller(listingId).catch(() => undefined);
+
                 const { conversationId } = await getOrCreateConversation(listingId);
                 router.push(`/market/messages/${conversationId}`);
             } catch (e: unknown) {
