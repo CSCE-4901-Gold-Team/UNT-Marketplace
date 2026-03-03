@@ -115,14 +115,14 @@ export default function MarketSection({
     }
 
     return (
-        <div id="marketSectionWrapper" className="flex flex-col gap-6">
+        <div id="marketSectionWrapper" className="flex flex-col gap-4 sm:gap-6">
             <div>
-                <h1 className="ml-100 mb-20">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-4 sm:mb-6">
                     Listings
                 </h1>
-                <div className="flex justify-between items-start gap-4">
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
                     <div className="flex-1">
-                        <h2>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl">
                             Category
                         </h2>
                         <CategoryList 
@@ -133,7 +133,7 @@ export default function MarketSection({
                             }}
                         />
                     </div>
-                    <div className="market-filter-container">
+                    <div className="market-filter-container w-full lg:w-auto">
                         <MarketFilterControls
                             filterObject={filterObject}
                             setFilterObjectAction={setFilterObject}
@@ -145,7 +145,7 @@ export default function MarketSection({
             </div>
 
             <div className="market-controls flex gap-0 justify-start items-center">
-                <div className="market-search-container translate-x-80">
+                <div className="market-search-container w-full sm:w-auto">
                     <div className="flex">
                         <TextInput inputClasses="rounded-r-none border-r-0"
                             onChange={e => setSearchQuery(e.target.value)}
@@ -175,19 +175,19 @@ export default function MarketSection({
 
             {
                 listingsLoading ? <LoadingSpinner /> :
-                    (listings.length === 0 ? <h2 className="text-gray-400 text-center mt-16">No listings found</h2> :
+                    (listings.length === 0 ? <h2 className="text-gray-400 text-center mt-8 sm:mt-16 text-base sm:text-xl">No listings found</h2> :
                         <ListingsContainer listings={listings} />)
             }
 
             {
                 !allListingsLoaded && !listingsLoading &&
-                    <div ref={sentinelRef} className="text-center pt-12 pb-6">
+                    <div ref={sentinelRef} className="text-center pt-8 sm:pt-12 pb-4 sm:pb-6">
                         <LoadingSpinner />
                     </div>
             }
             {
                 allListingsLoaded && (
-                    <h2 className="text-gray-300 text-center mt-16">that&#39;s all folks</h2>
+                    <h2 className="text-gray-300 text-center mt-8 sm:mt-16 text-base sm:text-xl">that&#39;s all folks</h2>
                 )
             }
 

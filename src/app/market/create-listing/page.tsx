@@ -106,11 +106,11 @@ export default function CreateListing() {
     };
 
     return (
-        <main className="min-h-screen flex items-start justify-center px-8 py-4 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 text-black dark:text-white transition-colors">
+        <main className="min-h-screen flex items-start justify-center px-4 py-4 sm:px-8 sm:py-6 lg:px-20 lg:py-12 bg-white dark:bg-gray-900 text-black dark:text-white transition-colors">
             <div className="w-full max-w-1xl">
-                <h1 className="text-4xl mb-6 text-black dark:text-white">Create New Listing</h1>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl mb-4 sm:mb-6 text-black dark:text-white">{isEditing ? "Edit Listing" : "Create New Listing"}</h1>
 
-                <form action={formAction} className="max-w-2xl flex flex-col gap-4 text-black dark:text-white">
+                <form action={formAction} className="max-w-2xl flex flex-col gap-3 sm:gap-4 text-black dark:text-white">
                     
                     {/* Title */}
                     <TextInput
@@ -218,12 +218,12 @@ export default function CreateListing() {
 
                     {/* Delete Confirmation */}
                     {isEditing && showDeleteConfirm && (
-                        <div className="mt-8 pt-6 border-t">
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                <p className="text-red-800 mb-4">
+                        <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t">
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                <p className="text-red-800 dark:text-red-300 mb-4 text-sm sm:text-base">
                                     Are you sure you want to delete &quot;{title}&quot;? This action cannot be undone.
                                 </p>
-                                <div className="flex gap-2">
+                                <div className="flex flex-col sm:flex-row gap-2">
                                     <Button
                                         type="button"
                                         onClick={handleDelete}

@@ -75,9 +75,9 @@ export default function ImageUpload({
             <div className="flex flex-col gap-4">
                 {/* File input */}
                 {selectedImages.length < maxImages && (
-                    <label className="cursor-pointer inline-flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 transition-colors">
+                    <label className="cursor-pointer inline-flex items-center justify-center px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 transition-colors">
                         <svg 
-                            className="w-5 h-5 mr-2" 
+                            className="w-5 h-5 mr-2 shrink-0" 
                             fill="none" 
                             stroke="currentColor" 
                             viewBox="0 0 24 24"
@@ -97,15 +97,8 @@ export default function ImageUpload({
                             onChange={handleFileChange}
                             className="hidden"
                         />
-                    </svg>
-                    Choose Image
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
-                </label>
+                    </label>
+                )}
 
                 {/* Error message */}
                 {error && (
@@ -114,7 +107,7 @@ export default function ImageUpload({
 
                 {/* Image previews grid */}
                 {selectedImages.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
                         {selectedImages.map((image, index) => (
                             <div key={index} className="relative group">
                                 <div className="relative aspect-square w-full rounded-lg overflow-hidden border-2 border-green-500">
@@ -123,12 +116,13 @@ export default function ImageUpload({
                                         alt={`Preview ${index + 1}`}
                                         fill
                                         className="object-cover"
+                                        unoptimized
                                     />
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => removeImage(index)}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 sm:p-1 hover:bg-red-600 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shadow-lg"
                                     aria-label="Remove image"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

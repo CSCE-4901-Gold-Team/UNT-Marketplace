@@ -15,9 +15,9 @@ export default function MarketHeader({
     return (
         <div id="marketHeader">
 
-            <div className="flex justify-between items-center lg:justify-end">
+            <div className="flex justify-between items-center lg:justify-end p-2 sm:p-0">
                 <button
-                    className="p-4 text-4xl lg:hidden"
+                    className="p-2 sm:p-4 text-3xl sm:text-4xl lg:hidden"
                     onClick={() => { setShowSidebar(!showSidebar); }}
                 >
                     <RiMenu3Fill />

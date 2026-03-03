@@ -20,26 +20,30 @@ export default function ListingCard({
 
     return (
         <div className="listing group relative">
-            <div className="listing-image">
-                <div className="h-[350px] bg-gray-300 dark:bg-gray-700 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
+            <div className="listing-image w-full">
+                <div className="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[350px] w-full bg-gray-300 dark:bg-gray-700 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
                     {hasValidImage ? (
                         <Image
                             src={`${listing.images[0].url}`}
                             alt={listing.title}
                             fill
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                             className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
                             unoptimized
+                            priority={false}
                         />
                     ) : (
-                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700" />
+                        <div className="w-full h-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center">
+                            <span className="text-gray-500">No Image</span>
+                        </div>
                     )}
                 </div>
             </div>
             <div className="listing-info mt-1">
-                <p className="font-bold text-lg text-black dark:text-white">
+                <p className="font-bold text-base sm:text-lg text-black dark:text-white">
                     {listingPrice}
                 </p>
-                <p className="text-black dark:text-white">{listing.title}</p>
+                <p className="text-sm sm:text-base text-black dark:text-white truncate">{listing.title}</p>
             </div>
             <Link href={listingUrl} className="top-0 left-0 right-0 bottom-0 absolute"></Link>
         </div>

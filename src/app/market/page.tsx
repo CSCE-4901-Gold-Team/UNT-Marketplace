@@ -11,7 +11,7 @@ export default async function MarketPage() {
     const userRole = getCurrentUserRole();
 
     return (
-        <main className="px-4 py-4 lg:px-8 lg:py-8 w-full">
+        <main className="px-3 py-3 sm:px-4 sm:py-4 lg:px-8 lg:py-8 w-full">
             <Suspense fallback={<MarketSuspense/>}>
                 <MarketSection
                     listingsResponse={listingsResponse}
