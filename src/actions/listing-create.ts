@@ -106,7 +106,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 status: FormStatus.ERROR,
                 message: {
                     type: "error",
-                    content: "You already have a listing pending review. Please wait until it is approved or denied before creating another listing.",
+                    content: "You already have a listing that is either pending review or archived. Please wait until it is approved or update/delete it if denied.",
                 },
             };
         }
