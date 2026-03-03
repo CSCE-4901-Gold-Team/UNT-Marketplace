@@ -69,7 +69,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         // Verify the listing exists and belongs to the user
         const existingListing = await prisma.listing.findUnique({
             where: { id: listingId },
-            select: { ownerId: true }
+            select: { ownerId: true, listingStatus: true }
         });
 
         if (!existingListing) {
@@ -152,6 +152,10 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 set: allCategoryIds.map(id => ({ id }))
             }
         };
+
+        if (existingListing.listingStatus === $Enums.ListingStatus.ARCHIVED) {
+            updateData.listingStatus = $Enums.ListingStatus.DRAFT;
+        }
 
         // Prevent students from setting professor-only flag
         if (parsedFormData.data.isProfessorOnly) {

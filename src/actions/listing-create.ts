@@ -89,6 +89,28 @@ export async function createListingAction(_initialState: FormResponse, formData:
     let newListingId: string;
 
     try {
+        const pendingListing = await prisma.listing.findFirst({
+            where: {
+                ownerId: session.user.id,
+                listingStatus: {
+                    in: ["DRAFT", "ARCHIVED"]
+                }
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (pendingListing) {
+            return {
+                status: FormStatus.ERROR,
+                message: {
+                    type: "error",
+                    content: "You already have a listing pending review. Please wait until it is approved or denied before creating another listing.",
+                },
+            };
+        }
+
         // First, create any new categories if provided (or find existing ones)
         const newCategoryIds: number[] = [];
         if (parsedFormData.data.newCategoryNames && parsedFormData.data.newCategoryNames.length > 0) {
