@@ -24,14 +24,14 @@ export default function MarketSidebar({
 
     return (
         <div id="marketSidebar" className={sidebarClassList}>
-            <div className="h-screen flex flex-col gap-6 py-6 w-full bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-2xl transition-all">
+            <div className="h-screen flex flex-col gap-6 py-6 w-full bg-linear-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-2xl transition-all">
                 <button className="absolute top-2 right-3 text-4xl bg-green text-white rounded-full lg:hidden hover:bg-green-700 transition-colors"
                     onClick={() => setShowSidebarAction(false)}>
                     <IoMdCloseCircle />
                 </button>
 
                 {/* Sidebar Logo */}
-                <div id="marketSidebarLogo" className="bg-gradient-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
+                <div id="marketSidebarLogo" className="bg-linear-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
                     <div className="flex justify-center">
                         <Image src={UNTLogo} alt="UNT Logo" width={200} height={200} priority />
                     </div>
