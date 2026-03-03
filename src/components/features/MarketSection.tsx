@@ -10,10 +10,10 @@ import Button from "@/components/ui/Button";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
-import { $Enums } from "@prisma/client";
+import { EventType, $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 import Link from "next/link";
-import {fireListingImpressions} from "@/actions/analytics-actions";
+import {fireListingEvents} from "@/actions/analytics-actions";
 
 export default function MarketSection({
     listingsResponse,
@@ -48,7 +48,7 @@ export default function MarketSection({
 
         if (toFire.length === 0) return;
 
-        void fireListingImpressions(toFire);
+        void fireListingEvents(EventType.LISTING_IMPRESSION, toFire);
     }, [listings]);
 
     // Scroll observer
