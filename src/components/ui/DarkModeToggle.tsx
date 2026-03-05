@@ -5,7 +5,6 @@ import React from "react";
 export default function DarkModeToggle() {
   const [isDark, setIsDark] = React.useState<boolean>(false);
   const [mounted, setMounted] = React.useState(false);
-  const [mounted, setMounted] = React.useState(false);
 
   // Initialize theme on mount
   React.useEffect(() => {
@@ -26,10 +25,6 @@ export default function DarkModeToggle() {
     }
   }, []);
 
-  // Apply theme changes when user toggles (skip on initial mount)
-  React.useEffect(() => {
-    if (!mounted) return;
-    
   const toggle = () => {
     try {
       const newDarkState = !isDark;

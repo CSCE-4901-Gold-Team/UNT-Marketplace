@@ -1,5 +1,5 @@
 import React from "react";
-import type {Metadata} from "next";
+import type {Metadata, Viewport} from "next";
 import "@/styles/globals.css";
 import {ToastContainer} from "react-toastify";
 import RemoveExtensionAttrs from "@/components/layout/RemoveExtensionAttrs";
@@ -14,15 +14,13 @@ export const metadata: Metadata = {
         statusBarStyle: "default",
         title: "UNT Marketplace",
     },
-    icons: {
-        apple: "/icons/icon-192x192.png",
-    },
-    viewport: {
-        width: "device-width",
-        initialScale: 1,
-        maximumScale: 1,
-        userScalable: false,
-    },
+};
+
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
 };
 
 export default function RootLayout({
@@ -34,7 +32,6 @@ export default function RootLayout({
     return (
         <html lang="en" suppressHydrationWarning>
             <head>
-                <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
                 <meta name="apple-mobile-web-app-capable" content="yes" />
                 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
                 <meta name="theme-color" content="#00853e" />

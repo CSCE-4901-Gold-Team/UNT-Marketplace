@@ -41,6 +41,7 @@ export default function MarketSection({
     // Scroll observer
     const observerRef = useRef<IntersectionObserver | null>(null);
     const sentinelRef = useRef<HTMLDivElement | null>(null);
+    const impressedListingIdsRef = useRef<Set<string>>(new Set());
 
     // Pagination variables
     const [pageSize] = useState<number>(12);

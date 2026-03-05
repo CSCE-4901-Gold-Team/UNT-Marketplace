@@ -24,23 +24,21 @@ export default function MarketSidebar({
 
     return (
         <div id="marketSidebar" className={sidebarClassList}>
-            <div className="h-screen flex flex-col gap-6 py-6 w-full bg-linear-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-2xl transition-all">
-                <button className="absolute top-2 right-3 text-4xl bg-green text-white rounded-full lg:hidden hover:bg-green-700 transition-colors"
+            <div className="h-screen flex flex-col gap-4 py-4 w-full bg-linear-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-2xl transition-all">
+                <button className="absolute top-2 right-3 text-4xl bg-green text-white rounded-full lg:hidden hover:bg-green-700 transition-colors z-10"
                     onClick={() => setShowSidebarAction(false)}>
                     <IoMdCloseCircle />
                 </button>
 
                 {/* Sidebar Logo */}
-                <div id="marketSidebarLogo" className="bg-linear-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
+                <div id="marketSidebarLogo" className="bg-linear-to-r from-green-600 to-green-700 text-white p-4 px-3 shadow-lg -me-2 rounded-r-2xl shrink-0">
                     <div className="flex justify-center">
-                        <Image src={UNTLogo} alt="UNT Logo" width={200} height={200} priority />
+                        <Image src={UNTLogo} alt="UNT Logo" width={150} height={150} priority />
                     </div>
-                    <div className="text-3xl font-black text-center tracking-tight">UNT Marketplace</div>
-                    <div className="text-sm text-end me-4 opacity-90 font-semibold">Buy. Sell. Swap.</div>
                 </div>
 
                 {/* MARKETPLACE SECTION */}
-                <div className="flex flex-col gap-2 px-4">
+                <div className="flex flex-col gap-2 px-4 shrink-0">
                     <div className="flex items-center justify-between px-2 mb-1">
                         <div className="text-base font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">Marketplace</div>
                         <div className="flex items-center gap-2">
@@ -86,17 +84,17 @@ export default function MarketSidebar({
                             <span className="text-base">Create Listing</span>
                         </NavItem>
 
-                        {/* Messages */}
+                        {/* My Listings */}
                         <NavItem
-                            link="/market/messages"
+                            link="/market/my-listings"
                             setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  strokeWidth="1.5" stroke="currentColor" className="size-7">
                                 <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+                                      d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                             </svg>
-                            <span>My Listings</span>
+                            <span className="text-base">My Listings</span>
                         </NavItem>
 
                         {/* Messages */}
@@ -106,13 +104,6 @@ export default function MarketSidebar({
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                  strokeWidth="1.5" stroke="currentColor" className="size-7">
-                        {/* Favorites */}
-                        <NavItem
-                            link="/market?filter=favorites"
-                            setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round"
                                       d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                             </svg>
@@ -122,8 +113,8 @@ export default function MarketSidebar({
                 </div>
 
                 {/* ACCOUNT SECTION */}
-                <div id="marketSidebarBottomMenu" className="mt-auto flex flex-col gap-2 px-4 font-bold text-gray-700 dark:text-gray-200">
-                    <div className="border-t border-gray-300 dark:border-gray-600 pt-4 pb-2">
+                <div id="marketSidebarBottomMenu" className="mt-auto flex flex-col gap-2 px-4 font-bold text-gray-700 dark:text-gray-200 shrink-0">
+                    <div className="border-t border-gray-300 dark:border-gray-600 pt-3 pb-2">
                         <div className="text-base font-bold text-gray-500 dark:text-gray-400 px-2 mb-3 uppercase tracking-wider">Account</div>
                         
                         {/* Logout */}

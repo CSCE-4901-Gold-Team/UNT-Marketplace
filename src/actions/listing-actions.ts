@@ -53,8 +53,8 @@ export async function getListings(
     // Build search object if it's included
     const searchObject = searchQuery ? {
         OR: [
-            {title: {contains: searchQuery, mode: 'insensitive'}},
-            {description: {contains: searchQuery, mode: 'insensitive'}}
+            {title: {contains: searchQuery, mode: 'insensitive' as const}},
+            {description: {contains: searchQuery, mode: 'insensitive' as const}}
         ]
     } : {};
 
@@ -77,7 +77,7 @@ export async function getListings(
                 images: true,
                 categories: true,
             }
-        });
+        }) as ListingWithRelations[];
     } else {
         // All other roles
         listings = await prisma.listing.findMany({
@@ -98,7 +98,7 @@ export async function getListings(
                 images: true,
                 categories: true,
             }
-        });
+        }) as ListingWithRelations[];
     }
 
     // Convert and return listings
