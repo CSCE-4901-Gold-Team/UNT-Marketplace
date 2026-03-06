@@ -110,7 +110,6 @@ export default function MarketSidebar({
                             <span className="text-base">Messages</span>
                         </NavItem>
                     </div>
-                </div>
 
                 {/* ACCOUNT SECTION */}
                 <div id="marketSidebarBottomMenu" className="mt-auto flex flex-col gap-2 px-4 font-bold text-gray-700 dark:text-gray-200 shrink-0">
