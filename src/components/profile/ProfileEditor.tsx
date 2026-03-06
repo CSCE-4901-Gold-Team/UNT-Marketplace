@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import Button from "@/components/ui/Button";
+import { toastService } from "@/lib/toast-service";
 
 interface Props {
   initialName?: string | null;
@@ -14,12 +16,10 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
 
     try {
       const res = await fetch("/api/profile", {
@@ -31,10 +31,10 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to update profile");
 
-      setMessage("Profile updated successfully");
+      toastService.toast("Profile updated successfully", "success");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setMessage(msg || "Update failed");
+      toastService.toast(msg || "Update failed", "error");
     } finally {
       setLoading(false);
     }
@@ -58,10 +58,11 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
       if (!res.ok) throw new Error(data?.error || "Upload failed");
 
       setImage(data.url);
-      setMessage("Image uploaded — remember to save changes.");
+      toastService.toast("Image uploaded — remember to save changes.", "info");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setUploadError(msg || "Upload failed");
+      toastService.toast(msg || "Upload failed", "error");
     } finally {
       setUploading(false);
     }
@@ -111,19 +112,17 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <button
+      <div className="flex gap-2 items-center">
+        <Button
           type="submit"
           disabled={loading}
-          className="enabled:bg-green-600 text-white px-4 py-2 rounded disabled:opacity-100 disabled:bg-gray-500"
+          showSpinner={loading}
+          buttonSize="lg"
         >
-          {loading ? "Saving..." : "Save"}
-        </button>
+          Save
+        </Button>
         <div className="flex-1 text-right text-sm text-gray-600">{initialEmail}</div>
-        
       </div>
-
-      {message && <div className="text-sm text-gray-700">{message}</div>}
     </form>
   );
 }
