@@ -14,6 +14,8 @@ import Button from "@/components/ui/Button";
 import { useSearchParams } from "next/navigation";
 import { toastService } from "@/lib/toast-service";
 
+type EditableListingStatus = "AVAILABLE" | "DRAFT";
+
 
 const initialState: FormResponse = {
     status: FormStatus.INITIALIZED
@@ -32,6 +34,7 @@ export default function CreateListing() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
+    const [listingStatus, setListingStatus] = useState<EditableListingStatus>("AVAILABLE");
     const [isProfessorOnly, setIsProfessorOnly] = useState(false);
     const [selected, setSelected] = useState<number[]>([]);
     const [categoryOptions, setCategoryOptions] = useState<{id: number, name: string}[]>([]);
@@ -59,6 +62,7 @@ export default function CreateListing() {
                     setTitle(data.title || "");
                     setDescription(data.description || "");
                     setPrice(data.price || "");
+                    setListingStatus((data.listingStatus === "DRAFT" ? "DRAFT" : "AVAILABLE") as EditableListingStatus);
                     setIsProfessorOnly(data.isProfessorOnly || false);
                     
                     // Set category options and selected IDs
@@ -162,6 +166,22 @@ export default function CreateListing() {
                         validationErrors={state.validationErrors}
                         required
                     />
+
+                    {isEditing && (
+                        <div className="flex flex-col gap-1">
+                            <label htmlFor="listingStatus" className="text-sm">Status</label>
+                            <select
+                                id="listingStatus"
+                                name="listingStatus"
+                                value={listingStatus}
+                                onChange={(e) => setListingStatus(e.target.value as EditableListingStatus)}
+                                className="border border-gray-300 rounded-md px-3 py-2"
+                            >
+                                <option value="AVAILABLE">AVAILABLE</option>
+                                <option value="DRAFT">DRAFT</option>
+                            </select>
+                        </div>
+                    )}
 
                     {/* Professor Only Checkbox */}
                     {canSetProfessorOnly && (
