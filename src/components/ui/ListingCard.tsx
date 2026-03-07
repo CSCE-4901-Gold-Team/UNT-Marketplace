@@ -17,9 +17,11 @@ export default function ListingCard({
 
     const listingUrl = `/market/listing/${listing.id}`;
     const hasValidImage = listing.images.length > 0 && listing.images[0].url;
-    const listingTitle = listing.listingStatus === "DRAFT"
-        ? `${listing.title} (PENDING)`
-        : listing.title;
+    const listingTitle = listing.isDeniedByAdmin
+        ? `${listing.title} (DENIED)`
+        : listing.listingStatus === "DRAFT" && listing.isPendingApproval
+            ? `${listing.title} (PENDING)`
+            : listing.title;
 
     return (
         <div className="listing group relative">

@@ -61,6 +61,11 @@ export async function getListings(
     const isMyListingsView = filters?.mine === true;
 
     if (isMyListingsView) {
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { listingApproved: true },
+        });
+
         listings = await prisma.listing.findMany({
             skip: skipN,
             take: takeN,
@@ -83,6 +88,8 @@ export async function getListings(
         return listings.map(listing => ({
             ...listing,
             price: listing.price.toNumber(),
+            isPendingApproval: listing.listingStatus === ListingStatus.DRAFT && !currentUser?.listingApproved,
+            isDeniedByAdmin: listing.listingStatus === ListingStatus.ARCHIVED && !currentUser?.listingApproved,
         }));
     }
 
@@ -133,5 +140,7 @@ export async function getListings(
     return listings.map(listing => ({
             ...listing,
             price: listing.price.toNumber(),
+            isPendingApproval: false,
+            isDeniedByAdmin: false,
     }));
 }
