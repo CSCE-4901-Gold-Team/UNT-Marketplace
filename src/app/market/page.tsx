@@ -1,6 +1,4 @@
-﻿"use server"
-
-import {getListings} from "@/actions/listing-actions";
+﻿import {getListings} from "@/actions/listing-actions";
 import MarketSection from "@/components/features/MarketSection";
 import {Suspense} from "react";
 import MarketSuspense from "@/components/suspense/MarketSuspense";

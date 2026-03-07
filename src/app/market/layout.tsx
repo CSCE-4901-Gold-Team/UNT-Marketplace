@@ -1,6 +1,4 @@
-﻿"use server";
-
-import React from "react";
+﻿import React from "react";
 import "@/styles/globals.css";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";

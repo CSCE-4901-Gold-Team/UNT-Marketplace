@@ -145,7 +145,7 @@ export default function MarketSection({
                 </div>
             </div>
 
-            <div className="market-controls flex gap-0 justify-start items-center">
+            <div className="market-controls flex gap-4 justify-start items-center">
                 <div className="market-search-container w-full sm:w-auto">
                     <div className="flex">
                         <TextInput inputClasses="rounded-r-none border-r-0"
@@ -157,21 +157,13 @@ export default function MarketSection({
                     </div>
                 </div>
 
-                <div className="market-filter-container flex gap-4 items-center">
-                    {userRole === "ADMIN" && (
-                        <Link href="/admin">
-                            <Button buttonStyle="bg" title="Admin Panel">
-                                Admin Panel
-                            </Button>
-                        </Link>
-                    )}
-                    <MarketFilterControls
-                        filterObject={filterObject}
-                        setFilterObjectAction={setFilterObject}
-                        refreshListingsAction={searchListings}
-                        userRole={userRole}
-                    />
-                </div>
+                {userRole === "ADMIN" && (
+                    <Link href="/admin">
+                        <Button buttonStyle="bg" title="Admin Panel">
+                            Admin Panel
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             {
