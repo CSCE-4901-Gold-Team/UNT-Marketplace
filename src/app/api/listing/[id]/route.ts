@@ -71,6 +71,7 @@ export async function GET(
             title: listing.title,
             description: listing.description,
             price: listing.price.toString(),
+            listingStatus: listing.listingStatus,
             isProfessorOnly: listing.isProfessorOnly,
             categories: listing.categories,
             images: listing.images,
