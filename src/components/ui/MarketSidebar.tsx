@@ -5,7 +5,7 @@ import Image from "next/image";
 import { IoMdCloseCircle } from "react-icons/io";
 import NavItem from "@/components/ui/NavItem";
 import BackgroundToggleButton from "@/components/ui/BackgroundToggleButton";
-import UNTLogo from "@/assets/UNT 16.png";
+import UNTLogo from "@/assets/UNT 7.png";
 
 type Props = {
   showSidebar: boolean;
