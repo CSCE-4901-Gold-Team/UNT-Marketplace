@@ -86,34 +86,70 @@ export default function MarketSidebar({ showSidebar, setShowSidebarAction }: Pro
           </div>
         </div>
 
-        {/* Marketplace */}
-        <div className="px-4 flex flex-col gap-3">
-          <div className="flex justify-between items-center px-2">
-            <h2 className="text-sm font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Marketplace
-            </h2>
-            <div className="flex items-center gap-2">
-              <Link href="/profile">
-                <button className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                  ⚙️
-                </button>
-              </Link>
-              <BackgroundToggleButton />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 font-bold text-gray-700 dark:text-gray-200">
-            {menuItems.map((item) => (
-              <NavItem
-                key={item.link}
-                link={item.link}
-                setShowSidebarAction={setShowSidebarAction}
-              >
-                {item.icon}
-                <span>{item.name}</span>
-              </NavItem>
-            ))}
-          </div>
-        </div>
+                {/* TOP MENU */}
+                <div id="marketSidebarTopMenu" className="flex flex-col gap-3 px-4 font-black text-gray-700">
+
+                    {/* View Listings */}
+                    <NavItem
+                        link="/market"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614" />
+                            </svg>
+                        </div>
+                        <div>View Listings</div>
+                    </NavItem>
+
+                    {/* Create Listing */}
+                    <NavItem
+                        link="/market/create-listing"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                        </div>
+                        <div>Create Listing</div>
+                    </NavItem>
+
+                    {/* My Listings */}
+                    <NavItem
+                        link="/market?mine=1"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12m-15.75-10.5h.008v.008H4.5V6.75Zm0 5.25h.008v.008H4.5V12Zm0 5.25h.008v.008H4.5v-.008Z" />
+                            </svg>
+                        </div>
+                        <div>My Listings</div>
+                    </NavItem>
+
+                    {/* Messages */}
+                    <NavItem
+                        link="/market/messages"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                            </svg>
+                        </div>
+                        <div>Messages</div>
+                    </NavItem>
+
+                </div>
 
         {/* Account Section */}
         <div className="mt-auto px-4 pb-4">

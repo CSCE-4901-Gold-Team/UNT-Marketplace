@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Prisma, $Enums } from "@prisma/client";
+import { $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
@@ -87,13 +87,47 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     let newListingId: string;
+    let requiresAdminApproval = false;
 
     try {
-        // Check if this is the user's first listing
-        const existingListingsCount = await prisma.listing.count({
-            where: { ownerId: session.user.id }
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { listingApproved: true },
         });
-        const isFirstListing = existingListingsCount === 0;
+
+        if (!user) {
+            return {
+                status: FormStatus.ERROR,
+                message: {
+                    type: "error",
+                    content: "User not found.",
+                },
+            };
+        }
+
+        requiresAdminApproval = !user.listingApproved;
+
+        const pendingListing = await prisma.listing.findFirst({
+            where: {
+                ownerId: session.user.id,
+                listingStatus: {
+                    in: ["DRAFT", "ARCHIVED"]
+                }
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (!user.listingApproved && pendingListing) {
+            return {
+                status: FormStatus.ERROR,
+                message: {
+                    type: "error",
+                    content: "You already have a listing that is either pending review or archived. Please wait until it is approved or update/delete it if denied.",
+                },
+            };
+        }
 
         // First, create any new categories if provided (or find existing ones)
         const newCategoryIds: number[] = [];
@@ -149,7 +183,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 description: parsedFormData.data.description,
                 price: parseFloat(parsedFormData.data.price),
                 isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                listingStatus: isFirstListing ? "DRAFT" : "AVAILABLE",
+                listingStatus: user.listingApproved ? "AVAILABLE" : "DRAFT",
                 ownerId: session.user.id,
                 categories: {
                     connect: allCategoryIds.map(id => ({ id }))
@@ -179,5 +213,5 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect after successful creation (outside try-catch)
-    redirect(`/market/listing/${newListingId}?created=true`);
+    redirect(`/market/listing/${newListingId}?created=true${requiresAdminApproval ? "&requiresApproval=true" : ""}`);
 }

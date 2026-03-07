@@ -15,6 +15,7 @@ const UpdateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(10, "Description must be at least 10 characters"),
     price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
+    listingStatus: z.enum(["AVAILABLE", "DRAFT"]).optional(),
     isProfessorOnly: z.boolean().optional(),
     categoryIds: z.array(z.number()).optional(),
     newCategoryNames: z.array(z.string()).optional(),
@@ -45,6 +46,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         title: formData.get("title"),
         description: formData.get("description"),
         price: formData.get("price"),
+        listingStatus: formData.get("listingStatus") as "AVAILABLE" | "DRAFT" | null,
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
         newCategoryNames: JSON.parse(formData.get("newCategoryNames") as string || "[]"),
@@ -69,7 +71,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         // Verify the listing exists and belongs to the user
         const existingListing = await prisma.listing.findUnique({
             where: { id: listingId },
-            select: { ownerId: true }
+            select: { ownerId: true, listingStatus: true }
         });
 
         if (!existingListing) {
@@ -152,6 +154,38 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 set: allCategoryIds.map(id => ({ id }))
             }
         };
+
+        if (existingListing.listingStatus === $Enums.ListingStatus.ARCHIVED) {
+            updateData.listingStatus = $Enums.ListingStatus.DRAFT;
+        } else if (
+            parsedFormData.data.listingStatus &&
+            (existingListing.listingStatus === $Enums.ListingStatus.AVAILABLE ||
+                existingListing.listingStatus === $Enums.ListingStatus.DRAFT)
+        ) {
+            if (
+                existingListing.listingStatus === $Enums.ListingStatus.DRAFT &&
+                parsedFormData.data.listingStatus === $Enums.ListingStatus.AVAILABLE
+            ) {
+                const user = await prisma.user.findUnique({
+                    where: {
+                        id: session.user.id,
+                    },
+                    select: { listingApproved: true },
+                });
+
+                if (!user?.listingApproved) {
+                    return {
+                        status: FormStatus.ERROR,
+                        message: {
+                            type: "error",
+                            content: "Your first listing requires admin approval before it can be set to AVAILABLE.",
+                        },
+                    };
+                }
+            }
+
+            updateData.listingStatus = parsedFormData.data.listingStatus;
+        }
 
         // Prevent students from setting professor-only flag
         if (parsedFormData.data.isProfessorOnly) {

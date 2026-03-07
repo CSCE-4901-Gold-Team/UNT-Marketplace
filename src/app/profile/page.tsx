@@ -27,8 +27,6 @@ export default async function ProfilePage() {
             Back to Marketplace &rarr;
           </Link>
         </div>
-
-        <ProfileEditor initialName={name} initialEmail={email} initialImage={image} />
       </div>
     </main>
   );

@@ -58,6 +58,41 @@ export async function getListings(
         ]
     } : {};
 
+    const isMyListingsView = filters?.mine === true;
+
+    if (isMyListingsView) {
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { listingApproved: true },
+        });
+
+        listings = await prisma.listing.findMany({
+            skip: skipN,
+            take: takeN,
+            where: {
+                ...searchObject,
+                AND: [
+                    { ownerId: session.user.id },
+                    ...filterObject
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                images: true,
+                categories: true,
+            }
+        });
+
+        return listings.map(listing => ({
+            ...listing,
+            price: listing.price.toNumber(),
+            isPendingApproval: listing.listingStatus === ListingStatus.DRAFT && !currentUser?.listingApproved,
+            isDeniedByAdmin: listing.listingStatus === ListingStatus.ARCHIVED && !currentUser?.listingApproved,
+        }));
+    }
+
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
         // Admin/Faculty
         listings = await prisma.listing.findMany({
@@ -105,5 +140,7 @@ export async function getListings(
     return listings.map(listing => ({
             ...listing,
             price: listing.price.toNumber(),
+            isPendingApproval: false,
+            isDeniedByAdmin: false,
     }));
 }
