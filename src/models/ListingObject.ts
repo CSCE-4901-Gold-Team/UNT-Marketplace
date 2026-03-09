@@ -12,4 +12,6 @@ export type ListingWithRelations = Prisma.ListingGetPayload<{
 
 export type ListingObject = Omit<ListingWithRelations, "price"> & {
     price: number;
+    isPendingApproval?: boolean;
+    isDeniedByAdmin?: boolean;
 };

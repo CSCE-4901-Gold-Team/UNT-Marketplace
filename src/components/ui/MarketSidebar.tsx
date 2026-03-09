@@ -32,7 +32,7 @@ export default function MarketSidebar({
                 </div>
 
                 {/* TOP MENU */}
-                <div id="marketSidebarTopMenu" className="flex flex-col gap-1 px-4 font-black text-gray-700">
+                <div id="marketSidebarTopMenu" className="flex flex-col gap-3 px-4 font-black text-gray-700">
 
                     {/* View Listings */}
                     <NavItem
@@ -54,30 +54,45 @@ export default function MarketSidebar({
                         link="/market/create-listing"
                         setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
                     >
-                        <div className="flex gap-2 px-1.5 py-3 rounded-xl hover:bg-gray-300">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                     strokeWidth="1.5" stroke="currentColor" className="size-6">
-                                    <path strokeLinecap="round" strokeLinejoin="round"
-                                          d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                            </div>
-                            <div>Create Listing</div>
-                        </div>
-                    </NavItem>
-
-                    {/* You can replace these with real menu items later */}
-                    <div className="flex gap-2 px-1.5 py-3 rounded-xl">
                         <div>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                 viewBox="0 0 24 24" strokeWidth="1.5"
-                                 stroke="currentColor" className="size-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
                                 <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="m12.75 15 3-3m0 0-3-3m3 3h-7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                      d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
                         </div>
-                        <div>Menu Item Label</div>
-                    </div>
+                        <div>Create Listing</div>
+                    </NavItem>
+
+                    {/* My Listings */}
+                    <NavItem
+                        link="/market?mine=1"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12m-15.75-10.5h.008v.008H4.5V6.75Zm0 5.25h.008v.008H4.5V12Zm0 5.25h.008v.008H4.5v-.008Z" />
+                            </svg>
+                        </div>
+                        <div>My Listings</div>
+                    </NavItem>
+
+                    {/* Messages */}
+                    <NavItem
+                        link="/market/messages"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a5.969 5.969 0 0 1-.474-.065 4.48 4.48 0 0 0 .978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                            </svg>
+                        </div>
+                        <div>Messages</div>
+                    </NavItem>
 
                 </div>
 

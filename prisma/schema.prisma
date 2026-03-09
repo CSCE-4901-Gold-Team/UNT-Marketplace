@@ -20,18 +20,23 @@ datasource db {
 // -------- User Schema --------
 
 model User {
-    id            String       @id
-    email         String       @unique
-    name          String
-    emailVerified Boolean      @default(false)
-    image         String?
-    createdAt     DateTime     @default(now())
-    updatedAt     DateTime     @default(now()) @updatedAt
-    sessions      Session[]
-    accounts      Account[]
-    listings      Listing[]
-    role          UserRole     @default(STUDENT)
-    statuses      UserStatus[]
+    id                       String                    @id
+    email                    String                    @unique
+    name                     String
+    emailVerified            Boolean                   @default(false)
+    listingApproved          Boolean                   @default(false)
+    image                    String?
+    createdAt                DateTime                  @default(now())
+    updatedAt                DateTime                  @default(now()) @updatedAt
+    sessions                 Session[]
+    accounts                 Account[]
+    listings                 Listing[]
+    role                     UserRole                  @default(STUDENT)
+    statuses                 UserStatus[]
+    reports                  Report[]
+    conversationParticipants ConversationParticipant[]
+    sentMessages             Message[]
+    events                   ListingEvent[]
 
     @@map("user")
 }
@@ -73,9 +78,12 @@ model Listing {
     listingStatus   ListingStatus @default(AVAILABLE)
 
     // Relations
-    owner      User       @relation(fields: [ownerId], references: [id])
-    images     Image[]
-    categories Category[]
+    owner         User           @relation(fields: [ownerId], references: [id])
+    images        Image[]
+    categories    Category[]
+    reports       Report[]
+    conversations Conversation[]
+    events        ListingEvent[]
 }
 
 enum ListingStatus {
@@ -104,6 +112,41 @@ model Category {
     name     String    @unique
     slug     String    @unique
     listings Listing[]
+}
+
+model Report {
+    id         String       @id @default(cuid())
+    listingId  String
+    reporterId String
+    reason     ReportReason
+    details    String?
+    status     ReportStatus @default(PENDING)
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @default(now()) @updatedAt
+
+    listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    reporter User    @relation(fields: [reporterId], references: [id])
+
+    @@unique([listingId, reporterId])
+    @@map("report")
+}
+
+enum ReportReason {
+    FRAUDULENT
+    OFFENSIVE_CONTENT
+    INAPPROPRIATE
+    INCORRECT_DESCRIPTION
+    DUPLICATE_LISTING
+    NOT_AVAILABLE
+    SCAM
+    OTHER
+}
+
+enum ReportStatus {
+    PENDING
+    UNDER_REVIEW
+    RESOLVED
+    DISMISSED
 }
 
 // -------- Auth / Identity Management --------
@@ -142,6 +185,48 @@ model Account {
     @@map("account")
 }
 
+// -------- Messaging --------
+
+model Conversation {
+    id        String   @id @default(cuid())
+    listingId String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now()) @updatedAt
+
+    listing      Listing?                  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+    participants ConversationParticipant[]
+    messages     Message[]
+
+    @@map("conversation")
+}
+
+model ConversationParticipant {
+    id             Int       @id @default(autoincrement())
+    conversationId String
+    userId         String
+    lastReadAt     DateTime?
+    createdAt      DateTime  @default(now())
+
+    conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([conversationId, userId])
+    @@map("conversation_participant")
+}
+
+model Message {
+    id             String   @id @default(cuid())
+    conversationId String
+    senderId       String
+    body           String
+    createdAt      DateTime @default(now())
+
+    conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender       User         @relation(fields: [senderId], references: [id])
+
+    @@map("message")
+}
+
 model Verification {
     id         String   @id
     identifier String
@@ -151,4 +236,27 @@ model Verification {
     updatedAt  DateTime @default(now()) @updatedAt
 
     @@map("verification")
+}
+
+model ListingEvent {
+    listing   Listing   @relation(fields: [listingId], references: [id])
+    listingId String
+    user      User?     @relation(fields: [userId], references: [id])
+    userId    String?
+    sessionId String
+    eventType EventType
+    createdAt DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+
+    @@unique([sessionId, listingId, eventType, createdAt], name: "session_listing_event_created")
+    @@index([listingId])
+    @@index([userId])
+    @@index([createdAt])
+}
+
+enum EventType {
+    LISTING_IMPRESSION
+    LISTING_VIEW
+    CONTACT_SELLER
+    SAVE_LISTING
+    SHARE_LISTING
 }

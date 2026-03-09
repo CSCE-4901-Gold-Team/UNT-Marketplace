@@ -1,16 +1,17 @@
-﻿"use server";
+"use server";
 
 import {auth} from "@/lib/auth";
-import {$Enums, ListingStatus, PrismaClient} from "@prisma/client";
+import {$Enums} from "@prisma/client";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getCurrentUserRole} from "@/actions/user-actions";
 import UserRole = $Enums.UserRole;
+import ListingStatus = $Enums.ListingStatus;
 import {ListingObject, ListingWithRelations} from "@/models/ListingObject";
 import {ListingFilters} from "@/types/ListingFilters";
 import {ListingUtils} from "@/utils/ListingUtils";
-
-const prisma = new PrismaClient();
+import { enforceUserStatus, checkUserStatus } from "@/utils/StatusEnforcer";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Returns all listings based on listing status and current user's role.
@@ -36,6 +37,10 @@ export async function getListings(
         redirect("/sign-in");
     }
 
+    // Enforce user status - allow viewing listings even if suspended
+    // (but you can change this if needed)
+    const statusCheck = await checkUserStatus(session.user.id);
+    
     // Get role of current user
     const currentUserRole = await getCurrentUserRole();
 
@@ -52,6 +57,41 @@ export async function getListings(
             {description: {search: searchQuery}}
         ]
     } : {};
+
+    const isMyListingsView = filters?.mine === true;
+
+    if (isMyListingsView) {
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { listingApproved: true },
+        });
+
+        listings = await prisma.listing.findMany({
+            skip: skipN,
+            take: takeN,
+            where: {
+                ...searchObject,
+                AND: [
+                    { ownerId: session.user.id },
+                    ...filterObject
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                images: true,
+                categories: true,
+            }
+        });
+
+        return listings.map(listing => ({
+            ...listing,
+            price: listing.price.toNumber(),
+            isPendingApproval: listing.listingStatus === ListingStatus.DRAFT && !currentUser?.listingApproved,
+            isDeniedByAdmin: listing.listingStatus === ListingStatus.ARCHIVED && !currentUser?.listingApproved,
+        }));
+    }
 
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
         // Admin/Faculty
@@ -100,5 +140,7 @@ export async function getListings(
     return listings.map(listing => ({
             ...listing,
             price: listing.price.toNumber(),
+            isPendingApproval: false,
+            isDeniedByAdmin: false,
     }));
 }

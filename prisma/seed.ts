@@ -1,63 +1,123 @@
-﻿import { PrismaClient } from '@prisma/client';
+﻿import { PrismaClient } from "@prisma/client";
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
-import { auth } from "../src/lib/auth";
+import EventType = $Enums.EventType;
+// Import Better Auth's own hashPassword so seeded passwords are
+// hashed with the exact same algorithm the sign-in flow expects.
+import { hashPassword } from "better-auth/crypto";
+import { generateId } from "better-auth";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
+
+function startOfDay(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function daysAgoStart(daysAgo: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+/**
+ * Create a user + credential account directly in the database,
+ * bypassing the Better Auth HTTP layer (and email-sending side-effects).
+ */
+async function createUser({
+    name,
+    email,
+    password,
+    emailVerified = true,
+    role = "STUDENT",
+    image,
+}: {
+    name: string;
+    email: string;
+    password: string;
+    emailVerified?: boolean;
+    role?: "STUDENT" | "ADMIN" | "FACULTY";
+    image?: string;
+}) {
+    const userId = generateId();
+    const accountId = generateId();
+    const hashedPassword = await hashPassword(password);
+
+    const user = await prisma.user.create({
+        data: {
+            id: userId,
+            name,
+            email,
+            emailVerified,
+            role,
+            image,
+        },
+    });
+
+    await prisma.account.create({
+        data: {
+            id: accountId,
+            accountId: userId,
+            providerId: "credential",
+            userId,
+            password: hashedPassword,
+        },
+    });
+
+    return user;
+}
 
 async function main() {
-    /**
-     * Users
-     */
-    const userJohn = await auth.api.signUpEmail({
-        body: {
-            name: "John Smith",
-            email: "john.smith@example.com",
-            password: "XAvAyN9h4uFR7u",
-            image: "https://example.com/images/john.png",
-            callbackURL: "https://example.com/callback",
-        },
+    // ---- Seed users ----
+    const testUser = await createUser({
+        name: "Test User",
+        email: "test.user@my.unt.edu",
+        password: "rootroot",
     });
 
-    const userEmma = await auth.api.signUpEmail({
-        body: {
-            name: "Emma Johnson",
-            email: "emma.johnson@example.com",
-            password: "tXn3bL2rV8pH5y",
-            image: "https://example.com/images/emma.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const adminUser = await createUser({
+        name: "Admin",
+        email: "admin@my.unt.edu",
+        password: "testtest",
+        role: "ADMIN",
     });
 
-    const userMichael = await auth.api.signUpEmail({
-        body: {
-            name: "Michael Brown",
-            email: "michael.brown@example.com",
-            password: "Pa9tLyXr3fQn7u",
-            image: "https://example.com/images/michael.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userJohn = await createUser({
+        name: "John Smith",
+        email: "john.smith@my.unt.edu",
+        password: "XAvAyN9h4uFR7u",
+        image: "https://example.com/images/john.png",
     });
 
-    const userSophia = await auth.api.signUpEmail({
-        body: {
-            name: "Sophia Davis",
-            email: "sophia.davis@example.com",
-            password: "hT5uEr1bM9oK2v",
-            image: "https://example.com/images/sophia.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userEmma = await createUser({
+        name: "Emma Johnson",
+        email: "emma.johnson@my.unt.edu",
+        password: "tXn3bL2rV8pH5y",
+        image: "https://example.com/images/emma.png",
     });
 
-    const userLiam = await auth.api.signUpEmail({
-        body: {
-            name: "Liam Wilson",
-            email: "liam.wilson@example.com",
-            password: "kN7tBv2rX3yP6q",
-            image: "https://example.com/images/liam.png",
-            callbackURL: "https://example.com/callback",
-        },
+    const userMichael = await createUser({
+        name: "Michael Brown",
+        email: "michael.brown@my.unt.edu",
+        password: "Pa9tLyXr3fQn7u",
+        image: "https://example.com/images/michael.png",
+    });
+
+    const userSophia = await createUser({
+        name: "Sophia Davis",
+        email: "sophia.davis@my.unt.edu",
+        password: "hT5uEr1bM9oK2v",
+        image: "https://example.com/images/sophia.png",
+    });
+
+    const userLiam = await createUser({
+        name: "Liam Wilson",
+        email: "liam.wilson@my.unt.edu",
+        password: "kN7tBv2rX3yP6q",
+        image: "https://example.com/images/liam.png",
     });
 
     /**
@@ -90,6 +150,25 @@ async function main() {
     /**
      * Listings
      */
+    const adminAnalyticsListing = await prisma.listing.create({
+        data: {
+            title: "Admin Listing",
+            description: "Demo listing owned by admin for analytics dashboard testing.",
+            price: 99.99,
+            isProfessorOnly: false,
+            listingStatus: ListingStatus.AVAILABLE,
+            ownerId: adminUser.id,
+            categories: { connect: [{ id: catTextbooks.id }, { id: catSupplies.id }] },
+            images: {
+                create: [
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
+                ]
+            }
+        }
+    });
+
     await prisma.listing.create({
         data: {
             title: "Calculus I Textbook",
@@ -97,13 +176,13 @@ async function main() {
             price: 25.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userJohn?.user.id,
+            ownerId: userJohn.id,
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -116,13 +195,13 @@ async function main() {
             price: 5.50,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userEmma?.user.id,
+            ownerId: userEmma.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -135,13 +214,13 @@ async function main() {
             price: 18.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userMichael?.user.id,
+            ownerId: userMichael.id,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -154,13 +233,13 @@ async function main() {
             price: 10.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userSophia?.user.id,
+            ownerId: userSophia.id,
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -173,13 +252,13 @@ async function main() {
             price: 15.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userLiam?.user.id,
+            ownerId: userLiam.id,
             categories: { connect: [{ id: catTextbooks.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -192,13 +271,13 @@ async function main() {
             price: 0,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userEmma?.user.id,
+            ownerId: userEmma.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -211,13 +290,13 @@ async function main() {
             price: 220.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userJohn?.user.id,
+            ownerId: userJohn.id,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -230,13 +309,13 @@ async function main() {
             price: 30.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userSophia?.user.id,
+            ownerId: userSophia.id,
             categories: { connect: [{ id: catTextbooks.id }, { id: catNotes.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -249,13 +328,13 @@ async function main() {
             price: 20.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.AVAILABLE,
-            ownerId: userMichael?.user.id,
+            ownerId: userMichael.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -268,13 +347,13 @@ async function main() {
             price: 450.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.ARCHIVED,
-            ownerId: userLiam?.user.id,
+            ownerId: userLiam.id,
             categories: { connect: [{ id: catLaptops.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -287,13 +366,13 @@ async function main() {
             price: 8.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.SOLD,
-            ownerId: userEmma?.user.id,
+            ownerId: userEmma.id,
             categories: { connect: [{ id: catNotes.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -306,13 +385,13 @@ async function main() {
             price: 6.00,
             isProfessorOnly: false,
             listingStatus: ListingStatus.DRAFT,
-            ownerId: userJohn?.user.id,
+            ownerId: userJohn.id,
             categories: { connect: [{ id: catSupplies.id }] },
             images: {
                 create: [
-                    { url: "sampleImage1.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage2.jpg", imageType: ImageType.LISTING },
-                    { url: "sampleImage3.jpg", imageType: ImageType.LISTING }
+                    { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                    { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                 ]
             }
         }
@@ -327,10 +406,10 @@ async function main() {
                 isProfessorOnly: false,
                 listingStatus: ListingStatus.AVAILABLE,
                 ownerId:
-                    i % 4 === 0 ? userJohn?.user.id :
-                        i % 4 === 1 ? userEmma?.user.id :
-                            i % 4 === 2 ? userMichael?.user.id :
-                                userSophia?.user.id,
+                    i % 4 === 0 ? userJohn.id :
+                        i % 4 === 1 ? userEmma.id :
+                            i % 4 === 2 ? userMichael.id :
+                                userSophia.id,
                 categories: {
                     connect: [
                         {
@@ -344,22 +423,87 @@ async function main() {
                 },
                 images: {
                     create: [
-                        {url: "sampleImage1.jpg", imageType: ImageType.LISTING},
-                        {url: "sampleImage2.jpg", imageType: ImageType.LISTING},
-                        {url: "sampleImage3.jpg", imageType: ImageType.LISTING}
+                        { url: "/sampleImage1.jpg", imageType: ImageType.LISTING },
+                        { url: "/sampleImage2.jpg", imageType: ImageType.LISTING },
+                        { url: "/sampleImage3.jpg", imageType: ImageType.LISTING }
                     ]
                 }
             }
         });
     }
+
+    // Seed analytics for the admin-owned listing (last 90 days).
+    // Because ListingEvent is deduped by (sessionId, listingId, eventType, createdAt),
+    // we create unique sessionIds per event instance to model volume.
+    const analyticsRows: {
+        listingId: string;
+        userId: string | null;
+        sessionId: string;
+        eventType: EventType;
+        createdAt: Date;
+    }[] = [];
+
+    const analyticsWindowDays = 90;
+
+    for (let dayOffset = analyticsWindowDays - 1; dayOffset >= 0; dayOffset--) {
+        const date = startOfDay(daysAgoStart(dayOffset));
+
+        // Randomized daily volume
+        const impressions = 20 + Math.floor(Math.random() * 81); // 20..100
+        const viewRate = 0.35 + Math.random() * 0.4; // 35%..75%
+        const contactRate = 0.08 + Math.random() * 0.22; // 8%..30%
+
+        const views = Math.max(1, Math.floor(impressions * viewRate));
+        const contacts = Math.max(0, Math.floor(views * contactRate));
+
+        for (let i = 0; i < impressions; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-imp-${dayOffset}-${i}`,
+                eventType: EventType.LISTING_IMPRESSION,
+                createdAt: date,
+            });
+        }
+
+        for (let i = 0; i < views; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-view-${dayOffset}-${i}`,
+                eventType: EventType.LISTING_VIEW,
+                createdAt: date,
+            });
+        }
+
+        for (let i = 0; i < contacts; i++) {
+            analyticsRows.push({
+                listingId: adminAnalyticsListing.id,
+                userId: null,
+                sessionId: `seed-admin-contact-${dayOffset}-${i}`,
+                eventType: EventType.CONTACT_SELLER,
+                createdAt: date,
+            });
+        }
+    }
+
+    await prisma.listingEvent.createMany({
+        data: analyticsRows,
+        skipDuplicates: true,
+    });
+
+    console.log("✅ Seed complete.");
+    console.log(`   test.user@my.unt.edu  / rootroot`);
+    console.log(`   admin@my.unt.edu      / testtest  (ADMIN)`);
 }
 
 main()
     .then(async () => {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     })
     .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+        console.error(e);
+        await prisma.$disconnect();
+        process.exit(1);
+    });
+

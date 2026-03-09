@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { authClient } from "@/lib/auth-client";
 import Alert from "@/components/ui/Alert";
 import Button from "@/components/ui/Button";
 import Link from "next/link";
@@ -13,21 +13,32 @@ function VerifyEmailContent() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
 
-    const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+    const [status, setStatus] = useState<"success" | "error" | "info">("info");
+    const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
     useEffect(() => {
         const verifyEmail = async () => {
             if (!token) {
-                setStatus("error");
-                setMessage("Invalid verification link.");
+                setStatus("info");
+                setMessage("A verification link has been sent to your email. Please visit the link to verify your account and complete registration.");
                 return;
             }
 
             try {
-                await auth.api.verifyEmail({
-                    query: { token }
-                });
+                setLoading(true);
+                const response = await fetch(
+                    `/api/auth/verify-email?token=${encodeURIComponent(token)}`,
+                    {
+                        method: "GET",
+                    }
+                );
+
+                if (!response.ok) {
+                    setStatus("error");
+                    setMessage("Email verification failed. The link may have expired.");
+                    return;
+                }
 
                 setStatus("success");
                 setMessage("Your email has been verified successfully!");
@@ -35,6 +46,7 @@ function VerifyEmailContent() {
                 setStatus("error");
                 setMessage("Email verification failed. The link may have expired.");
             }
+            setLoading(false);
         };
 
         verifyEmail();
@@ -45,42 +57,23 @@ function VerifyEmailContent() {
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Email Verification</h1>
 
-                {status === "loading" && (
+                {loading && (
                     <div className="text-center py-8">
                         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
                         <p className="mt-4">Verifying your email...</p>
                     </div>
                 )}
 
-                {status === "success" && (
-                    <div>
-                        <Alert alertType="success">
-                            <h3>Verification Successful!</h3>
-                            <p>{message}</p>
-                        </Alert>
-                        <div className="text-center mt-6">
-                            <Button buttonSize="lg" onClick={() => router.push("/login")}>
-                                Go to Login
-                            </Button>
-                        </div>
+                <div>
+                    <Alert alertType={status}>
+                        <p>{message}</p>
+                    </Alert>
+                    <div className="text-center mt-6">
+                        <Button buttonSize="lg" onClick={() => router.push("/login")}>
+                            Go to Login
+                        </Button>
                     </div>
-                )}
-
-                {status === "error" && (
-                    <div>
-                        <Alert alertType="error">
-                            <h3>Verification Failed</h3>
-                            <p>{message}</p>
-                        </Alert>
-                        <div className="text-center mt-6">
-                            <Link href="/login">
-                                <Button buttonSize="lg">
-                                    Back to Login
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                )}
+                </div>
             </Card>
         </div>
     );
