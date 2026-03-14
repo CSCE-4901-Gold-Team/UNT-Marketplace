@@ -11,9 +11,6 @@ import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
 import { EventType, $Enums } from "@prisma/client";
-import { useSearchParams } from "next/navigation";
-import CategoryList from "@/components/ui/CategoryList";
-
 import UserRole = $Enums.UserRole;
 import Link from "next/link";
 import {fireListingEvents} from "@/actions/analytics-actions";
@@ -29,17 +26,14 @@ export default function MarketSection({
 }) {
     const [listings, setListings] = useState(use(listingsResponse)); // Listing object
     const userRole = use(userRoleResponse);
-    const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(""); // Search input state
     const [listingsLoading, setListingsLoading] = useState(false); // Listing loading state
     const [newPageLoading, setNewPageLoading] = useState(false);
     const [allListingsLoaded, setAllListingsLoaded] = useState(false);
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(searchParams.get("category"));
     const [filterObject, setFilterObject] = useState<ListingFilters>({
         priceMin: "",
         priceMax: "",
         ...initialFilters,
-        categories: selectedCategory ? [selectedCategory] : undefined
     });
 
     const impressedListingIdsRef = useRef<Set<string>>(new Set());
@@ -117,11 +111,6 @@ export default function MarketSection({
         };
     }, [allListingsLoaded, filterObject, listings, listingsLoading, newPageLoading, pageSize, searchQuery, skipIndex]);
 
-    // Trigger search when category filter changes
-    useEffect(() => {
-        void searchListings();
-    }, [filterObject.categories]);
-
     async function searchListings() {
         if (listingsLoading || newPageLoading) return;
 
@@ -141,13 +130,6 @@ export default function MarketSection({
 
             <div className="market-controls flex gap-6 justify-between items-center">
                 <div className="market-search-container">
-                     <CategoryList 
-                    selectedCategory={selectedCategory}
-                    onCategorySelect={(category) => {
-                        setSelectedCategory(category);
-                        setFilterObject(prev => ({ ...prev, categories: category ? [category] : undefined }));
-                    }}
-                    />
                     <div className="flex">
                         <TextInput inputClasses="rounded-r-none border-r-0"
                             onChange={e => setSearchQuery(e.target.value)}
