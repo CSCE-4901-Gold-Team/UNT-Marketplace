@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent } from "react";
 import Image from "next/image";
 
 interface ImageUploadProps {
@@ -18,56 +18,106 @@ export default function ImageUpload({
     onImagesChange,
     maxImages = 5
 }: ImageUploadProps) {
+    const [previews, setPreviews] = useState<string[]>(selectedImages);
     const [error, setError] = useState<string>("");
 
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+    // Update previews when selectedImages prop changes (for edit mode)
+    useEffect(() => {
+        setPreviews(selectedImages);
+    }, [selectedImages]);
 
-        // Check if adding these files would exceed max images
-        if (selectedImages.length + files.length > maxImages) {
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
+        // Check if adding these files would exceed the max
+        if (previews.length + files.length > maxImages) {
             setError(`You can only upload up to ${maxImages} images`);
             return;
         }
 
-        setError("");
+        // Client-side validation
+        const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+        const maxSize = 5 * 1024 * 1024; // 5MB per file
 
-        // Process each file
-        Array.from(files).forEach((file) => {
-            // Client-side validation
-            const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+        const validFiles = files.filter(file => {
             if (!validTypes.includes(file.type)) {
-                setError("Please upload a valid image file (JPEG, PNG, GIF, or WebP)");
-                return;
+                setError("Please upload valid image files (JPEG, PNG, GIF, or WebP)");
+                return false;
             }
-
-            const maxSize = 5 * 1024 * 1024; // 5MB
             if (file.size > maxSize) {
-                setError("File size must be less than 5MB");
-                return;
+                setError("Each file must be less than 5MB");
+                return false;
             }
-
-            // Convert file to base64 data URL
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const dataUrl = e.target?.result as string;
-                onImagesChange([...selectedImages, dataUrl]);
-            };
-            reader.readAsDataURL(file);
+            return true;
         });
 
-        // Clear the input so the same file can be selected again if needed
-        e.target.value = '';
+        if (validFiles.length === 0) return;
+
+        setError("");
+
+        // Convert and compress files to base64 data URLs
+        const readers = validFiles.map(file => {
+            return new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.onload = () => {
+                        // Create canvas for compression
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Max dimensions (reduce size for faster upload)
+                        const maxWidth = 1200;
+                        const maxHeight = 1200;
+                        
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Calculate new dimensions while maintaining aspect ratio
+                        if (width > height) {
+                            if (width > maxWidth) {
+                                height = (height * maxWidth) / width;
+                                width = maxWidth;
+                            }
+                        } else {
+                            if (height > maxHeight) {
+                                width = (width * maxHeight) / height;
+                                height = maxHeight;
+                            }
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        // Draw and compress (0.7 = 70% quality for smaller size)
+                        ctx?.drawImage(img, 0, 0, width, height);
+                        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        resolve(compressedDataUrl);
+                    };
+                    img.src = e.target?.result as string;
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        Promise.all(readers).then(dataUrls => {
+            const newPreviews = [...previews, ...dataUrls];
+            setPreviews(newPreviews);
+            onImagesChange(newPreviews);
+        });
     };
 
-    const removeImage = (indexToRemove: number) => {
-        onImagesChange(selectedImages.filter((_, index) => index !== indexToRemove));
+    const removeImage = (index: number) => {
+        const newPreviews = previews.filter((_, i) => i !== index);
+        setPreviews(newPreviews);
+        onImagesChange(newPreviews);
     };
 
     return (
         <div className="space-y-2">
             {inputLabel && (
-                <label className="block text-sm font-medium text-black dark:text-gray-200">
+                <label className="block text-sm font-medium text-gray-700">
                     {inputLabel} ({previews.length}/{maxImages})
                 </label>
             )}
@@ -106,33 +156,41 @@ export default function ImageUpload({
                 )}
 
                 {/* Image previews grid */}
-                {selectedImages.length > 0 && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {selectedImages.map((image, index) => (
-                            <div key={index} className="relative group">
-                                <div className="relative aspect-square w-full rounded-lg overflow-hidden border-2 border-green-500">
+                {previews.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {previews.map((preview, index) => (
+                            <div key={index} className="relative">
+                                <div className="relative aspect-video w-full rounded-lg overflow-hidden border-2 border-gray-300 hover:border-green-500 transition">
                                     <Image
-                                        src={image}
+                                        src={preview}
                                         alt={`Preview ${index + 1}`}
                                         fill
                                         className="object-cover"
+                                        unoptimized
                                     />
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => removeImage(index)}
-                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                                    aria-label="Remove image"
+                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-lg"
                                 >
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
+                                {index === 0 && (
+                                    <span className="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded">
+                                        Primary
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* Hidden input to store the image paths for form submission */}
+            <input type="hidden" name={name} value={JSON.stringify(previews)} />
         </div>
     );
 }
