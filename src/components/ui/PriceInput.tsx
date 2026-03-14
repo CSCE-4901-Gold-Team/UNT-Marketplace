@@ -6,6 +6,7 @@ import {ErrorHelper} from "@/utils/ErrorHelper";
 
 export default function PriceInput({
     inputLabel,
+    value,
     onChange,
     validationErrors,
     required,
@@ -14,6 +15,7 @@ export default function PriceInput({
     step = "0.01",
 }: {
     inputLabel?: string;
+    value?: string;
     onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
     validationErrors?: z.core.$ZodIssue[]
 } & React.InputHTMLAttributes<HTMLInputElement>) {
@@ -30,6 +32,7 @@ export default function PriceInput({
                     id={name}
                     name={name}
                     placeholder={placeholder}
+                    value={value}
                     min="0"
                     step={step}
                     required={required}
