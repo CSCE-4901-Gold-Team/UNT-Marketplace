@@ -58,11 +58,11 @@ export const ListingUtils = {
         }
 
         // Categories
-        if (!!filters.categories && filters.categories.length > 0) {
+        if (!!filters.categories) {
             filterObject.push({
                 categories: {
                     some: {
-                        slug: { in: filters.categories }
+                        name: { in: filters.categories }
                     }
                 }
             });
