@@ -2,7 +2,6 @@
 
 import React, {useActionState, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
 import {FormResponse} from "@/types/FormResponse";
@@ -53,6 +52,18 @@ export default function LoginPage() {
                     <Alert alertType="success">
                         <h3>Login success!</h3>
                         <p>If you&#39;re not redirected <Link href="/">click here</Link></p>
+                    </Alert>
+                }
+
+                { loginFormResponse.status === FormStatus.ERROR && loginFormResponse.message?.content.includes("verify your email") &&
+                    <Alert alertType="error">
+                        <h3>Email Not Verified</h3>
+                        <p>You must verify your email before logging in.</p>
+                        <p className="mt-2">
+                            <Link href="/resend-verification" className="text-green-700 font-semibold hover:underline">
+                                Resend Verification Email
+                            </Link>
+                        </p>
                     </Alert>
                 }
 
