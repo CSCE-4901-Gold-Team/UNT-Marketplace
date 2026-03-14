@@ -4,8 +4,8 @@ import { FormResponse } from "@/types/FormResponse";
 import * as z from "zod";
 import { ZodValidators } from "@/utils/ZodValidators";
 import { FormStatus } from "@/constants/FormStatus";
-import { prisma } from "@/lib/auth";
-import { sendPasswordResetEmail } from "@/lib/email-service";
+import { auth } from "@/lib/auth";
+import { APIError } from "better-auth";
 
 const PasswordResetRequest = z.object({
     email: ZodValidators.email,
@@ -30,33 +30,20 @@ export async function passwordResetRequestAction(initialState: FormResponse, for
 
     // Send password reset request
     try {
-        // Check if user exists
-        const user = await prisma.user.findUnique({
-            where: { email: parsedFormData.data.email }
+        await auth.api.forgetPassword({
+            body: {
+                email: parsedFormData.data.email,
+                redirectTo: `${process.env.APP_URL}/reset-password`,
+            }
         });
-
-        if (!user) {
-            // For security, don't reveal if email exists or not
-            return {
-                status: FormStatus.SUCCESS,
-                message: {
-                    type: "success",
-                    content: "If an account with that email exists, a password reset link has been sent."
-                }
-            };
-        }
-
-        // Generate reset token and send email
-        const resetUrl = `${process.env.APP_URL}/reset-password?email=${encodeURIComponent(user.email)}`;
-        await sendPasswordResetEmail(user.email, resetUrl);
-
     } catch (error) {
         // Request failed
         return {
             status: FormStatus.ERROR,
             message: {
                 type: "error",
-                content: "An internal service error occurred during password reset request."
+                content: error instanceof APIError ?
+                    error.message : "An internal service error occurred during password reset request."
             }
         };
     }
@@ -66,7 +53,7 @@ export async function passwordResetRequestAction(initialState: FormResponse, for
         status: FormStatus.SUCCESS,
         message: {
             type: "success",
-            content: "If an account with that email exists, a password reset link has been sent."
+            content: "Password reset link has been sent to your email."
         }
     };
 }
