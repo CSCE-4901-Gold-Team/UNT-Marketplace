@@ -24,6 +24,13 @@ export async function GET(request: NextRequest) {
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
 
+        if (!userId) {
+            return NextResponse.json(
+                { error: "User ID not found" },
+                { status: 400 }
+            );
+        }
+
         const savedQueries = await prisma.savedQuery.findMany({
             where: { userId },
             include: {
@@ -89,6 +96,13 @@ export async function POST(request: NextRequest) {
         const userObj = session.user as unknown as { id?: string };
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "User ID not found" },
+                { status: 400 }
+            );
+        }
 
         const body = await request.json();
         const { name, searchTerm, minPrice, maxPrice, categoryIds = [] } = body;

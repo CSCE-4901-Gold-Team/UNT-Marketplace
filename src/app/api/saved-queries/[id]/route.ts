@@ -27,6 +27,13 @@ export async function GET(
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
 
+        if (!userId) {
+            return NextResponse.json(
+                { error: "User ID not found" },
+                { status: 400 }
+            );
+        }
+
         const { id } = await params;
 
         const savedQuery = await prisma.savedQuery.findUnique({
@@ -111,6 +118,13 @@ export async function PATCH(
         const userObj = session.user as unknown as { id?: string };
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "User ID not found" },
+                { status: 400 }
+            );
+        }
 
         const { id } = await params;
         const body = await request.json();
@@ -227,6 +241,13 @@ export async function DELETE(
         const userObj = session.user as unknown as { id?: string };
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
+
+        if (!userId) {
+            return NextResponse.json(
+                { error: "User ID not found" },
+                { status: 400 }
+            );
+        }
 
         const { id } = await params;
 

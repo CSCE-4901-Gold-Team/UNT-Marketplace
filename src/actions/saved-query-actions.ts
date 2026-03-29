@@ -27,6 +27,10 @@ export async function createSavedQuery(data: {
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
 
+        if (!userId) {
+            return { success: false, error: "User ID not found" };
+        }
+
         const savedQuery = await prisma.savedQuery.create({
             data: {
                 userId,
@@ -93,6 +97,10 @@ export async function getSavedQueries() {
         const userObj = session.user as unknown as { id?: string };
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
+
+        if (!userId) {
+            return { success: false, error: "User ID not found" };
+        }
 
         const queries = await prisma.savedQuery.findMany({
             where: { userId },
@@ -161,6 +169,10 @@ export async function updateSavedQuery(
         const userObj = session.user as unknown as { id?: string };
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
+
+        if (!userId) {
+            return { success: false, error: "User ID not found" };
+        }
 
         // Verify ownership
         const existingQuery = await prisma.savedQuery.findUnique({
@@ -265,6 +277,10 @@ export async function deleteSavedQuery(id: string) {
         const userObj = session.user as unknown as { id?: string };
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
+
+        if (!userId) {
+            return { success: false, error: "User ID not found" };
+        }
 
         // Verify ownership
         const existingQuery = await prisma.savedQuery.findUnique({
