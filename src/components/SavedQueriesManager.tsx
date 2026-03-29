@@ -6,13 +6,13 @@ import { getSavedQueries, createSavedQuery, updateSavedQuery, deleteSavedQuery }
 interface SavedQuery {
     id: string;
     name: string;
-    searchTerm?: string;
+    searchTerm: string | null;
     minPrice?: string;
     maxPrice?: string;
     categories: Array<{ id: number; name: string; slug: string }>;
     enabled: boolean;
-    createdAt: string;
-    lastEmailSentAt?: string;
+    createdAt: string | Date;
+    lastEmailSentAt?: string | Date | null;
 }
 
 interface ToggleableQuery extends SavedQuery {
@@ -63,9 +63,9 @@ export function SavedQueriesManager() {
                     prev.map((q) =>
                         q.id === id
                             ? {
-                                  ...result.query,
-                                  isToggling: false,
-                              }
+                                ...result.query,
+                                isToggling: false,
+                            }
                             : q
                     )
                 );
@@ -314,11 +314,10 @@ function QueryCard({
                     )}
                 </div>
                 <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        query.enabled
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${query.enabled
                             ? "bg-green-100 text-green-800"
                             : "bg-gray-100 text-gray-800"
-                    }`}
+                        }`}
                 >
                     {query.enabled ? "Active" : "Inactive"}
                 </span>
@@ -346,8 +345,8 @@ function QueryCard({
                     {query.isToggling
                         ? "Updating..."
                         : query.enabled
-                          ? "Disable Alerts"
-                          : "Enable Alerts"}
+                            ? "Disable Alerts"
+                            : "Enable Alerts"}
                 </button>
                 <button
                     onClick={onDelete}
