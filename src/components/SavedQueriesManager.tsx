@@ -56,6 +56,20 @@ export function SavedQueriesManager() {
         }
     };
 
+    const refreshQueries = async () => {
+        try {
+            const result = await getSavedQueries();
+            if (result.success && result.queries) {
+                setQueries(result.queries);
+                setError(null);
+            } else {
+                setError(result.error || "Failed to refresh queries");
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Unknown error");
+        }
+    };
+
     const handleToggleEnabled = async (id: string, currentEnabled: boolean) => {
         try {
             setQueries((prev) =>
@@ -213,9 +227,9 @@ export function SavedQueriesManager() {
 
             {showCreateForm && (
                 <CreateQueryForm
-                    onSuccess={() => {
+                    onSuccess={async () => {
+                        await refreshQueries();
                         setShowCreateForm(false);
-                        loadQueries();
                     }}
                     onCancel={() => setShowCreateForm(false)}
                 />
@@ -275,6 +289,11 @@ function CreateQueryForm({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Prevent multiple submissions
+        if (isSubmitting) {
+            return;
+        }
+
         if (!formData.name.trim()) {
             setError("Query name is required");
             return;
@@ -282,6 +301,8 @@ function CreateQueryForm({
 
         try {
             setIsSubmitting(true);
+            setError(null);
+
             const result = await createSavedQuery({
                 name: formData.name,
                 searchTerm: formData.searchTerm || undefined,
@@ -290,13 +311,22 @@ function CreateQueryForm({
             });
 
             if (result.success) {
+                // Reset form data
+                setFormData({
+                    name: "",
+                    searchTerm: "",
+                    minPrice: "",
+                    maxPrice: "",
+                });
+                setError(null);
+                // Call onSuccess to refresh and close the form
                 onSuccess();
             } else {
                 setError(result.error || "Failed to create query");
+                setIsSubmitting(false);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Unknown error");
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -367,7 +397,7 @@ function CreateQueryForm({
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50"
+                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? "Creating..." : "Create Saved Search"}
                     </button>
@@ -375,7 +405,7 @@ function CreateQueryForm({
                         type="button"
                         onClick={onCancel}
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                        className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
@@ -408,10 +438,10 @@ function EditQueryForm({
 
         try {
             setIsSubmitting(true);
+            setError(null);
             onSave(formData);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Unknown error");
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -482,7 +512,7 @@ function EditQueryForm({
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50"
+                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? "Saving..." : "Save Changes"}
                     </button>
@@ -490,7 +520,7 @@ function EditQueryForm({
                         type="button"
                         onClick={onCancel}
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                        className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
@@ -547,7 +577,7 @@ function QueryCard({
                 <button
                     onClick={() => onToggle(query.enabled)}
                     disabled={query.isToggling || query.isDeleting}
-                    className="flex-1 px-3 py-2 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
+                    className="flex-1 px-3 py-2 text-sm border rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {query.isToggling
                         ? "Updating..."
@@ -558,14 +588,14 @@ function QueryCard({
                 <button
                     onClick={onEdit}
                     disabled={query.isToggling || query.isDeleting}
-                    className="flex-1 px-3 py-2 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50 disabled:opacity-50"
+                    className="flex-1 px-3 py-2 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Edit
                 </button>
                 <button
                     onClick={onDelete}
                     disabled={query.isDeleting}
-                    className="flex-1 px-3 py-2 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50 disabled:opacity-50"
+                    className="flex-1 px-3 py-2 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {query.isDeleting ? "Deleting..." : "Delete"}
                 </button>
