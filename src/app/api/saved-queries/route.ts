@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
             const categoriesCount = await prisma.category.count({
                 where: {
                     id: {
-                        in: categoryIds.map((id: number) => parseInt(id as string, 10)),
+                        in: categoryIds,
                     },
                 },
             });
