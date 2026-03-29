@@ -12,7 +12,7 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const { name, email, image } = session.user;
+  const { name = "", email = "", image = null } = session.user;
 
   return (
     <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
