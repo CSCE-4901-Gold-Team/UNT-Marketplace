@@ -219,7 +219,7 @@ export function SavedQueriesManager() {
                 <h2 className="text-2xl font-bold">Saved Searches</h2>
                 <button
                     onClick={() => setShowCreateForm(!showCreateForm)}
-                    className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark"
+                    className="px-4 py-2 bg-primary text-black bg-green-200 rounded hover:bg-primary-dark"
                 >
                     {showCreateForm ? "Cancel" : "New Saved Search"}
                 </button>
@@ -332,7 +332,7 @@ function CreateQueryForm({
     };
 
     return (
-        <div className="border rounded-lg p-6 bg-white shadow">
+        <div className="border rounded-lg p-6 bg-white shadow max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Create New Saved Search</h3>
 
             {error && (
@@ -393,11 +393,11 @@ function CreateQueryForm({
                     </div>
                 </div>
 
-                <div className="flex gap-2 pt-4">
+                <div className="flex gap-2 pt-4 sticky bottom-0 bg-white pb-2 border-t mt-6 -mx-6 px-6 py-4">
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-4 py-2 bg-primary text-black rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? "Creating..." : "Create Saved Search"}
                     </button>
@@ -447,7 +447,7 @@ function EditQueryForm({
     };
 
     return (
-        <div className="border rounded-lg p-6 bg-white shadow">
+        <div className="border rounded-lg p-6 bg-white shadow max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Edit Saved Search</h3>
 
             {error && (
@@ -508,11 +508,11 @@ function EditQueryForm({
                     </div>
                 </div>
 
-                <div className="flex gap-2 pt-4">
+                <div className="flex gap-2 pt-4 sticky bottom-0 bg-white pb-2 border-t mt-6 -mx-6 px-6 py-4">
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-4 py-2 bg-primary bg-green-200 text-black rounded hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isSubmitting ? "Saving..." : "Save Changes"}
                     </button>
