@@ -161,7 +161,7 @@ export async function PATCH(
                 await prisma.categoryOnSavedQuery.createMany({
                     data: categoryIds.map((categoryId: number) => ({
                         savedQueryId: id,
-                        categoryId: parseInt(categoryId as string, 10),
+                        categoryId,
                     })),
                 });
             }

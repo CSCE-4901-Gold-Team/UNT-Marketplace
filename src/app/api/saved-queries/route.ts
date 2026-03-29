@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
                 maxPrice: maxPrice ? parseFloat(maxPrice) : null,
                 categories: {
                     create: categoryIds.map((categoryId: number) => ({
-                        categoryId: parseInt(categoryId as string, 10),
+                        categoryId,
                     })),
                 },
             },
