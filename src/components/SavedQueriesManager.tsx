@@ -17,6 +17,15 @@ interface SavedQuery {
 
 interface ToggleableQuery extends SavedQuery {
     isToggling?: boolean;
+    isDeleting?: boolean;
+}
+
+interface EditingQuery {
+    id: string;
+    name: string;
+    searchTerm: string | null;
+    minPrice: string | null;
+    maxPrice: string | null;
 }
 
 export function SavedQueriesManager() {
@@ -24,6 +33,7 @@ export function SavedQueriesManager() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
+    const [editingQuery, setEditingQuery] = useState<EditingQuery | null>(null);
 
     useEffect(() => {
         loadQueries();
@@ -101,11 +111,74 @@ export function SavedQueriesManager() {
         }
 
         try {
+            setQueries((prev) =>
+                prev.map((q) =>
+                    q.id === id ? { ...q, isDeleting: true } : q
+                )
+            );
+
             const result = await deleteSavedQuery(id);
             if (result.success) {
                 setQueries((prev) => prev.filter((q) => q.id !== id));
             } else {
                 setError(result.error || "Failed to delete query");
+                setQueries((prev) =>
+                    prev.map((q) =>
+                        q.id === id ? { ...q, isDeleting: false } : q
+                    )
+                );
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Unknown error");
+            setQueries((prev) =>
+                prev.map((q) =>
+                    q.id === id ? { ...q, isDeleting: false } : q
+                )
+            );
+        }
+    };
+
+    const handleEditQuery = (query: ToggleableQuery) => {
+        setEditingQuery({
+            id: query.id,
+            name: query.name,
+            searchTerm: query.searchTerm,
+            minPrice: query.minPrice || null,
+            maxPrice: query.maxPrice || null,
+        });
+    };
+
+    const handleSaveEdit = async (updatedQuery: EditingQuery) => {
+        try {
+            const result = await updateSavedQuery(updatedQuery.id, {
+                name: updatedQuery.name,
+                searchTerm: updatedQuery.searchTerm,
+                minPrice: updatedQuery.minPrice,
+                maxPrice: updatedQuery.maxPrice,
+            });
+
+            if (result.success && result.query) {
+                setQueries((prev) =>
+                    prev.map((q) =>
+                        q.id === updatedQuery.id
+                            ? {
+                                id: result.query.id,
+                                name: result.query.name,
+                                searchTerm: result.query.searchTerm,
+                                minPrice: result.query.minPrice,
+                                maxPrice: result.query.maxPrice,
+                                categories: result.query.categories,
+                                enabled: result.query.enabled,
+                                createdAt: result.query.createdAt,
+                                lastEmailSentAt: result.query.lastEmailSentAt,
+                            }
+                            : q
+                    )
+                );
+                setEditingQuery(null);
+                setError(null);
+            } else {
+                setError(result.error || "Failed to update query");
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Unknown error");
@@ -148,6 +221,14 @@ export function SavedQueriesManager() {
                 />
             )}
 
+            {editingQuery && (
+                <EditQueryForm
+                    query={editingQuery}
+                    onSave={handleSaveEdit}
+                    onCancel={() => setEditingQuery(null)}
+                />
+            )}
+
             {queries.length === 0 ? (
                 <div className="text-center p-8 bg-gray-50 rounded">
                     <p className="text-gray-600 mb-4">You haven't saved any searches yet.</p>
@@ -165,6 +246,7 @@ export function SavedQueriesManager() {
                             key={query.id}
                             query={query}
                             onToggle={(enabled) => handleToggleEnabled(query.id, enabled)}
+                            onEdit={() => handleEditQuery(query)}
                             onDelete={() => handleDeleteQuery(query.id)}
                         />
                     ))}
@@ -303,13 +385,130 @@ function CreateQueryForm({
     );
 }
 
+function EditQueryForm({
+    query,
+    onSave,
+    onCancel,
+}: {
+    query: EditingQuery;
+    onSave: (query: EditingQuery) => void;
+    onCancel: () => void;
+}) {
+    const [formData, setFormData] = useState(query);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!formData.name.trim()) {
+            setError("Query name is required");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            onSave(formData);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Unknown error");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="border rounded-lg p-6 bg-white shadow">
+            <h3 className="text-lg font-semibold mb-4">Edit Saved Search</h3>
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded mb-4">
+                    {error}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <label className="block text-sm font-medium mb-1">Search Name *</label>
+                    <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="e.g., Budget Laptops"
+                        className="w-full px-3 py-2 border rounded"
+                        disabled={isSubmitting}
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium mb-1">Search Term</label>
+                    <input
+                        type="text"
+                        value={formData.searchTerm || ""}
+                        onChange={(e) => setFormData({ ...formData, searchTerm: e.target.value || null })}
+                        placeholder="e.g., laptop, textbook"
+                        className="w-full px-3 py-2 border rounded"
+                        disabled={isSubmitting}
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Min Price</label>
+                        <input
+                            type="number"
+                            value={formData.minPrice || ""}
+                            onChange={(e) => setFormData({ ...formData, minPrice: e.target.value || null })}
+                            placeholder="0"
+                            step="0.01"
+                            className="w-full px-3 py-2 border rounded"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Max Price</label>
+                        <input
+                            type="number"
+                            value={formData.maxPrice || ""}
+                            onChange={(e) => setFormData({ ...formData, maxPrice: e.target.value || null })}
+                            placeholder="No limit"
+                            step="0.01"
+                            className="w-full px-3 py-2 border rounded"
+                            disabled={isSubmitting}
+                        />
+                    </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="flex-1 px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark disabled:opacity-50"
+                    >
+                        {isSubmitting ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={onCancel}
+                        disabled={isSubmitting}
+                        className="flex-1 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    );
+}
+
 function QueryCard({
     query,
     onToggle,
+    onEdit,
     onDelete,
 }: {
     query: ToggleableQuery;
     onToggle: (enabled: boolean) => void;
+    onEdit: () => void;
     onDelete: () => void;
 }) {
     return (
@@ -347,7 +546,7 @@ function QueryCard({
             <div className="flex gap-2">
                 <button
                     onClick={() => onToggle(query.enabled)}
-                    disabled={query.isToggling}
+                    disabled={query.isToggling || query.isDeleting}
                     className="flex-1 px-3 py-2 text-sm border rounded hover:bg-gray-50 disabled:opacity-50"
                 >
                     {query.isToggling
@@ -357,10 +556,18 @@ function QueryCard({
                             : "Enable Alerts"}
                 </button>
                 <button
-                    onClick={onDelete}
-                    className="flex-1 px-3 py-2 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50"
+                    onClick={onEdit}
+                    disabled={query.isToggling || query.isDeleting}
+                    className="flex-1 px-3 py-2 text-sm border border-blue-600 text-blue-600 rounded hover:bg-blue-50 disabled:opacity-50"
                 >
-                    Delete
+                    Edit
+                </button>
+                <button
+                    onClick={onDelete}
+                    disabled={query.isDeleting}
+                    className="flex-1 px-3 py-2 text-sm text-red-600 border border-red-600 rounded hover:bg-red-50 disabled:opacity-50"
+                >
+                    {query.isDeleting ? "Deleting..." : "Delete"}
                 </button>
             </div>
         </div>
