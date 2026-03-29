@@ -58,12 +58,20 @@ export function SavedQueriesManager() {
                 enabled: !currentEnabled,
             });
 
-            if (result.success) {
+            if (result.success && result.query) {
                 setQueries((prev) =>
                     prev.map((q) =>
                         q.id === id
                             ? {
-                                ...result.query,
+                                id: result.query.id,
+                                name: result.query.name,
+                                searchTerm: result.query.searchTerm,
+                                minPrice: result.query.minPrice,
+                                maxPrice: result.query.maxPrice,
+                                categories: result.query.categories,
+                                enabled: result.query.enabled,
+                                createdAt: result.query.createdAt,
+                                lastEmailSentAt: result.query.lastEmailSentAt,
                                 isToggling: false,
                             }
                             : q
@@ -315,8 +323,8 @@ function QueryCard({
                 </div>
                 <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${query.enabled
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
                         }`}
                 >
                     {query.enabled ? "Active" : "Inactive"}
