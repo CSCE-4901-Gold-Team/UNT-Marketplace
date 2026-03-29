@@ -237,10 +237,7 @@ export async function GET(request: Request) {
         const result = await processSavedQueries();
 
         return new Response(
-            JSON.stringify({
-                success: true,
-                ...result,
-            }),
+            JSON.stringify(result),
             { status: 200 }
         );
     } catch (error) {
