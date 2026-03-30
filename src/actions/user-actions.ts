@@ -20,7 +20,7 @@ export async function getCurrentUserRole(): Promise<$Enums.UserRole> {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const user = await prisma.user.findFirst({
@@ -42,7 +42,7 @@ export async function updateAdminUser(userId: string, data: { name?: string; ema
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -78,7 +78,7 @@ export async function getUserStatus(userId: string): Promise<{status: number, us
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     // Get role of current user and validate
@@ -134,7 +134,7 @@ async function createUserStatus(userId: string, userStatus: UserStatusType, expi
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     // Get role of current user and validate

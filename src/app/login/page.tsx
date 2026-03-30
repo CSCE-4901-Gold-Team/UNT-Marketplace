@@ -8,6 +8,7 @@ import {FormResponse} from "@/types/FormResponse";
 import {FormStatus} from "@/constants/FormStatus";
 import Alert from "@/components/ui/Alert";
 import Link from "next/link";
+import Image from "next/image";
 import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
