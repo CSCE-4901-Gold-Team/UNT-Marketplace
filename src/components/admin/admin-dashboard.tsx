@@ -4,48 +4,8 @@ import { useRouter } from "next/navigation";
 import { $Enums } from "@prisma/client";
 import { getAdminStats, getRecentlyListedItems, getFirstListingsAwaitingApproval, getAllUsers, approveFirstListing, rejectFirstListing, getSuspendedUsers, deleteListing } from "@/actions/admin-actions";
 import { updateAdminUser, suspendUser, banUser, setUserActive } from "@/actions/user-actions";
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    transactions: number;
-    listings: number;
-    reports: number;
-}
-
-interface SuspendedUser {
-    userId: string;
-    name: string;
-    email: string;
-    role: string;
-    status: string;
-    expiresAt: Date | null;
-    suspendedAt: Date;
-    userCreatedAt: Date;
-}
-
-interface RecentListing {
-    id: string;
-    title: string;
-    seller: string;
-    sellerName: string;
-    category: string;
-    price: string;
-    date: string;
-    createdAt: Date;
-}
-
-interface PendingListing {
-    id: string;
-    title: string;
-    seller: string;
-    sellerName: string;
-    category: string;
-    price: string;
-    date: string;
-}
+import type { User, SuspendedUser } from "@/types/admin/users";
+import type { RecentListing, PendingListing } from "@/types/admin/listings";
 
 export default function Admin({ userRole }: { userRole: string | null }) {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
