@@ -6,6 +6,8 @@ import { FormStatus } from "@/constants/FormStatus";
 import { createCategoryAction, deleteCategoryAction, getCategories, getCategoriesCount, updateCategoryAction } from "@/actions/category-actions";
 import type { AdminCategory } from "@/types/admin/categories";
 import Pagination from "../ui/Pagination";
+import ConfirmationPopup from "../ui/confirmation-popup";
+import { toastService } from "@/lib/toast-service";
 
 const CATEGORIES_PER_PAGE = 20;
 
@@ -23,6 +25,11 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
     const [totalCategoriesCount, setTotalCategoriesCount] = useState(0);
     const [newCategoryName, setNewCategoryName] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<AdminCategory | null>(null);
+    const [categoryPendingDeletion, setCategoryPendingDeletion] = useState<AdminCategory | null>(null);
+
+    function getSlugPreview(name: string) {
+        return name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    }
 
     async function loadCategories(page: number) {
         setLoading(true);
@@ -37,6 +44,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
             setTotalCategoriesCount(totalCount);
         } catch (error) {
             console.error("Error loading categories:", error);
+            toastService.toast("Error loading categories", "error");
         } finally {
             setLoading(false);
         }
@@ -60,7 +68,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
 
     async function handleCreateCategory() {
         if (!newCategoryName.trim()) {
-            alert("Please enter a category name.");
+            toastService.toast("Please enter a category name.", "warn");
             return;
         }
 
@@ -72,11 +80,11 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
 
             const response = await createCategoryAction(initialFormState, formData);
             if (response.status !== FormStatus.SUCCESS) {
-                alert(response.message?.content || "Error creating category");
+                toastService.toast(response.message?.content || "Error creating category", response.message?.type || "error");
                 return;
             }
 
-            alert(response.message?.content || "Category created successfully.");
+            toastService.toast(response.message?.content || "Category created successfully.", response.message?.type || "success");
             setNewCategoryName("");
 
             if (categoriesPage !== 1) {
@@ -86,7 +94,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
             }
         } catch (error) {
             console.error("Error creating category:", error);
-            alert("Error creating category");
+            toastService.toast("Error creating category", "error");
         } finally {
             setActionInProgress(false);
         }
@@ -104,34 +112,36 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
 
             const response = await updateCategoryAction(initialFormState, formData);
             if (response.status !== FormStatus.SUCCESS) {
-                alert(response.message?.content || "Error updating category");
+                toastService.toast(response.message?.content || "Error updating category", response.message?.type || "error");
                 return;
             }
 
-            alert(response.message?.content || "Category updated successfully.");
+            toastService.toast(response.message?.content || "Category updated successfully.", response.message?.type || "success");
             setSelectedCategory(null);
             await loadCategories(categoriesPage);
         } catch (error) {
             console.error("Error updating category:", error);
-            alert("Error updating category");
+            toastService.toast("Error updating category", "error");
         } finally {
             setActionInProgress(false);
         }
     }
 
-    async function handleDeleteCategory(categoryId: number, categoryName: string) {
-        if (!confirm(`Are you sure you want to delete the category "${categoryName}"?`)) return;
+    async function handleDeleteCategory() {
+        if (!categoryPendingDeletion) return;
+
+        setCategoryPendingDeletion(null);
 
         setActionInProgress(true);
 
         try {
-            const response = await deleteCategoryAction(categoryId);
+            const response = await deleteCategoryAction(categoryPendingDeletion.id);
             if (response.status !== FormStatus.SUCCESS) {
-                alert(response.message?.content || "Error deleting category");
+                toastService.toast(response.message?.content || "Error deleting category", response.message?.type || "error");
                 return;
             }
 
-            alert(response.message?.content || "Category deleted successfully.");
+            toastService.toast(response.message?.content || "Category deleted successfully.", response.message?.type || "success");
 
             if (categories.length === 1 && categoriesPage > 1) {
                 setCategoriesPage((prev) => prev - 1);
@@ -140,7 +150,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
             }
         } catch (error) {
             console.error("Error deleting category:", error);
-            alert("Error deleting category");
+            toastService.toast("Error deleting category", "error");
         } finally {
             setActionInProgress(false);
         }
@@ -216,7 +226,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
                                         Edit
                                     </button>
                                     <button
-                                        onClick={() => handleDeleteCategory(category.id, category.name)}
+                                        onClick={() => setCategoryPendingDeletion(category)}
                                         className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition disabled:opacity-50"
                                         disabled={actionInProgress}
                                     >
@@ -238,7 +248,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
             </div>
 
             {selectedCategory && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-2xl w-[450px] p-6 shadow-lg">
                         <h3 className="text-2xl font-bold mb-4 text-center">Edit Category</h3>
                         <div className="flex flex-col gap-4">
@@ -255,7 +265,7 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
                             <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
                                 <p className="text-sm text-gray-600">Slug preview</p>
                                 <p className="font-medium text-gray-900 mt-1">
-                                    {selectedCategory.name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "n-a"}
+                                    {getSlugPreview(selectedCategory.name) || "n-a"}
                                 </p>
                             </div>
                         </div>
@@ -279,6 +289,18 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
                     </div>
                 </div>
             )}
+
+            <ConfirmationPopup
+                open={!!categoryPendingDeletion}
+                title="Delete Category"
+                message={categoryPendingDeletion ? `Are you sure you want to delete the category "${categoryPendingDeletion.name}"?` : ""}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                tone="danger"
+                pending={actionInProgress}
+                onConfirm={handleDeleteCategory}
+                onClose={() => setCategoryPendingDeletion(null)}
+            />
         </main>
     );
 }
