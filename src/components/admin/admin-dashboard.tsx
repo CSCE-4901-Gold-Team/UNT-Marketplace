@@ -2,9 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAdminStats, getRecentlyListedItems, getFirstListingsAwaitingApproval, getAllUsers, getSuspendedUsers } from "@/actions/admin-actions";
-import type { User, SuspendedUser } from "@/types/admin/users";
-import type { RecentListing, PendingListing } from "@/types/admin/listings";
+import { getAdminStats, getFirstListingsAwaitingApproval, getSuspendedUsers } from "@/actions/admin-actions";
 
 export default function Admin({ userRole }: { userRole: string | null }) {
     const [stats, setStats] = useState({ totalUsers: 0, activeListings: 0, pendingReports: 0, totalTransactions: 0, suspendedCount: 0, pendingCount: 0 });
@@ -86,7 +84,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             {/* Quick Actions */}
             <div>
                 <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-4 gap-6">
                     <Link href="/admin/users" className="bg-orange-500 rounded-3xl h-[200px] flex items-center justify-center text-white hover:shadow-xl transition-shadow">
                         <div className="text-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-12 mx-auto mb-3">
@@ -102,6 +100,15 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
                             <div className="text-xl font-bold">Listings</div>
+                        </div>
+                    </Link>
+
+                    <Link href="/admin/categories" className="bg-blue-600 rounded-3xl h-[200px] flex items-center justify-center text-white hover:shadow-xl transition-shadow">
+                        <div className="text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-12 mx-auto mb-3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5m-16.5 5.25h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                            <div className="text-xl font-bold">Categories</div>
                         </div>
                     </Link>
 

@@ -81,8 +81,10 @@ async function findCategoryConflict(name: string, slug: string, excludeCategoryI
     });
 }
 
-export async function getAllCategories() {
+export async function getCategories(take: number = 50, skip: number = 0) {
     const categories = await prisma.category.findMany({
+        take: take,
+        skip: skip,
         orderBy: {
             name: "asc"
         },
@@ -101,6 +103,10 @@ export async function getAllCategories() {
         slug: category.slug,
         listingCount: category._count.listings
     }));
+}
+
+export async function getCategoriesCount() {
+    return await prisma.category.count();
 }
 
 export async function getCategoryById(categoryId: number) {
