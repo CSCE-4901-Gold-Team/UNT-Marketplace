@@ -16,13 +16,9 @@ const CreateListingRequest = z.object({
     description: z.string().min(10, "Description must be at least 10 characters"),
     price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
     isProfessorOnly: z.boolean().optional(),
-    categoryIds: z.array(z.number()).optional(),
-    newCategoryNames: z.array(z.string()).optional(),
+    categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
-}).refine(
-    (data) => (data.categoryIds && data.categoryIds.length > 0) || (data.newCategoryNames && data.newCategoryNames.length > 0),
-    { message: "At least one category is required", path: ["categoryIds"] }
-);
+});
 
 export async function createListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
 
@@ -59,7 +55,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         price: formData.get("price"),
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
-        newCategoryNames: JSON.parse(formData.get("newCategoryNames") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
     });
 
@@ -129,37 +124,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        // First, create any new categories if provided (or find existing ones)
-        const newCategoryIds: number[] = [];
-        if (parsedFormData.data.newCategoryNames && parsedFormData.data.newCategoryNames.length > 0) {
-            for (const categoryName of parsedFormData.data.newCategoryNames) {
-                // Create a slug from the category name
-                const slug = categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-                // Check if category already exists, if not create it
-                let category = await prisma.category.findUnique({
-                    where: { name: categoryName }
-                });
-
-                if (!category) {
-                    category = await prisma.category.create({
-                        data: {
-                            name: categoryName,
-                            slug: slug
-                        }
-                    });
-                }
-
-                newCategoryIds.push(category.id);
-            }
-        }
-
-        // Combine existing category IDs with newly created ones
-        const allCategoryIds = [
-            ...(parsedFormData.data.categoryIds || []),
-            ...newCategoryIds
-        ];
-
         // Use the image path directly (base64 or file path)
         const imagePath = parsedFormData.data.imagePath || null;
         let imagesParsed: string[] = [];
@@ -186,7 +150,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                 listingStatus: user.listingApproved ? "AVAILABLE" : "DRAFT",
                 ownerId: session.user.id,
                 categories: {
-                    connect: allCategoryIds.map(id => ({ id }))
+                    connect: parsedFormData.data.categoryIds.map(id => ({ id }))
                 },
                 ...(imagesParsed.length > 0 && {
                     images: {
