@@ -21,10 +21,11 @@ export default function RootLayout({
             <body className="antialiased font-display" suppressHydrationWarning>
                 {/* cleans extension-injected attributes after hydration to avoid client/server mismatches */}
                 <RemoveExtensionAttrs />
-                <DarkModeInit />
-                <div id="appContainer">
-                    {children}
-                </div>
+                <DarkModeInit>
+                    <div id="appContainer">
+                        {children}
+                    </div>
+                </DarkModeInit>
                 <ToastContainer/>
             </body>
         </html>
