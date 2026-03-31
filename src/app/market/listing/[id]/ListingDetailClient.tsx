@@ -51,13 +51,15 @@ export default function ListingDetailClient({ listingId, isOwner }: ListingDetai
                 <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
                     Share
                 </button>
-                <button
-                    onClick={() => setIsReportModalOpen(true)}
-                    className="px-6 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
-                    title="Report this listing"
-                >
-                    Report
-                </button>
+                {!isOwner && (
+                    <button
+                        onClick={() => setIsReportModalOpen(true)}
+                        className="px-6 py-3 border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
+                        title="Report this listing"
+                    >
+                        Report
+                    </button>
+                )}
             </div>
 
             {contactError && (
