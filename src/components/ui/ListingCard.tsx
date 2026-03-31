@@ -18,6 +18,11 @@ export default function ListingCard({
         style: "currency",
         currency: "USD",
     }).format(listing.price);
+    const postedDate = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(new Date(listing.createdAt));
 
     const listingUrl = `/market/listing/${listing.id}`;
     const sortedImages = useMemo(
@@ -100,6 +105,7 @@ export default function ListingCard({
                     {listingPrice}
                 </p>
                 <p>{listingTitle}</p>
+                <p className="text-sm text-gray-500">Posted {postedDate}</p>
             </div>
 
             {isOwner && (
