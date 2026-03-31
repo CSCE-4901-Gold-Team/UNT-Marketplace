@@ -6,9 +6,11 @@ import Link from "next/link";
 import Image from "next/image";
 
 export default function ListingCard({
-    listing
+    listing,
+    currentUserId,
 }: {
-    listing: ListingObject
+    listing: ListingObject,
+    currentUserId: string,
 }) {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -26,6 +28,8 @@ export default function ListingCard({
     );
     const hasValidImage = sortedImages.length > 0;
     const currentImage = hasValidImage ? sortedImages[currentImageIndex] : null;
+    const isOwner = listing.ownerId === currentUserId;
+    const editListingUrl = `/market/create-listing?edit=true&id=${listing.id}`;
     const listingTitle = listing.isDeniedByAdmin
         ? `${listing.title} (DENIED)`
         : listing.listingStatus === "DRAFT" && listing.isPendingApproval
@@ -47,7 +51,7 @@ export default function ListingCard({
     };
 
     return (
-        <Link href={listingUrl} className="listing group relative block">
+        <div className="listing group relative">
             <div className="listing-image">
                 <div className="h-[350px] bg-gray-300 rounded-sm overflow-hidden group-hover:shadow-lg transition-all duration-500 ease-in-out relative">
                     {hasValidImage ? (
@@ -97,6 +101,21 @@ export default function ListingCard({
                 </p>
                 <p>{listingTitle}</p>
             </div>
-        </Link>
+
+            {isOwner && (
+                <Link
+                    href={editListingUrl}
+                    className="absolute bottom-2 right-2 z-30 rounded bg-blue-600 px-3 py-1 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                    Edit
+                </Link>
+            )}
+
+            <Link
+                href={listingUrl}
+                aria-label={`Open ${listing.title}`}
+                className="absolute inset-0 z-10"
+            />
+        </div>
     );
 }
