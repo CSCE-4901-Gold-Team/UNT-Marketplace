@@ -1,6 +1,7 @@
 "use server";
 
 import { auth, prisma } from "@/lib/auth";
+import { censorProfanity } from "@/lib/profanity-filter";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -268,30 +269,43 @@ export async function sendMessage(conversationId: string, body: string): Promise
     if (!trimmed) throw new Error("Message cannot be empty");
     if (trimmed.length > 2000) throw new Error("Message too long");
 
+    const { censored: bodyToStore, wasCensored } = censorProfanity(trimmed);
+
     // Verify user is a participant
     const participant = await prisma.conversationParticipant.findUnique({
         where: { conversationId_userId: { conversationId, userId: user.id } },
     });
     if (!participant) throw new Error("Forbidden");
 
-    const [message] = await prisma.$transaction([
-        prisma.message.create({
-            data: { conversationId, senderId: user.id, body: trimmed },
+    const message = await prisma.$transaction(async (tx) => {
+        const msg = await tx.message.create({
+            data: { conversationId, senderId: user.id, body: bodyToStore },
             include: { sender: { select: { id: true, name: true, image: true } } },
-        }),
-        prisma.conversation.update({
+        });
+        await tx.conversation.update({
             where: { id: conversationId },
             data: { updatedAt: new Date() },
-        }),
-        // Mark sender's lastReadAt so their own message isn't counted as unread
-        prisma.conversationParticipant.update({
+        });
+        await tx.conversationParticipant.update({
             where: { conversationId_userId: { conversationId, userId: user.id } },
             data: { lastReadAt: new Date() },
-        }),
-    ]);
+        });
+        if (wasCensored) {
+            await tx.messageProfanityFlag.create({
+                data: {
+                    messageId: msg.id,
+                    conversationId,
+                    senderId: user.id,
+                    originalBody: trimmed,
+                },
+            });
+        }
+        return msg;
+    });
 
     revalidatePath(`/market/messages/${conversationId}`);
     revalidatePath("/market/messages");
+    revalidatePath("/admin");
 
     return {
         id: message.id,

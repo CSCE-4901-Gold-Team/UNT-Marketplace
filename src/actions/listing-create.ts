@@ -10,6 +10,8 @@ import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
+import { censorProfanity } from "@/lib/profanity-filter";
+import { revalidatePath } from "next/cache";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -142,29 +144,51 @@ export async function createListingAction(_initialState: FormResponse, formData:
             }
         }
 
-        // Create the listing
-        const newListing = await prisma.listing.create({
-            data: {
-                title: parsedFormData.data.title,
-                description: parsedFormData.data.description,
-                price: parseFloat(parsedFormData.data.price),
-                isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                listingStatus: isFirstListing ? "DRAFT" : "AVAILABLE",
-                ownerId: session.user.id,
-                categories: {
-                    connect: allCategoryIds.map(id => ({ id }))
+        const rawTitle = parsedFormData.data.title.trim();
+        const rawDescription = parsedFormData.data.description.trim();
+        const titleC = censorProfanity(rawTitle);
+        const descC = censorProfanity(rawDescription);
+        const wasCensored = titleC.wasCensored || descC.wasCensored;
+
+        const newListing = await prisma.$transaction(async (tx) => {
+            const listing = await tx.listing.create({
+                data: {
+                    title: titleC.censored,
+                    description: descC.censored,
+                    price: parseFloat(parsedFormData.data.price),
+                    isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+                    listingStatus: wasCensored || isFirstListing ? "DRAFT" : "AVAILABLE",
+                    ownerId: session.user.id,
+                    categories: {
+                        connect: allCategoryIds.map((id) => ({ id })),
+                    },
+                    ...(imagesParsed.length > 0 && {
+                        images: {
+                            create: imagesParsed.map((url, index) => ({
+                                url: url,
+                                imageType: "LISTING",
+                                sortOrder: index,
+                            })),
+                        },
+                    }),
                 },
-                ...(imagesParsed.length > 0 && {
-                    images: {
-                        create: imagesParsed.map((url, index) => ({
-                            url: url,
-                            imageType: "LISTING",
-                            sortOrder: index
-                        }))
-                    }
-                })
+            });
+            if (wasCensored) {
+                await tx.listingProfanityFlag.create({
+                    data: {
+                        listingId: listing.id,
+                        ownerId: session.user.id,
+                        originalTitle: rawTitle,
+                        originalDescription: rawDescription,
+                    },
+                });
             }
+            return listing;
         });
+
+        if (wasCensored) {
+            revalidatePath("/admin");
+        }
 
         newListingId = newListing.id;
     } catch (error) {

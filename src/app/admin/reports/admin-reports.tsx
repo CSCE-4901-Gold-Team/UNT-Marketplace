@@ -29,7 +29,12 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
     const [loading, setLoading] = useState(true);
     const [selectedReport, setSelectedReport] = useState<Report | null>(null);
     const [actionInProgress, setActionInProgress] = useState(false);
-    const [suspensionModal, setSuspensionModal] = useState<{ open: boolean; userId: string; userName: string }>({ open: false, userId: '', userName: '' });
+    const [suspensionModal, setSuspensionModal] = useState<{
+        open: boolean;
+        userId: string;
+        userName: string;
+        reportId: string | null;
+    }>({ open: false, userId: "", userName: "", reportId: null });
     const [suspensionDays, setSuspensionDays] = useState(7);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -46,14 +51,16 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
 
         const fetchReports = async () => {
             try {
-                const reportsData = await getPendingListingReports(REPORTS_PER_PAGE + 1, (currentPage - 1) * REPORTS_PER_PAGE);
-                setReports(reportsData.slice(0, REPORTS_PER_PAGE));
-                setTotalReports(reportsData.length > REPORTS_PER_PAGE ? (currentPage * REPORTS_PER_PAGE) + 1 : (currentPage - 1) * REPORTS_PER_PAGE + reportsData.length);
+                const { reports: reportsData, total } = await getPendingListingReports(
+                    REPORTS_PER_PAGE,
+                    (currentPage - 1) * REPORTS_PER_PAGE
+                );
+                setReports(reportsData);
+                setTotalReports(total);
 
-                // Check if listing parameter is in URL and select it
-                const listingParam = searchParams.get('listing');
+                const listingParam = searchParams.get("listing");
                 if (listingParam) {
-                    const report = reportsData.find(r => r.listingId === listingParam);
+                    const report = reportsData.find((r) => r.listingId === listingParam);
                     if (report) {
                         setSelectedReport(report);
                     }
@@ -181,9 +188,8 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
         }
     };
 
-    const handleOpenSuspensionModal = (userId: string, userName: string) => {
-        setSuspensionModal({ open: true, userId, userName });
-        setSelectedReport(null);
+    const handleOpenSuspensionModal = (userId: string, userName: string, reportId: string) => {
+        setSuspensionModal({ open: true, userId, userName, reportId });
     };
 
     const handleSuspendUser = async () => {
@@ -192,22 +198,29 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
             return;
         }
 
-        if (!selectedReport) return;
+        const reportId = suspensionModal.reportId;
+        if (!reportId) {
+            alert("Missing report reference. Close the modal and use Suspend from a report again.");
+            return;
+        }
+
+        const suspendedUserName = suspensionModal.userName;
+        const days = suspensionDays;
 
         setActionInProgress(true);
         try {
             const expiryDate = new Date();
-            expiryDate.setDate(expiryDate.getDate() + suspensionDays);
-            
+            expiryDate.setDate(expiryDate.getDate() + days);
+
             await suspendUser(suspensionModal.userId, expiryDate);
-            await resolveReport(selectedReport.id, 'RESOLVED');
-            
-            setReports(reports.filter(r => r.id !== selectedReport.id));
+            await resolveReport(reportId, "RESOLVED");
+
+            setReports((prev) => prev.filter((r) => r.id !== reportId));
             setSelectedReport(null);
-            setSuspensionModal({ open: false, userId: '', userName: '' });
+            setSuspensionModal({ open: false, userId: "", userName: "", reportId: null });
             setSuspensionDays(7);
-            
-            alert(`User ${suspensionModal.userName} suspended for ${suspensionDays} days`);
+
+            alert(`User ${suspendedUserName} suspended for ${days} days`);
         } catch (error) {
             console.error("Error suspending user:", error);
             alert("Error suspending user");
@@ -270,7 +283,17 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-green mb-4"
                     />
                     <div className="text-sm text-gray-600">
-                        Total pending reports: <span className="font-bold">{loading ? "-" : filteredReports.length}</span>
+                        {searchQuery ? (
+                            <>
+                                Matching this page:{" "}
+                                <span className="font-bold">{loading ? "-" : filteredReports.length}</span>
+                            </>
+                        ) : (
+                            <>
+                                Total pending reports:{" "}
+                                <span className="font-bold">{loading ? "-" : totalReports}</span>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -423,7 +446,13 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
                                 {actionInProgress ? 'Deleting...' : 'Delete Listing'}
                             </button>
                             <button
-                                onClick={() => handleOpenSuspensionModal(selectedReport.listingOwnerId, selectedReport.listingOwnerName)}
+                                onClick={() =>
+                                    handleOpenSuspensionModal(
+                                        selectedReport.listingOwnerId,
+                                        selectedReport.listingOwnerName,
+                                        selectedReport.id
+                                    )
+                                }
                                 className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium disabled:opacity-50"
                                 disabled={actionInProgress}
                             >
@@ -483,7 +512,14 @@ export default function AdminReports({ userRole }: { userRole: string | null }) 
 
                         <div className="flex justify-end gap-3 mt-6">
                             <button
-                                onClick={() => setSuspensionModal({ open: false, userId: '', userName: '' })}
+                                onClick={() =>
+                                    setSuspensionModal({
+                                        open: false,
+                                        userId: "",
+                                        userName: "",
+                                        reportId: null,
+                                    })
+                                }
                                 className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300 transition"
                                 disabled={actionInProgress}
                             >

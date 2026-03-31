@@ -9,6 +9,9 @@ import { Prisma, $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
+import { censorProfanity } from "@/lib/profanity-filter";
+import { revalidatePath } from "next/cache";
+import { MessageProfanityFlagStatus } from "@prisma/client";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),
@@ -142,15 +145,22 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             }
         }
 
+        const rawTitle = parsedFormData.data.title.trim();
+        const rawDescription = parsedFormData.data.description.trim();
+        const titleC = censorProfanity(rawTitle);
+        const descC = censorProfanity(rawDescription);
+        const wasCensored = titleC.wasCensored || descC.wasCensored;
+
         // Build update data
         const updateData: any = {
-            title: parsedFormData.data.title,
-            description: parsedFormData.data.description,
+            title: titleC.censored,
+            description: descC.censored,
             price: new Prisma.Decimal(parsedFormData.data.price),
             isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+            ...(wasCensored && { listingStatus: "DRAFT" }),
             categories: {
-                set: allCategoryIds.map(id => ({ id }))
-            }
+                set: allCategoryIds.map((id) => ({ id })),
+            },
         };
 
         // Prevent students from setting professor-only flag
@@ -174,20 +184,51 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 create: imagesParsed.map((url, index) => ({
                     url: url,
                     imageType: $Enums.ImageType.LISTING,
-                    sortOrder: index
-                }))
+                    sortOrder: index,
+                })),
             };
         } else {
             updateData.images = {
-                deleteMany: {}
+                deleteMany: {},
             };
         }
 
-        // Update the listing
-        await prisma.listing.update({
-            where: { id: listingId },
-            data: updateData
+        await prisma.$transaction(async (tx) => {
+            await tx.listing.update({
+                where: { id: listingId },
+                data: updateData,
+            });
+            if (wasCensored) {
+                const pending = await tx.listingProfanityFlag.findFirst({
+                    where: {
+                        listingId,
+                        status: MessageProfanityFlagStatus.PENDING,
+                    },
+                });
+                if (pending) {
+                    await tx.listingProfanityFlag.update({
+                        where: { id: pending.id },
+                        data: {
+                            originalTitle: rawTitle,
+                            originalDescription: rawDescription,
+                        },
+                    });
+                } else {
+                    await tx.listingProfanityFlag.create({
+                        data: {
+                            listingId,
+                            ownerId: session.user.id,
+                            originalTitle: rawTitle,
+                            originalDescription: rawDescription,
+                        },
+                    });
+                }
+            }
         });
+
+        if (wasCensored) {
+            revalidatePath("/admin");
+        }
 
     } catch (error) {
         console.error("Error updating listing:", error);
