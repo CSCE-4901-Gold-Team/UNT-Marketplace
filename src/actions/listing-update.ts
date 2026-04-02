@@ -151,7 +151,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         const descC = censorProfanity(rawDescription);
         const wasCensored = titleC.wasCensored || descC.wasCensored;
 
-        // Build update data
+        // Single `updateData` object: censored fields + category relation set (no duplicate keys/blocks).
         const updateData: any = {
             title: titleC.censored,
             description: descC.censored,
@@ -182,7 +182,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             updateData.images = {
                 deleteMany: {},
                 create: imagesParsed.map((url, index) => ({
-                    url: url,
+                    url,
                     imageType: $Enums.ImageType.LISTING,
                     sortOrder: index,
                 })),

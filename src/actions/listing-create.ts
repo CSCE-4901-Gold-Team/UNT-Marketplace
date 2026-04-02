@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Prisma, $Enums } from "@prisma/client";
+import { $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
@@ -144,6 +144,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             }
         }
 
+        // Create listing: censored title/description; DRAFT if first listing or profanity matched; optional profanity flag row.
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
         const titleC = censorProfanity(rawTitle);
