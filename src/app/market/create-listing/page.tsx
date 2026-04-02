@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useActionState, useEffect, useState } from "react";
+import React, { useActionState, useEffect, useRef, useState } from "react";
 import { createListingAction } from "@/actions/listing-create";
 import { updateListingAction } from "@/actions/listing-update";
 import { deleteListingAction } from "@/actions/listing-delete";
@@ -8,10 +8,25 @@ import { FormStatus } from "@/constants/FormStatus";
 import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
 import PriceInput from "@/components/ui/PriceInput";
-import CategoryInput from "@/components/ui/CategoryInput";
+import CategoryChipsInput from "@/components/ui/CategoryChipsInput";
 import ImageUpload from "@/components/ui/ImageUpload";
 import Button from "@/components/ui/Button";
 import { useSearchParams } from "next/navigation";
+import { toastService } from "@/lib/toast-service";
+import { getCategories, getCategoriesCount } from "@/actions/category-actions";
+
+type EditableListingStatus = "AVAILABLE" | "DRAFT";
+type ListingCategory = { id: number; name: string };
+type ListingImage = { url: string };
+type ListingResponse = {
+    title?: string;
+    description?: string;
+    price?: string;
+    listingStatus?: "AVAILABLE" | "DRAFT" | "SOLD" | "ARCHIVED";
+    isProfessorOnly?: boolean;
+    categories?: ListingCategory[];
+    images?: ListingImage[];
+};
 
 
 const initialState: FormResponse = {
@@ -31,16 +46,54 @@ export default function CreateListing() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
+    const [listingStatus, setListingStatus] = useState<EditableListingStatus>("AVAILABLE");
     const [isProfessorOnly, setIsProfessorOnly] = useState(false);
-    const [selected, setSelected] = useState<number[]>([]);
+    const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
     const [categoryOptions, setCategoryOptions] = useState<{id: number, name: string}[]>([]);
     const [selectedImages, setSelectedImages] = useState<string[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(false);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(true);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const lastToastMessageRef = useRef<string | null>(null);
 
     const canSetProfessorOnly = userRole === "FACULTY" || userRole === "ADMIN";
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadCategories = async () => {
+            setIsLoadingCategories(true);
+
+            try {
+                const totalCategories = await getCategoriesCount();
+                const categories = await getCategories(totalCategories || 1, 0);
+
+                if (!isMounted) return;
+
+                setCategoryOptions(categories.map((category) => ({
+                    id: category.id,
+                    name: category.name
+                })));
+            } catch (error) {
+                console.error("Error loading categories:", error);
+                if (isMounted) {
+                    toastService.toast("Failed to load categories.", "error");
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingCategories(false);
+                }
+            }
+        };
+
+        loadCategories();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     // Load listing data if editing
     useEffect(() => {
@@ -53,21 +106,21 @@ export default function CreateListing() {
                     }
                     return res.json();
                 })
-                .then(data => {
+                .then((data: ListingResponse) => {
                     setTitle(data.title || "");
                     setDescription(data.description || "");
                     setPrice(data.price || "");
+                    setListingStatus((data.listingStatus === "DRAFT" ? "DRAFT" : "AVAILABLE") as EditableListingStatus);
                     setIsProfessorOnly(data.isProfessorOnly || false);
                     
-                    // Set category options and selected IDs
+                    // Set selected category IDs
                     if (data.categories && data.categories.length > 0) {
-                        setCategoryOptions(data.categories);
-                        setSelected(data.categories.map((c: any) => c.id));
+                        setSelectedCategoryIds(data.categories.map((c: { id: number }) => c.id));
                     }
                     
                     // Load existing images into selectedImages for editing
                     if (data.images && data.images.length > 0) {
-                        const imageUrls = data.images.map((img: any) => img.url);
+                        const imageUrls = data.images.map((img) => img.url);
                         setSelectedImages(imageUrls);
                     }
 
@@ -93,6 +146,18 @@ export default function CreateListing() {
             setIsProfessorOnly(false);
         }
     }, [canSetProfessorOnly]);
+
+    useEffect(() => {
+        const message = state.message?.content;
+        if (!message) return;
+
+        const isPendingReviewMessage = message.toLowerCase().includes("pending review");
+        if (!isPendingReviewMessage) return;
+        if (lastToastMessageRef.current === message) return;
+
+        toastService.toast(message, "warn");
+        lastToastMessageRef.current = message;
+    }, [state.message]);
 
     const handleDelete = async () => {
         if (!listingId) return;
@@ -149,6 +214,22 @@ export default function CreateListing() {
                         required
                     />
 
+                    {isEditing && (
+                        <div className="flex flex-col gap-1">
+                            <label htmlFor="listingStatus" className="text-sm">Status</label>
+                            <select
+                                id="listingStatus"
+                                name="listingStatus"
+                                value={listingStatus}
+                                onChange={(e) => setListingStatus(e.target.value as EditableListingStatus)}
+                                className="border border-gray-300 rounded-md px-3 py-2"
+                            >
+                                <option value="AVAILABLE">AVAILABLE</option>
+                                <option value="DRAFT">DRAFT</option>
+                            </select>
+                        </div>
+                    )}
+
                     {/* Professor Only Checkbox */}
                     {canSetProfessorOnly && (
                         <div className="flex items-center gap-2">
@@ -172,17 +253,19 @@ export default function CreateListing() {
                         inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
                         name="imagePath"
                         selectedImages={selectedImages}
-                        onImagesChange={setSelectedImages}
-                        maxImages={5}
-                    />
+                    onImagesChange={setSelectedImages}
+                    maxImages={5}
+                />
                     {/* Categories */}
-                    <CategoryInput
+                    <CategoryChipsInput
                         inputLabel="Categories"
                         name="categoryIds"
                         options={categoryOptions}
-                        value={selected}
-                        onChange={setSelected}
+                        value={selectedCategoryIds}
+                        onChange={setSelectedCategoryIds}
                         validationErrors={state.validationErrors}
+                        disabled={isPending || isLoadingData || isLoadingCategories}
+                        isLoading={isLoadingCategories}
                     />
 
                     {/* Submit Button */}
@@ -191,7 +274,7 @@ export default function CreateListing() {
                             type="submit" 
                             buttonSize="lg"
                             showSpinner={isPending || state.status === FormStatus.SUCCESS}
-                            disabled={isPending || isLoadingData || state.status === FormStatus.SUCCESS}
+                            disabled={isPending || isLoadingData || isLoadingCategories || state.status === FormStatus.SUCCESS}
                         >
                             {isEditing ? 'Update Listing' : 'Create Listing'}
                         </Button>
@@ -201,7 +284,7 @@ export default function CreateListing() {
                                 buttonVariant="secondary"
                                 buttonSize="lg"
                                 onClick={() => window.location.href = `/market/listing/${listingId}`}
-                                disabled={isPending || isLoadingData || state.status === FormStatus.SUCCESS}
+                                disabled={isPending || isLoadingData || isLoadingCategories || state.status === FormStatus.SUCCESS}
                             >
                                 Cancel
                             </Button>

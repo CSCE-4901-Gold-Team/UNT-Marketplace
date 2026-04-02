@@ -18,13 +18,9 @@ const CreateListingRequest = z.object({
     description: z.string().min(10, "Description must be at least 10 characters"),
     price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
     isProfessorOnly: z.boolean().optional(),
-    categoryIds: z.array(z.number()).optional(),
-    newCategoryNames: z.array(z.string()).optional(),
+    categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
-}).refine(
-    (data) => (data.categoryIds && data.categoryIds.length > 0) || (data.newCategoryNames && data.newCategoryNames.length > 0),
-    { message: "At least one category is required", path: ["categoryIds"] }
-);
+});
 
 export async function createListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
 
@@ -61,7 +57,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         price: formData.get("price"),
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
-        newCategoryNames: JSON.parse(formData.get("newCategoryNames") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
     });
 
@@ -89,44 +84,47 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     let newListingId: string;
+    let requiresAdminApproval = false;
 
     try {
-        // Check if this is the user's first listing
-        const existingListingsCount = await prisma.listing.count({
-            where: { ownerId: session.user.id }
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { listingApproved: true },
         });
-        const isFirstListing = existingListingsCount === 0;
 
-        // First, create any new categories if provided (or find existing ones)
-        const newCategoryIds: number[] = [];
-        if (parsedFormData.data.newCategoryNames && parsedFormData.data.newCategoryNames.length > 0) {
-            for (const categoryName of parsedFormData.data.newCategoryNames) {
-                // Create a slug from the category name
-                const slug = categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-                // Check if category already exists, if not create it
-                let category = await prisma.category.findUnique({
-                    where: { name: categoryName }
-                });
-
-                if (!category) {
-                    category = await prisma.category.create({
-                        data: {
-                            name: categoryName,
-                            slug: slug
-                        }
-                    });
-                }
-
-                newCategoryIds.push(category.id);
-            }
+        if (!user) {
+            return {
+                status: FormStatus.ERROR,
+                message: {
+                    type: "error",
+                    content: "User not found.",
+                },
+            };
         }
 
-        // Combine existing category IDs with newly created ones
-        const allCategoryIds = [
-            ...(parsedFormData.data.categoryIds || []),
-            ...newCategoryIds
-        ];
+        requiresAdminApproval = !user.listingApproved;
+
+        const pendingListing = await prisma.listing.findFirst({
+            where: {
+                ownerId: session.user.id,
+                listingStatus: {
+                    in: ["DRAFT", "ARCHIVED"]
+                }
+            },
+            select: {
+                id: true,
+            },
+        });
+
+        if (!user.listingApproved && pendingListing) {
+            return {
+                status: FormStatus.ERROR,
+                message: {
+                    type: "error",
+                    content: "You already have a listing that is either pending review or archived. Please wait until it is approved or update/delete it if denied.",
+                },
+            };
+        }
 
         // Use the image path directly (base64 or file path)
         const imagePath = parsedFormData.data.imagePath || null;
@@ -144,12 +142,15 @@ export async function createListingAction(_initialState: FormResponse, formData:
             }
         }
 
-        // Create listing: censored title/description; DRAFT if first listing or profanity matched; optional profanity flag row.
+        // Censored title/description; DRAFT if profanity or user requires approval; optional profanity flag row.
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
         const titleC = censorProfanity(rawTitle);
         const descC = censorProfanity(rawDescription);
         const wasCensored = titleC.wasCensored || descC.wasCensored;
+
+        const listingStatus =
+            wasCensored || !user.listingApproved ? "DRAFT" : "AVAILABLE";
 
         const newListing = await prisma.$transaction(async (tx) => {
             const listing = await tx.listing.create({
@@ -158,10 +159,10 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     description: descC.censored,
                     price: parseFloat(parsedFormData.data.price),
                     isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                    listingStatus: wasCensored || isFirstListing ? "DRAFT" : "AVAILABLE",
+                    listingStatus,
                     ownerId: session.user.id,
                     categories: {
-                        connect: allCategoryIds.map((id) => ({ id })),
+                        connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
                     },
                     ...(imagesParsed.length > 0 && {
                         images: {
@@ -204,5 +205,5 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect after successful creation (outside try-catch)
-    redirect(`/market/listing/${newListingId}?created=true`);
+    redirect(`/market/listing/${newListingId}?created=true${requiresAdminApproval ? "&requiresApproval=true" : ""}`);
 }

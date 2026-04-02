@@ -18,14 +18,11 @@ const UpdateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(10, "Description must be at least 10 characters"),
     price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
+    listingStatus: z.enum(["AVAILABLE", "DRAFT"]).optional(),
     isProfessorOnly: z.boolean().optional(),
-    categoryIds: z.array(z.number()).optional(),
-    newCategoryNames: z.array(z.string()).optional(),
+    categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
-}).refine(
-    (data) => (data.categoryIds && data.categoryIds.length > 0) || (data.newCategoryNames && data.newCategoryNames.length > 0),
-    { message: "At least one category is required", path: ["categoryIds"] }
-);
+});
 
 export async function updateListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
     
@@ -48,9 +45,9 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         title: formData.get("title"),
         description: formData.get("description"),
         price: formData.get("price"),
+        listingStatus: formData.get("listingStatus") as "AVAILABLE" | "DRAFT" | null,
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
-        newCategoryNames: JSON.parse(formData.get("newCategoryNames") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
     });
 
@@ -72,7 +69,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         // Verify the listing exists and belongs to the user
         const existingListing = await prisma.listing.findUnique({
             where: { id: listingId },
-            select: { ownerId: true }
+            select: { ownerId: true, listingStatus: true }
         });
 
         if (!existingListing) {
@@ -94,35 +91,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 }
             };
         }
-
-        // Create any new categories
-        const newCategoryIds: number[] = [];
-        if (parsedFormData.data.newCategoryNames && parsedFormData.data.newCategoryNames.length > 0) {
-            for (const categoryName of parsedFormData.data.newCategoryNames) {
-                const slug = categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                
-                let category = await prisma.category.findUnique({
-                    where: { name: categoryName }
-                });
-
-                if (!category) {
-                    category = await prisma.category.create({
-                        data: { 
-                            name: categoryName,
-                            slug: slug
-                        }
-                    });
-                }
-                
-                newCategoryIds.push(category.id);
-            }
-        }
-
-        // Combine existing category IDs with newly created ones
-        const allCategoryIds = [
-            ...(parsedFormData.data.categoryIds || []),
-            ...newCategoryIds
-        ];
 
         // Handle image update if provided
         const imagePath = parsedFormData.data.imagePath;
@@ -151,17 +119,51 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         const descC = censorProfanity(rawDescription);
         const wasCensored = titleC.wasCensored || descC.wasCensored;
 
-        // Single `updateData` object: censored fields + category relation set (no duplicate keys/blocks).
-        const updateData: any = {
+        const updateData: Prisma.ListingUpdateInput = {
             title: titleC.censored,
             description: descC.censored,
             price: new Prisma.Decimal(parsedFormData.data.price),
             isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-            ...(wasCensored && { listingStatus: "DRAFT" }),
             categories: {
-                set: allCategoryIds.map((id) => ({ id })),
+                set: parsedFormData.data.categoryIds.map((id) => ({ id })),
             },
         };
+
+        if (existingListing.listingStatus === $Enums.ListingStatus.ARCHIVED) {
+            updateData.listingStatus = $Enums.ListingStatus.DRAFT;
+        } else if (
+            parsedFormData.data.listingStatus &&
+            (existingListing.listingStatus === $Enums.ListingStatus.AVAILABLE ||
+                existingListing.listingStatus === $Enums.ListingStatus.DRAFT)
+        ) {
+            if (
+                existingListing.listingStatus === $Enums.ListingStatus.DRAFT &&
+                parsedFormData.data.listingStatus === $Enums.ListingStatus.AVAILABLE
+            ) {
+                const user = await prisma.user.findUnique({
+                    where: {
+                        id: session.user.id,
+                    },
+                    select: { listingApproved: true },
+                });
+
+                if (!user?.listingApproved) {
+                    return {
+                        status: FormStatus.ERROR,
+                        message: {
+                            type: "error",
+                            content: "Your first listing requires admin approval before it can be set to AVAILABLE.",
+                        },
+                    };
+                }
+            }
+
+            updateData.listingStatus = parsedFormData.data.listingStatus;
+        }
+
+        if (wasCensored) {
+            updateData.listingStatus = $Enums.ListingStatus.DRAFT;
+        }
 
         // Prevent students from setting professor-only flag
         if (parsedFormData.data.isProfessorOnly) {

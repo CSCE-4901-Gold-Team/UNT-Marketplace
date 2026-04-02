@@ -64,6 +64,21 @@ export default function MarketSidebar({
                         <div>Create Listing</div>
                     </NavItem>
 
+                    {/* My Listings */}
+                    <NavItem
+                        link="/market?mine=1"
+                        setShowSidebarAction={(newVal: boolean) => setShowSidebarAction(newVal)}
+                    >
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 strokeWidth="1.5" stroke="currentColor" className="size-6">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                      d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12m-15.75-10.5h.008v.008H4.5V6.75Zm0 5.25h.008v.008H4.5V12Zm0 5.25h.008v.008H4.5v-.008Z" />
+                            </svg>
+                        </div>
+                        <div>My Listings</div>
+                    </NavItem>
+
                     {/* Messages */}
                     <NavItem
                         link="/market/messages"

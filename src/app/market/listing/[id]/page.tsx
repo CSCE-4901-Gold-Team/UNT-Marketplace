@@ -48,6 +48,11 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
     }
 
     const isOwner = session?.user?.id === listing.ownerId;
+    const postedDate = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(new Date(listing.createdAt));
 
     return (
         <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
@@ -61,7 +66,10 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
 
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     <div className="flex justify-between items-start mb-4">
-                        <h1 className="text-4xl font-bold">{listing.title}</h1>
+                        <div>
+                            <h1 className="text-4xl font-bold">{listing.title}</h1>
+                            <p className="text-sm text-gray-500 mt-2">Posted {postedDate}</p>
+                        </div>
                         {isOwner && (
                             <div className="flex gap-2">
                                 <Link

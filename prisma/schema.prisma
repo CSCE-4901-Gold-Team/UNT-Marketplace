@@ -24,6 +24,7 @@ model User {
     email                    String                    @unique
     name                     String
     emailVerified            Boolean                   @default(false)
+    listingApproved          Boolean                   @default(false)
     image                    String?
     createdAt                DateTime                  @default(now())
     updatedAt                DateTime                  @default(now()) @updatedAt
@@ -40,6 +41,7 @@ model User {
     profanityFlagsReviewed   MessageProfanityFlag[] @relation("ProfanityFlagReviewer")
     listingProfanityFlags    ListingProfanityFlag[] @relation("ListingProfanityOwner")
     listingProfanityReviews  ListingProfanityFlag[] @relation("ListingProfanityReviewer")
+    savedQueries             SavedQuery[]
 
     @@map("user")
 }
@@ -116,6 +118,7 @@ model Category {
     name     String    @unique
     slug     String    @unique
     listings Listing[]
+    savedQueries CategoryOnSavedQuery[]
 }
 
 model Report {
@@ -313,4 +316,50 @@ enum EventType {
     CONTACT_SELLER
     SAVE_LISTING
     SHARE_LISTING
+}
+
+// -------- Saved Queries / Search Alerts --------
+
+model SavedQuery {
+    id        String   @id @default(cuid())
+    userId    String
+    name      String
+    searchTerm String?
+    categories CategoryOnSavedQuery[]
+    minPrice  Decimal? @db.Decimal(10, 2)
+    maxPrice  Decimal? @db.Decimal(10, 2)
+    enabled   Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now()) @updatedAt
+    lastEmailSentAt DateTime?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([enabled])
+    @@map("saved_query")
+}
+
+model CategoryOnSavedQuery {
+    id           Int        @id @default(autoincrement())
+    savedQueryId String
+    categoryId   Int
+    savedQuery   SavedQuery @relation(fields: [savedQueryId], references: [id], onDelete: Cascade)
+    category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@unique([savedQueryId, categoryId])
+    @@map("category_on_saved_query")
+}
+
+model QueryNotificationLog {
+    id        String   @id @default(cuid())
+    queryId   String
+    sentAt    DateTime @default(now())
+    listingCount Int
+    recipientEmail String
+    status    String   @default("sent")
+
+    @@index([queryId])
+    @@index([sentAt])
+    @@map("query_notification_log")
 }

@@ -206,10 +206,25 @@ export async function approveFirstListing(listingId: string) {
         throw new Error("Unauthorized");
     }
 
-    await prisma.listing.update({
+    const listing = await prisma.listing.findUnique({
         where: { id: listingId },
-        data: { listingStatus: ListingStatus.AVAILABLE }
+        select: { ownerId: true },
     });
+
+    if (!listing) {
+        throw new Error("Listing not found");
+    }
+
+    await prisma.$transaction([
+        prisma.listing.update({
+            where: { id: listingId },
+            data: { listingStatus: ListingStatus.AVAILABLE }
+        }),
+        prisma.user.update({
+            where: { id: listing.ownerId },
+            data: { listingApproved: true },
+        }),
+    ]);
 
     return { success: true };
 }

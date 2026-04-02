@@ -11,4 +11,5 @@ export type ListingFilters = {
     professorOnly?: boolean;
     sold?: boolean;
     categories?: string[];
+    mine?: boolean;
 }

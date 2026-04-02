@@ -49,14 +49,18 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
             };
         }
 
-        // Delete associated images first
-        await prisma.image.deleteMany({
-            where: { listingId: listingId }
-        });
+        await prisma.$transaction(async (tx) => {
+            await tx.listingEvent.deleteMany({
+                where: { listingId: listingId }
+            });
 
-        // Delete the listing
-        await prisma.listing.delete({
-            where: { id: listingId }
+            await tx.image.deleteMany({
+                where: { listingId: listingId }
+            });
+
+            await tx.listing.delete({
+                where: { id: listingId }
+            });
         });
 
     } catch (error) {
