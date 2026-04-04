@@ -8,6 +8,14 @@
 }
 
 @layer base {
+    html {
+        --accessibility-font-scale: 1;
+        font-size: calc(16px * var(--accessibility-font-scale));
+    }
+
+    body {
+        @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors;
+    }
     h1 {
         font-size: var(--text-2xl);
         font-weight: var(--font-weight-semibold);
