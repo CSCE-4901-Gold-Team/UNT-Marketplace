@@ -11,6 +11,7 @@ import Link from "next/link";
 import { toastService } from "@/lib/toast-service";
 import { passwordResetConfirmAction } from "@/actions/password-reset-confirm";
 import Card from "@/components/ui/Card";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 function ResetPasswordContent() {
     const router = useRouter();
@@ -38,14 +39,17 @@ function ResetPasswordContent() {
 
     if (!token) {
         return (
-            <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
+            <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+                <div className="absolute top-4 right-4">
+                    <DarkModeToggle />
+                </div>
                 <Card>
                     <h1 className="mb-6 text-center text-2xl font-semibold">Invalid Reset Link</h1>
-                    <p className="mb-6 text-center text-gray-600">
+                    <p className="mb-6 text-center text-gray-600 dark:text-gray-400">
                         The password reset link is invalid or has expired.
                     </p>
                     <div className="text-center">
-                        <Link href="/forgot-password" className="text-green-700 hover:underline">
+                        <Link href="/forgot-password" className="text-green-700 dark:text-green-400 hover:underline">
                             Request a new reset link
                         </Link>
                     </div>
@@ -55,7 +59,10 @@ function ResetPasswordContent() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
+            <div className="absolute top-4 right-4">
+                <DarkModeToggle />
+            </div>
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Set New Password</h1>
 

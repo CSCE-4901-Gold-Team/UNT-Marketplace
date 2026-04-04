@@ -3,6 +3,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import Link from "next/link";
+import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default async function Home() {
     const session = await auth.api.getSession({
@@ -10,8 +11,11 @@ export default async function Home() {
     });
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-gray-100">
-            <div className="container mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-lg text-center">
+        <main className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+            <div className="absolute top-4 right-4">
+                <DarkModeToggle />
+            </div>
+            <div className="container mx-auto max-w-2xl rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-lg text-center">
 
                 <div className="flex gap-4 justify-center">
                     <Link className="text-lg font-black px-3 py-1.5 bg-green-600 rounded text-white no-underline" href="/register">Register</Link>

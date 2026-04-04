@@ -125,7 +125,7 @@ export default function ImageUpload({
             <div className="flex flex-col gap-4">
                 {/* File input */}
                 {previews.length < maxImages && (
-                    <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 w-fit">
+                    <label className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500 w-fit transition-colors">
                         <svg 
                             className="w-5 h-5 mr-2" 
                             fill="none" 

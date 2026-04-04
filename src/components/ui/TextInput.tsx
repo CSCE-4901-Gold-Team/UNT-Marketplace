@@ -27,7 +27,7 @@ export default function TextInput({
     setValue?: (newValue: string) => void;
     setChecked?: (newValue: boolean) => void;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
-    let inputElementClasses = "rounded-md px-3 py-2 border border-black " + inputClasses;
+    let inputElementClasses = "rounded-md px-3 py-2 border border-black text-black dark:text-white bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400 dark:border-gray-600 " + inputClasses;
 
     if (type === "checkbox") {
         inputElementClasses += " w-auto";
@@ -48,7 +48,7 @@ export default function TextInput({
     return (
         <div>
             { !!inputLabel && (
-                <label className="block text-sm font-medium">{ inputLabel }</label>
+                <label className="block text-sm font-medium text-black dark:text-gray-200">{ inputLabel }</label>
             )}
             <input
                 type={type}
