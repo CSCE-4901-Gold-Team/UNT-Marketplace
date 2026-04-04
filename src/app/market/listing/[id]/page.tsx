@@ -48,6 +48,11 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
     }
 
     const isOwner = session?.user?.id === listing.ownerId;
+    const postedDate = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(new Date(listing.createdAt));
 
     return (
         <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
@@ -60,13 +65,16 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                 </Link>
 
                 <div className="bg-white rounded-lg shadow-lg p-8">
-                    <div className="flex justify-between items-start mb-4 dark:bg-gray-800">
-                        <h1 className="text-4xl font-bold dark:text-white">{listing.title}</h1>
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <h1 className="text-4xl font-bold">{listing.title}</h1>
+                            <p className="text-sm text-gray-500 mt-2">Posted {postedDate}</p>
+                        </div>
                         {isOwner && (
                             <div className="flex gap-2">
                                 <Link
                                     href={`/market/listing/${listing.id}/analytics`}
-                                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 dark:bg-gray-700"
+                                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200"
                                 >
                                     View Analytics
                                 </Link>
@@ -83,28 +91,28 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                     {/* Image Carousel */}
                     <ImageCarousel images={listing.images} alt={listing.title} />
 
-                    <div className="flex items-center justify-between mb-6 pb-6 border-b dark:border-gray-700">
+                    <div className="flex items-center justify-between mb-6 pb-6 border-b">
                         <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
                         {listing.isProfessorOnly && (
-                            <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-4 py-2 rounded">
+                            <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded">
                                 Professor Only
                             </span>
                         )}
                     </div>
 
                     <div className="mb-6">
-                        <h2 className="text-xl font-semibold mb-2 dark:text-white">Description</h2>
-                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{listing.description}</p>
+                        <h2 className="text-xl font-semibold mb-2">Description</h2>
+                        <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
                     </div>
 
                 {listing.categories.length > 0 && (
                     <div className="mb-6">
-                        <h2 className="text-xl font-semibold mb-2 dark:text-white">Categories</h2>
+                        <h2 className="text-xl font-semibold mb-2">Categories</h2>
                         <div className="flex flex-wrap gap-2">
                             {listing.categories.map((category) => (
                                 <span
                                     key={category.id}
-                                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded dark:bg-gray-700 dark:text-gray-300"
+                                    className="bg-gray-100 text-gray-700 px-3 py-1 rounded"
                                 >
                                     {category.name}
                                 </span>
