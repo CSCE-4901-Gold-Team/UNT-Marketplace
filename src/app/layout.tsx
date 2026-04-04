@@ -3,6 +3,7 @@ import type {Metadata} from "next";
 import "@/styles/globals.css";
 import {ToastContainer} from "react-toastify";
 import RemoveExtensionAttrs from "@/components/layout/RemoveExtensionAttrs";
+import AccessibilityTools from "@/components/ui/AccessibilityTools";
 import {ThemeProvider} from "@/components/ui/ThemeProvider";
 
 export const metadata: Metadata = {
@@ -26,6 +27,7 @@ export default function RootLayout({
                         {children}
                     </div>
                 </ThemeProvider>
+                <AccessibilityTools />
                 <ToastContainer/>
             </body>
         </html>
