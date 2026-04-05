@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import { getAdminStats, getFirstListingsAwaitingApproval, getSuspendedUsers } from "@/actions/admin-actions";
 
 export default function Admin({ userRole }: { userRole: string | null }) {
-    const [stats, setStats] = useState({ totalUsers: 0, activeListings: 0, pendingReports: 0, totalTransactions: 0, suspendedCount: 0, pendingCount: 0 });
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        activeListings: 0,
+        pendingReports: 0,
+        totalTransactions: 0,
+        suspendedCount: 0,
+        pendingCount: 0,
+    });
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
@@ -20,11 +27,14 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                 const [statsData, pendingData, suspendedData] = await Promise.all([
                     getAdminStats(),
                     getFirstListingsAwaitingApproval(),
-                    getSuspendedUsers()
+                    getSuspendedUsers(),
                 ]);
 
-                setStats({ ...statsData, suspendedCount: suspendedData.length, pendingCount: pendingData.length });
-
+                setStats({
+                    ...statsData,
+                    suspendedCount: suspendedData.length,
+                    pendingCount: pendingData.length,
+                });
             } catch (error) {
                 console.error("Error loading admin data:", error);
             } finally {
@@ -44,15 +54,15 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                 </div>
                 <button
                     onClick={() => router.push("/market")}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold flex items-center gap-2 whitespace-nowrap">
+                    className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-semibold flex items-center gap-2 whitespace-nowrap"
+                >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0-3.675V5.007c0-.694-.506-1.285-1.175-1.402C15.198 3.4 13.653 3 12 3s-3.197.4-4.825.605c-.669.117-1.175.708-1.175 1.402v12.694m0 0H1.36" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0-3.675V5.007c0-.694-.506-1.285-1.175-1.402C15.198 3.4 13.653 3 12 3s-3.197.4-4.825.605-.669.117-1.175.708-1.175 1.402v12.694m0 0H1.36" />
                     </svg>
                     Back to Marketplace
                 </button>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-5 gap-6">
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Total Users</div>
@@ -81,7 +91,6 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                 </div>
             </div>
 
-            {/* Quick Actions */}
             <div>
                 <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
                 <div className="grid grid-cols-4 gap-6">
@@ -122,6 +131,6 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                     </Link>
                 </div>
             </div>
-        </main >
+        </main>
     );
 }

@@ -5,6 +5,8 @@ import { headers } from "next/headers";
 import { CreateReportSchema, CreateReportInput } from "@/schemas/report-schemas";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { prisma } from "@/lib/prisma";
+import { censorProfanity } from "@/lib/profanity-filter";
+import { revalidatePath } from "next/cache";
 
 interface SubmitReportResult {
     success: boolean;
@@ -55,7 +57,10 @@ export async function submitListingReport(
             };
         }
 
-        const { listingId, reason, details } = validationResult.data;
+        const { listingId, reason, details: rawDetails } = validationResult.data;
+        const detailsCensored = rawDetails?.trim()
+            ? censorProfanity(rawDetails.trim()).censored
+            : null;
 
         // Check if listing exists
         const listing = await prisma.listing.findUnique({
@@ -89,18 +94,21 @@ export async function submitListingReport(
         }
 
         // Create the report
-        const report = await prisma.report.create({
+        await prisma.report.create({
             data: {
                 listingId,
                 reporterId: session.user.id,
                 reason,
-                details: details || null
-            }
+                details: detailsCensored,
+            },
         });
+
+        revalidatePath("/admin");
+        revalidatePath("/admin/reports");
 
         return {
             success: true,
-            message: "Report submitted successfully. Thank you for helping keep our marketplace safe."
+            message: "Report submitted successfully. Thank you for helping keep our marketplace safe.",
         };
     } catch (error) {
         console.error("Error submitting report:", error);

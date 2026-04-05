@@ -37,6 +37,10 @@ model User {
     conversationParticipants ConversationParticipant[]
     sentMessages             Message[]
     events                   ListingEvent[]
+    profanityFlagsSent       MessageProfanityFlag[] @relation("ProfanityFlagSender")
+    profanityFlagsReviewed   MessageProfanityFlag[] @relation("ProfanityFlagReviewer")
+    listingProfanityFlags    ListingProfanityFlag[] @relation("ListingProfanityOwner")
+    listingProfanityReviews  ListingProfanityFlag[] @relation("ListingProfanityReviewer")
     savedQueries             SavedQuery[]
 
     @@map("user")
@@ -79,12 +83,13 @@ model Listing {
     listingStatus   ListingStatus @default(AVAILABLE)
 
     // Relations
-    owner         User           @relation(fields: [ownerId], references: [id])
-    images        Image[]
-    categories    Category[]
-    reports       Report[]
-    conversations Conversation[]
-    events        ListingEvent[]
+    owner                 User                   @relation(fields: [ownerId], references: [id])
+    images                Image[]
+    categories            Category[]
+    reports               Report[]
+    conversations         Conversation[]
+    events                ListingEvent[]
+    listingProfanityFlags ListingProfanityFlag[]
 }
 
 enum ListingStatus {
@@ -195,9 +200,10 @@ model Conversation {
     createdAt DateTime @default(now())
     updatedAt DateTime @default(now()) @updatedAt
 
-    listing      Listing?                  @relation(fields: [listingId], references: [id], onDelete: SetNull)
-    participants ConversationParticipant[]
-    messages     Message[]
+    listing        Listing?                  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+    participants   ConversationParticipant[]
+    messages       Message[]
+    profanityFlags MessageProfanityFlag[]
 
     @@map("conversation")
 }
@@ -223,10 +229,59 @@ model Message {
     body           String
     createdAt      DateTime @default(now())
 
-    conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-    sender       User         @relation(fields: [senderId], references: [id])
+    conversation  Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender        User                  @relation(fields: [senderId], references: [id])
+    profanityFlag MessageProfanityFlag?
 
     @@map("message")
+}
+
+enum MessageProfanityFlagStatus {
+    PENDING
+    REVIEWED_NO_ACTION
+    ACTIONED
+}
+
+model MessageProfanityFlag {
+    id             String                     @id @default(cuid())
+    messageId      String                     @unique
+    conversationId String
+    senderId       String
+    originalBody   String
+    createdAt      DateTime                   @default(now())
+    status         MessageProfanityFlagStatus @default(PENDING)
+    reviewedAt     DateTime?
+    reviewedById   String?
+
+    message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender       User         @relation("ProfanityFlagSender", fields: [senderId], references: [id])
+    reviewer     User?        @relation("ProfanityFlagReviewer", fields: [reviewedById], references: [id])
+
+    @@index([status])
+    @@index([senderId])
+    @@map("message_profanity_flag")
+}
+
+model ListingProfanityFlag {
+    id                  String                   @id @default(cuid())
+    listingId           String
+    ownerId             String
+    originalTitle       String
+    originalDescription String
+    createdAt           DateTime                 @default(now())
+    status              MessageProfanityFlagStatus @default(PENDING)
+    reviewedAt          DateTime?
+    reviewedById        String?
+
+    listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    owner    User    @relation("ListingProfanityOwner", fields: [ownerId], references: [id])
+    reviewer User?   @relation("ListingProfanityReviewer", fields: [reviewedById], references: [id])
+
+    @@index([status])
+    @@index([listingId])
+    @@index([ownerId])
+    @@map("listing_profanity_flag")
 }
 
 model Verification {

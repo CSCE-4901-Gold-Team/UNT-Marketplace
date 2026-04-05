@@ -1,9 +1,20 @@
-﻿"use client"
+"use client"
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { $Enums } from "@prisma/client";
 import type { User, SuspendedUser } from "@/types/admin/users";
-import { getAdminStats, getAllUsers, getSuspendedUsers } from "@/actions/admin-actions";
+import {
+    getAdminStats,
+    getAllUsers,
+    getSuspendedUsers,
+    getPendingProfanityFlags,
+    reviewProfanityFlag,
+    getPendingListingProfanityFlags,
+    reviewListingProfanityFlag,
+    type ProfanityFlagRow,
+    type ListingProfanityFlagRow,
+} from "@/actions/admin-actions";
 import { updateAdminUser, suspendUser, banUser, setUserActive } from "@/actions/user-actions";
 import Pagination from "../ui/Pagination";
 
@@ -12,6 +23,8 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
 
     const USERS_PER_PAGE = 50;
     const SUSPENDED_PER_PAGE = 20;
+    const PROFANITY_PER_PAGE = 10;
+    const LISTING_PROFANITY_PER_PAGE = 10;
 
     const [loading, setLoading] = useState(true);
     const [actionInProgress, setActionInProgress] = useState(false);
@@ -39,6 +52,19 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
     const [suspensionReason, setSuspensionReason] = useState("");
     const [showSuspendedUsers, setShowSuspendedUsers] = useState(false);
 
+    const [profanityFlags, setProfanityFlags] = useState<ProfanityFlagRow[]>([]);
+    const [profanityPage, setProfanityPage] = useState(1);
+    const [profanityTotalCount, setProfanityTotalCount] = useState(0);
+    const [profanityFlagIdForAction, setProfanityFlagIdForAction] = useState<string | null>(null);
+    const [listingProfanityFlags, setListingProfanityFlags] = useState<ListingProfanityFlagRow[]>([]);
+    const [listingProfanityPage, setListingProfanityPage] = useState(1);
+    const [listingProfanityTotalCount, setListingProfanityTotalCount] = useState(0);
+    const [listingProfanityFlagIdForAction, setListingProfanityFlagIdForAction] = useState<string | null>(null);
+    const [queueStats, setQueueStats] = useState({
+        pendingProfanityFlags: 0,
+        pendingListingProfanityFlags: 0,
+    });
+
     useEffect(() => {
         if (userRole !== "ADMIN") {
             router.push("/market");
@@ -47,10 +73,21 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
 
         const load = async () => {
             try {
-                const [statsData, usersData, suspendedData] = await Promise.all([
+                const [
+                    statsData,
+                    usersData,
+                    suspendedData,
+                    profanityQueue,
+                    listingProfanityQueue,
+                ] = await Promise.all([
                     getAdminStats(),
                     getAllUsers(USERS_PER_PAGE + 1, (usersPage - 1) * USERS_PER_PAGE),
                     getSuspendedUsers(SUSPENDED_PER_PAGE + 1, (suspendedUsersPage - 1) * SUSPENDED_PER_PAGE),
+                    getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
+                    getPendingListingProfanityFlags(
+                        LISTING_PROFANITY_PER_PAGE,
+                        (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                    ),
                 ]);
 
                 setUsers(usersData.slice(0, USERS_PER_PAGE));
@@ -59,9 +96,18 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                 setSuspendedUsers(suspendedData.slice(0, SUSPENDED_PER_PAGE));
                 setTotalSuspendedUsersCount(
                     suspendedData.length > SUSPENDED_PER_PAGE
-                        ? (suspendedUsersPage * SUSPENDED_PER_PAGE) + 1
+                        ? suspendedUsersPage * SUSPENDED_PER_PAGE + 1
                         : (suspendedUsersPage - 1) * SUSPENDED_PER_PAGE + suspendedData.length
                 );
+
+                setQueueStats({
+                    pendingProfanityFlags: statsData.pendingProfanityFlags ?? 0,
+                    pendingListingProfanityFlags: statsData.pendingListingProfanityFlags ?? 0,
+                });
+                setProfanityFlags(profanityQueue.flags);
+                setProfanityTotalCount(profanityQueue.total);
+                setListingProfanityFlags(listingProfanityQueue.flags);
+                setListingProfanityTotalCount(listingProfanityQueue.total);
             } catch (e) {
                 console.error("Error loading users:", e);
             } finally {
@@ -70,7 +116,7 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
         };
 
         load();
-    }, [userRole, router, usersPage, suspendedUsersPage]);
+    }, [userRole, router, usersPage, suspendedUsersPage, profanityPage, listingProfanityPage]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         if (selectedUser) {
@@ -111,12 +157,41 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
 
             await suspendUser(suspensionModal.userId, expiryDate);
 
-            const updated = await getSuspendedUsers(SUSPENDED_PER_PAGE);
-            setSuspendedUsers(updated);
+            if (profanityFlagIdForAction) {
+                await reviewProfanityFlag(profanityFlagIdForAction, "ACTIONED");
+                setProfanityFlagIdForAction(null);
+            }
+            if (listingProfanityFlagIdForAction) {
+                await reviewListingProfanityFlag(listingProfanityFlagIdForAction, "ACTIONED");
+                setListingProfanityFlagIdForAction(null);
+            }
+
+            const suspendedName = suspensionModal.userName;
+            const daysSuspended = suspensionDays;
+
+            const updated = await getSuspendedUsers(SUSPENDED_PER_PAGE + 1, (suspendedUsersPage - 1) * SUSPENDED_PER_PAGE);
+            setSuspendedUsers(updated.slice(0, SUSPENDED_PER_PAGE));
             setUsers((prev) => prev.filter((u) => u.id !== suspensionModal.userId));
             setExpandedUserId(null);
 
-            alert(`User ${suspensionModal.userName} suspended for ${suspensionDays} days`);
+            const [statsData, pq, lq] = await Promise.all([
+                getAdminStats(),
+                getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
+                getPendingListingProfanityFlags(
+                    LISTING_PROFANITY_PER_PAGE,
+                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                ),
+            ]);
+            setQueueStats({
+                pendingProfanityFlags: statsData.pendingProfanityFlags ?? 0,
+                pendingListingProfanityFlags: statsData.pendingListingProfanityFlags ?? 0,
+            });
+            setProfanityFlags(pq.flags);
+            setProfanityTotalCount(pq.total);
+            setListingProfanityFlags(lq.flags);
+            setListingProfanityTotalCount(lq.total);
+
+            alert(`User ${suspendedName} suspended for ${daysSuspended} days`);
             setSuspensionModal({ open: false, userId: "", userName: "" });
             setSuspensionDays(7);
             setSuspensionReason("");
@@ -128,19 +203,96 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
         }
     }
 
-    async function handleBanUser(userId: string, userName: string) {
+    async function handleBanUser(
+        userId: string,
+        userName: string,
+        opts?: { messageProfanityFlagId?: string; listingProfanityFlagId?: string }
+    ) {
         if (!confirm(`Are you sure you want to permanently ban ${userName}?`)) return;
 
         setActionInProgress(true);
         try {
             await banUser(userId);
-            const updated = await getSuspendedUsers(SUSPENDED_PER_PAGE);
-            setSuspendedUsers(updated);
+
+            if (opts?.messageProfanityFlagId) {
+                await reviewProfanityFlag(opts.messageProfanityFlagId, "ACTIONED");
+            }
+            if (opts?.listingProfanityFlagId) {
+                await reviewListingProfanityFlag(opts.listingProfanityFlagId, "ACTIONED");
+            }
+
+            const updated = await getSuspendedUsers(SUSPENDED_PER_PAGE + 1, (suspendedUsersPage - 1) * SUSPENDED_PER_PAGE);
+            setSuspendedUsers(updated.slice(0, SUSPENDED_PER_PAGE));
             setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+            const [statsData, pq, lq] = await Promise.all([
+                getAdminStats(),
+                getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
+                getPendingListingProfanityFlags(
+                    LISTING_PROFANITY_PER_PAGE,
+                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                ),
+            ]);
+            setQueueStats({
+                pendingProfanityFlags: statsData.pendingProfanityFlags ?? 0,
+                pendingListingProfanityFlags: statsData.pendingListingProfanityFlags ?? 0,
+            });
+            setProfanityFlags(pq.flags);
+            setProfanityTotalCount(pq.total);
+            setListingProfanityFlags(lq.flags);
+            setListingProfanityTotalCount(lq.total);
+
             alert(`User ${userName} has been permanently banned`);
         } catch (error) {
             console.error("Error banning user:", error);
             alert("Error banning user");
+        } finally {
+            setActionInProgress(false);
+        }
+    }
+
+    async function handleDismissProfanity(flagId: string) {
+        setActionInProgress(true);
+        try {
+            await reviewProfanityFlag(flagId, "REVIEWED_NO_ACTION");
+            const [statsData, pq] = await Promise.all([
+                getAdminStats(),
+                getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
+            ]);
+            setQueueStats({
+                pendingProfanityFlags: statsData.pendingProfanityFlags ?? 0,
+                pendingListingProfanityFlags: statsData.pendingListingProfanityFlags ?? 0,
+            });
+            setProfanityFlags(pq.flags);
+            setProfanityTotalCount(pq.total);
+        } catch (error) {
+            console.error("Error dismissing profanity flag:", error);
+            alert("Could not update review status");
+        } finally {
+            setActionInProgress(false);
+        }
+    }
+
+    async function handleDismissListingProfanity(flagId: string) {
+        setActionInProgress(true);
+        try {
+            await reviewListingProfanityFlag(flagId, "REVIEWED_NO_ACTION");
+            const [statsData, lq] = await Promise.all([
+                getAdminStats(),
+                getPendingListingProfanityFlags(
+                    LISTING_PROFANITY_PER_PAGE,
+                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                ),
+            ]);
+            setQueueStats({
+                pendingProfanityFlags: statsData.pendingProfanityFlags ?? 0,
+                pendingListingProfanityFlags: statsData.pendingListingProfanityFlags ?? 0,
+            });
+            setListingProfanityFlags(lq.flags);
+            setListingProfanityTotalCount(lq.total);
+        } catch (error) {
+            console.error("Error dismissing listing profanity flag:", error);
+            alert("Could not update review status");
         } finally {
             setActionInProgress(false);
         }
@@ -181,6 +333,19 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                 </button>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white border-2 border-amber-200 rounded-2xl p-6">
+                    <div className="text-gray-500 text-sm font-semibold mb-2">DM profanity queue</div>
+                    <div className="text-3xl font-black text-amber-700">{loading ? "-" : queueStats.pendingProfanityFlags}</div>
+                    <div className="text-xs text-gray-400 mt-1">Messages to review</div>
+                </div>
+                <div className="bg-white border-2 border-amber-200 rounded-2xl p-6">
+                    <div className="text-gray-500 text-sm font-semibold mb-2">Listing profanity queue</div>
+                    <div className="text-3xl font-black text-amber-700">{loading ? "-" : queueStats.pendingListingProfanityFlags}</div>
+                    <div className="text-xs text-gray-400 mt-1">Listings to review</div>
+                </div>
+            </div>
+
             {/* Quick Actions - Manage Suspensions */}
             <div>
                 <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
@@ -196,6 +361,223 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                             <div className="text-xl font-bold">Manage Suspensions</div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* Direct message profanity review */}
+            <div>
+                <h2 className="text-2xl font-bold mb-4">Direct message moderation</h2>
+                <p className="text-gray-600 text-sm mb-4 max-w-3xl">
+                    When a user sends a message that matches the profanity filter, the original text is stored here for review.
+                    Dismiss if no action is needed, or suspend or ban the sender if the violation warrants it.
+                </p>
+                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
+                    {loading ? (
+                        <div className="text-gray-500 text-center py-8">Loading...</div>
+                    ) : profanityFlags.length === 0 ? (
+                        <div className="text-gray-500 text-center py-8">No pending profanity reviews</div>
+                    ) : (
+                        <>
+                            <div className="overflow-x-auto space-y-6">
+                                {profanityFlags.map((flag) => (
+                                    <div key={flag.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50/80">
+                                        <div className="flex flex-wrap gap-4 justify-between items-start mb-3">
+                                            <div>
+                                                <div className="text-sm text-gray-500">{new Date(flag.createdAt).toLocaleString()}</div>
+                                                <div className="font-semibold text-gray-900 mt-1">
+                                                    {flag.senderName}{" "}
+                                                    <span className="font-normal text-gray-600">({flag.senderEmail})</span>
+                                                </div>
+                                                {flag.listingTitle && (
+                                                    <div className="text-sm text-gray-600 mt-1">
+                                                        Conversation re:{" "}
+                                                        {flag.listingId ? (
+                                                            <Link
+                                                                href={`/market/listing/${flag.listingId}`}
+                                                                className="text-green hover:underline"
+                                                            >
+                                                                {flag.listingTitle}
+                                                            </Link>
+                                                        ) : (
+                                                            flag.listingTitle
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDismissProfanity(flag.id)}
+                                                    disabled={actionInProgress}
+                                                    className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded-lg text-sm hover:bg-gray-300 transition disabled:opacity-50"
+                                                >
+                                                    Dismiss (no action)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setProfanityFlagIdForAction(flag.id);
+                                                        setListingProfanityFlagIdForAction(null);
+                                                        setSuspensionModal({
+                                                            open: true,
+                                                            userId: flag.senderId,
+                                                            userName: flag.senderName,
+                                                        });
+                                                    }}
+                                                    disabled={actionInProgress}
+                                                    className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition disabled:opacity-50"
+                                                >
+                                                    Suspend sender
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleBanUser(flag.senderId, flag.senderName, {
+                                                            messageProfanityFlagId: flag.id,
+                                                        })
+                                                    }
+                                                    disabled={actionInProgress}
+                                                    className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition disabled:opacity-50"
+                                                >
+                                                    Ban sender
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="grid md:grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                                    Original (matched filter)
+                                                </div>
+                                                <p className="whitespace-pre-wrap break-words rounded-lg bg-white border border-amber-200 p-3 font-mono text-gray-900">
+                                                    {flag.originalBody}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                                    Stored (censored)
+                                                </div>
+                                                <p className="whitespace-pre-wrap break-words rounded-lg bg-white border border-gray-200 p-3 font-mono text-gray-700">
+                                                    {flag.censoredBody}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <Pagination
+                                currentPage={profanityPage}
+                                totalItems={profanityTotalCount}
+                                itemsPerPage={PROFANITY_PER_PAGE}
+                                loading={loading}
+                                onPageChange={setProfanityPage}
+                            />
+                        </>
+                    )}
+                </div>
+            </div>
+
+            {/* Listing profanity review */}
+            <div>
+                <h2 className="text-2xl font-bold mb-4">Listing moderation (profanity)</h2>
+                <p className="text-gray-600 text-sm mb-4 max-w-3xl">
+                    When a listing title or description matches the profanity filter, the public listing shows censored text;
+                    originals appear here for review. Dismiss if acceptable, or suspend or ban the seller if needed.
+                </p>
+                <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
+                    {loading ? (
+                        <div className="text-gray-500 text-center py-8">Loading...</div>
+                    ) : listingProfanityFlags.length === 0 ? (
+                        <div className="text-gray-500 text-center py-8">No pending listing profanity reviews</div>
+                    ) : (
+                        <>
+                            <div className="overflow-x-auto space-y-6">
+                                {listingProfanityFlags.map((flag) => (
+                                    <div key={flag.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50/80">
+                                        <div className="flex flex-wrap gap-4 justify-between items-start mb-3">
+                                            <div>
+                                                <div className="text-sm text-gray-500">{new Date(flag.createdAt).toLocaleString()}</div>
+                                                <div className="font-semibold text-gray-900 mt-1">
+                                                    {flag.ownerName}{" "}
+                                                    <span className="font-normal text-gray-600">({flag.ownerEmail})</span>
+                                                </div>
+                                                <Link
+                                                    href={`/market/listing/${flag.listingId}`}
+                                                    className="text-sm text-green hover:underline mt-1 inline-block"
+                                                >
+                                                    View listing
+                                                </Link>
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDismissListingProfanity(flag.id)}
+                                                    disabled={actionInProgress}
+                                                    className="px-3 py-1.5 bg-gray-200 text-gray-800 rounded-lg text-sm hover:bg-gray-300 transition disabled:opacity-50"
+                                                >
+                                                    Dismiss (no action)
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setProfanityFlagIdForAction(null);
+                                                        setListingProfanityFlagIdForAction(flag.id);
+                                                        setSuspensionModal({
+                                                            open: true,
+                                                            userId: flag.ownerId,
+                                                            userName: flag.ownerName,
+                                                        });
+                                                    }}
+                                                    disabled={actionInProgress}
+                                                    className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition disabled:opacity-50"
+                                                >
+                                                    Suspend seller
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleBanUser(flag.ownerId, flag.ownerName, {
+                                                            listingProfanityFlagId: flag.id,
+                                                        })
+                                                    }
+                                                    disabled={actionInProgress}
+                                                    className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition disabled:opacity-50"
+                                                >
+                                                    Ban seller
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="grid md:grid-cols-2 gap-3 text-sm">
+                                            <div>
+                                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                                    Original (matched filter)
+                                                </div>
+                                                <p className="font-semibold text-gray-900">{flag.originalTitle}</p>
+                                                <p className="whitespace-pre-wrap break-words rounded-lg bg-white border border-amber-200 p-3 font-mono text-gray-900 mt-2">
+                                                    {flag.originalDescription}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                                    Public (censored)
+                                                </div>
+                                                <p className="font-semibold text-gray-800">{flag.censoredTitle}</p>
+                                                <p className="whitespace-pre-wrap break-words rounded-lg bg-white border border-gray-200 p-3 font-mono text-gray-700 mt-2">
+                                                    {flag.censoredDescription}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <Pagination
+                                currentPage={listingProfanityPage}
+                                totalItems={listingProfanityTotalCount}
+                                itemsPerPage={LISTING_PROFANITY_PER_PAGE}
+                                loading={loading}
+                                onPageChange={setListingProfanityPage}
+                            />
+                        </>
+                    )}
                 </div>
             </div>
 
