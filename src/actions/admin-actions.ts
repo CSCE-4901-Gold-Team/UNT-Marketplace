@@ -1,9 +1,10 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { ListingStatus, ReportStatus, UserStatusType } from "@prisma/client";
+import { ListingStatus, MessageProfanityFlagStatus, ReportStatus, UserStatusType } from "@prisma/client";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
 
@@ -22,23 +23,36 @@ export async function getAdminStats() {
         throw new Error("Unauthorized");
     }
 
-    const [totalUsers, activeListings, pendingReports, totalTransactions] = await Promise.all([
-        prisma.user.count().catch(() => 0),
-        prisma.listing.count({
-            where: { listingStatus: ListingStatus.AVAILABLE }
-        }).catch(() => 0),
-        prisma.report.count({
-            where: { status: ReportStatus.PENDING }
-        }).catch(() => 0),
-        // Transaction model to be added in future PR - currently returns 0
-        Promise.resolve(0)
-    ]);
+    const [totalUsers, activeListings, pendingReports, totalTransactions, pendingProfanityFlags, pendingListingProfanityFlags] =
+        await Promise.all([
+            prisma.user.count().catch(() => 0),
+            prisma.listing.count({
+                where: { listingStatus: ListingStatus.AVAILABLE },
+            }).catch(() => 0),
+            prisma.report.count({
+                where: { status: ReportStatus.PENDING },
+            }).catch(() => 0),
+            // Transaction model to be added in future PR - currently returns 0
+            Promise.resolve(0),
+            prisma.messageProfanityFlag
+                .count({
+                    where: { status: MessageProfanityFlagStatus.PENDING },
+                })
+                .catch(() => 0),
+            prisma.listingProfanityFlag
+                .count({
+                    where: { status: MessageProfanityFlagStatus.PENDING },
+                })
+                .catch(() => 0),
+        ]);
 
     return {
         totalUsers,
         activeListings,
         pendingReports,
-        totalTransactions
+        totalTransactions,
+        pendingProfanityFlags,
+        pendingListingProfanityFlags,
     };
 }
 
@@ -253,66 +267,78 @@ export async function getPendingListingReports(limit: number = 50, skip: number 
         throw new Error("Unauthorized");
     }
 
-    const reports = await prisma.report.findMany({
-        where: {
-            status: ReportStatus.PENDING
-        },
-        orderBy: {
-            createdAt: 'desc'
-        },
-        take: limit,
-        skip: skip,
-        include: {
-            listing: {
-                select: {
-                    id: true,
-                    title: true,
-                    description: true,
-                    price: true,
-                    ownerId: true,
-                    owner: {
-                        select: {
-                            id: true,
-                            name: true,
-                            email: true
-                        }
-                    },
-                    images: {
-                        select: {
-                            url: true
-                        },
-                        take: 1
-                    }
-                }
+    const [reports, total] = await Promise.all([
+        prisma.report.findMany({
+            where: {
+                status: ReportStatus.PENDING,
             },
-            reporter: {
-                select: {
-                    id: true,
-                    name: true,
-                    email: true
-                }
-            }
-        }
-    });
+            orderBy: {
+                createdAt: "desc",
+            },
+            take: limit,
+            skip: skip,
+            include: {
+                listing: {
+                    select: {
+                        id: true,
+                        title: true,
+                        description: true,
+                        price: true,
+                        ownerId: true,
+                        owner: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                            },
+                        },
+                        images: {
+                            select: {
+                                url: true,
+                            },
+                            take: 1,
+                        },
+                    },
+                },
+                reporter: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                    },
+                },
+            },
+        }),
+        prisma.report.count({
+            where: { status: ReportStatus.PENDING },
+        }),
+    ]);
 
-    return reports.map(report => ({
-        id: report.id,
-        listingId: report.listing.id,
-        listingTitle: report.listing.title,
-        listingDescription: report.listing.description,
-        listingPrice: `$${report.listing.price.toNumber().toFixed(2)}`,
-        listingImage: report.listing.images[0]?.url || null,
-        listingOwnerId: report.listing.ownerId,
-        listingOwnerName: report.listing.owner.name,
-        listingOwnerEmail: report.listing.owner.email,
-        reporterId: report.reporter.id,
-        reporterName: report.reporter.name,
-        reporterEmail: report.reporter.email,
-        reason: report.reason,
-        details: report.details,
-        status: report.status,
-        createdAt: report.createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-    }));
+    return {
+        reports: reports.map((report) => ({
+            id: report.id,
+            listingId: report.listing.id,
+            listingTitle: report.listing.title,
+            listingDescription: report.listing.description,
+            listingPrice: `$${report.listing.price.toNumber().toFixed(2)}`,
+            listingImage: report.listing.images[0]?.url || null,
+            listingOwnerId: report.listing.ownerId,
+            listingOwnerName: report.listing.owner.name,
+            listingOwnerEmail: report.listing.owner.email,
+            reporterId: report.reporter.id,
+            reporterName: report.reporter.name,
+            reporterEmail: report.reporter.email,
+            reason: report.reason,
+            details: report.details,
+            status: report.status,
+            createdAt: report.createdAt.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            }),
+        })),
+        total,
+    };
 }
 
 export async function getReportById(reportId: string) {
@@ -566,8 +592,215 @@ export async function resolveReport(reportId: string, action: 'RESOLVED' | 'DISM
 
     await prisma.report.update({
         where: { id: reportId },
-        data: { status: reportStatus }
+        data: { status: reportStatus },
     });
 
+    revalidatePath("/admin");
+    revalidatePath("/admin/reports");
+
+    return { success: true };
+}
+
+export interface ProfanityFlagRow {
+    id: string;
+    messageId: string;
+    conversationId: string;
+    senderId: string;
+    senderName: string;
+    senderEmail: string;
+    originalBody: string;
+    censoredBody: string;
+    createdAt: Date;
+    listingId: string | null;
+    listingTitle: string | null;
+}
+
+export async function getPendingProfanityFlags(limit: number = 25, skip: number = 0): Promise<{
+    flags: ProfanityFlagRow[];
+    total: number;
+}> {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const [rows, total] = await Promise.all([
+        prisma.messageProfanityFlag.findMany({
+            where: { status: MessageProfanityFlagStatus.PENDING },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+            skip,
+            include: {
+                sender: { select: { id: true, name: true, email: true } },
+                message: { select: { body: true } },
+                conversation: {
+                    select: {
+                        listing: { select: { id: true, title: true } },
+                    },
+                },
+            },
+        }),
+        prisma.messageProfanityFlag.count({
+            where: { status: MessageProfanityFlagStatus.PENDING },
+        }),
+    ]);
+
+    const flags: ProfanityFlagRow[] = rows.map((f) => ({
+        id: f.id,
+        messageId: f.messageId,
+        conversationId: f.conversationId,
+        senderId: f.senderId,
+        senderName: f.sender.name,
+        senderEmail: f.sender.email,
+        originalBody: f.originalBody,
+        censoredBody: f.message.body,
+        createdAt: f.createdAt,
+        listingId: f.conversation.listing?.id ?? null,
+        listingTitle: f.conversation.listing?.title ?? null,
+    }));
+
+    return { flags, total };
+}
+
+export async function reviewProfanityFlag(
+    flagId: string,
+    outcome: "REVIEWED_NO_ACTION" | "ACTIONED"
+): Promise<{ success: boolean }> {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const status =
+        outcome === "ACTIONED"
+            ? MessageProfanityFlagStatus.ACTIONED
+            : MessageProfanityFlagStatus.REVIEWED_NO_ACTION;
+
+    await prisma.messageProfanityFlag.update({
+        where: { id: flagId },
+        data: {
+            status,
+            reviewedAt: new Date(),
+            reviewedById: session.user.id,
+        },
+    });
+
+    revalidatePath("/admin");
+    return { success: true };
+}
+
+export interface ListingProfanityFlagRow {
+    id: string;
+    listingId: string;
+    ownerId: string;
+    ownerName: string;
+    ownerEmail: string;
+    originalTitle: string;
+    originalDescription: string;
+    censoredTitle: string;
+    censoredDescription: string;
+    createdAt: Date;
+}
+
+export async function getPendingListingProfanityFlags(
+    limit: number = 25,
+    skip: number = 0
+): Promise<{
+    flags: ListingProfanityFlagRow[];
+    total: number;
+}> {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const [rows, total] = await Promise.all([
+        prisma.listingProfanityFlag.findMany({
+            where: { status: MessageProfanityFlagStatus.PENDING },
+            orderBy: { createdAt: "desc" },
+            take: limit,
+            skip,
+            include: {
+                listing: { select: { title: true, description: true } },
+                owner: { select: { id: true, name: true, email: true } },
+            },
+        }),
+        prisma.listingProfanityFlag.count({
+            where: { status: MessageProfanityFlagStatus.PENDING },
+        }),
+    ]);
+
+    const flags: ListingProfanityFlagRow[] = rows.map((f) => ({
+        id: f.id,
+        listingId: f.listingId,
+        ownerId: f.ownerId,
+        ownerName: f.owner.name,
+        ownerEmail: f.owner.email,
+        originalTitle: f.originalTitle,
+        originalDescription: f.originalDescription,
+        censoredTitle: f.listing.title,
+        censoredDescription: f.listing.description,
+        createdAt: f.createdAt,
+    }));
+
+    return { flags, total };
+}
+
+export async function reviewListingProfanityFlag(
+    flagId: string,
+    outcome: "REVIEWED_NO_ACTION" | "ACTIONED"
+): Promise<{ success: boolean }> {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const userRole = await getCurrentUserRole();
+    if (userRole !== "ADMIN") {
+        throw new Error("Unauthorized");
+    }
+
+    const status =
+        outcome === "ACTIONED"
+            ? MessageProfanityFlagStatus.ACTIONED
+            : MessageProfanityFlagStatus.REVIEWED_NO_ACTION;
+
+    await prisma.listingProfanityFlag.update({
+        where: { id: flagId },
+        data: {
+            status,
+            reviewedAt: new Date(),
+            reviewedById: session.user.id,
+        },
+    });
+
+    revalidatePath("/admin");
     return { success: true };
 }

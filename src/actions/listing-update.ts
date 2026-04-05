@@ -9,6 +9,9 @@ import { Prisma, $Enums } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
+import { censorProfanity } from "@/lib/profanity-filter";
+import { revalidatePath } from "next/cache";
+import { MessageProfanityFlagStatus } from "@prisma/client";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),
@@ -17,13 +20,9 @@ const UpdateListingRequest = z.object({
     price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
     listingStatus: z.enum(["AVAILABLE", "DRAFT"]).optional(),
     isProfessorOnly: z.boolean().optional(),
-    categoryIds: z.array(z.number()).optional(),
-    newCategoryNames: z.array(z.string()).optional(),
+    categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
-}).refine(
-    (data) => (data.categoryIds && data.categoryIds.length > 0) || (data.newCategoryNames && data.newCategoryNames.length > 0),
-    { message: "At least one category is required", path: ["categoryIds"] }
-);
+});
 
 export async function updateListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
     
@@ -49,7 +48,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         listingStatus: formData.get("listingStatus") as "AVAILABLE" | "DRAFT" | null,
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
-        newCategoryNames: JSON.parse(formData.get("newCategoryNames") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
     });
 
@@ -94,35 +92,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        // Create any new categories
-        const newCategoryIds: number[] = [];
-        if (parsedFormData.data.newCategoryNames && parsedFormData.data.newCategoryNames.length > 0) {
-            for (const categoryName of parsedFormData.data.newCategoryNames) {
-                const slug = categoryName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                
-                let category = await prisma.category.findUnique({
-                    where: { name: categoryName }
-                });
-
-                if (!category) {
-                    category = await prisma.category.create({
-                        data: { 
-                            name: categoryName,
-                            slug: slug
-                        }
-                    });
-                }
-                
-                newCategoryIds.push(category.id);
-            }
-        }
-
-        // Combine existing category IDs with newly created ones
-        const allCategoryIds = [
-            ...(parsedFormData.data.categoryIds || []),
-            ...newCategoryIds
-        ];
-
         // Handle image update if provided
         const imagePath = parsedFormData.data.imagePath;
         
@@ -144,15 +113,20 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             }
         }
 
-        // Build update data
-        const updateData: any = {
-            title: parsedFormData.data.title,
-            description: parsedFormData.data.description,
+        const rawTitle = parsedFormData.data.title.trim();
+        const rawDescription = parsedFormData.data.description.trim();
+        const titleC = censorProfanity(rawTitle);
+        const descC = censorProfanity(rawDescription);
+        const wasCensored = titleC.wasCensored || descC.wasCensored;
+
+        const updateData: Prisma.ListingUpdateInput = {
+            title: titleC.censored,
+            description: descC.censored,
             price: new Prisma.Decimal(parsedFormData.data.price),
             isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
             categories: {
-                set: allCategoryIds.map(id => ({ id }))
-            }
+                set: parsedFormData.data.categoryIds.map((id) => ({ id })),
+            },
         };
 
         if (existingListing.listingStatus === $Enums.ListingStatus.ARCHIVED) {
@@ -187,6 +161,10 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             updateData.listingStatus = parsedFormData.data.listingStatus;
         }
 
+        if (wasCensored) {
+            updateData.listingStatus = $Enums.ListingStatus.DRAFT;
+        }
+
         // Prevent students from setting professor-only flag
         if (parsedFormData.data.isProfessorOnly) {
             const currentUserRole = await getCurrentUserRole();
@@ -206,22 +184,53 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             updateData.images = {
                 deleteMany: {},
                 create: imagesParsed.map((url, index) => ({
-                    url: url,
+                    url,
                     imageType: $Enums.ImageType.LISTING,
-                    sortOrder: index
-                }))
+                    sortOrder: index,
+                })),
             };
         } else {
             updateData.images = {
-                deleteMany: {}
+                deleteMany: {},
             };
         }
 
-        // Update the listing
-        await prisma.listing.update({
-            where: { id: listingId },
-            data: updateData
+        await prisma.$transaction(async (tx) => {
+            await tx.listing.update({
+                where: { id: listingId },
+                data: updateData,
+            });
+            if (wasCensored) {
+                const pending = await tx.listingProfanityFlag.findFirst({
+                    where: {
+                        listingId,
+                        status: MessageProfanityFlagStatus.PENDING,
+                    },
+                });
+                if (pending) {
+                    await tx.listingProfanityFlag.update({
+                        where: { id: pending.id },
+                        data: {
+                            originalTitle: rawTitle,
+                            originalDescription: rawDescription,
+                        },
+                    });
+                } else {
+                    await tx.listingProfanityFlag.create({
+                        data: {
+                            listingId,
+                            ownerId: session.user.id,
+                            originalTitle: rawTitle,
+                            originalDescription: rawDescription,
+                        },
+                    });
+                }
+            }
         });
+
+        if (wasCensored) {
+            revalidatePath("/admin");
+        }
 
     } catch (error) {
         console.error("Error updating listing:", error);

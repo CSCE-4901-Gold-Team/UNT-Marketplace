@@ -18,7 +18,6 @@ export default async function Home() {
                     <Link className="text-lg font-black px-3 py-1.5 bg-blue-500 rounded text-white no-underline" href="/login">Login</Link>
                     <Link className="text-lg font-black px-3 py-1.5 bg-amber-500 rounded text-white no-underline" href="/logout">Logout</Link>
                     <Link className="text-lg font-black px-3 py-1.5 bg-teal-600 rounded text-white no-underline" href="/market">Market</Link>
-                    <Link className="text-lg font-black px-3 py-1.5 bg-red-300 rounded text-white no-underline" href="/admin">Admin</Link>
                 </div>
 
                 <p className="mt-5">
