@@ -10,7 +10,6 @@ import Link from "next/link";
 import { toastService } from "@/lib/toast-service";
 import { passwordResetRequestAction } from "@/actions/password-reset-request";
 import Card from "@/components/ui/Card";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -27,13 +26,10 @@ export default function ForgotPasswordPage() {
     }, [formResponse]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
-            <div className="absolute top-4 right-4">
-                <DarkModeToggle />
-            </div>
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Reset Your Password</h1>
-                <p className="mb-6 text-center text-gray-600 dark:text-gray-400">
+                <p className="mb-6 text-center text-gray-600">
                     Enter your email address and we'll send you a link to reset your password.
                 </p>
 

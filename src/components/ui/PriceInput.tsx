@@ -23,7 +23,7 @@ export default function PriceInput({
     return (
         <div>
             { !!inputLabel && (
-                <label className="block text-sm font-medium text-black dark:text-gray-200">{ inputLabel }</label>
+                <label className="block text-sm font-medium">{ inputLabel }</label>
             )}
             <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
