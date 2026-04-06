@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ConversationDetail, MessageData, sendMessage, getNewMessages } from "@/actions/chat-actions";
+import { censorProfanity } from "@/lib/profanity-filter";
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -88,7 +89,7 @@ export default function ChatWindow({ initial }: { initial: ConversationDetail })
         setError(null);
         const optimisticMsg: MessageData = {
             id: `optimistic-${Date.now()}`,
-            body: trimmed,
+            body: censorProfanity(trimmed).censored,
             senderId: "me",
             senderName: "You",
             senderImage: null,

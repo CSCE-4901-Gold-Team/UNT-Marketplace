@@ -36,7 +36,7 @@ export default function MarketFilterControls({
             </div>
 
             {showFilters &&
-                (<div className="listing-filter-controls w-72 p-5 rounded-lg border border-green-700 mt-3 absolute z-10 bg-white/90 backdrop-blur-lg right-0 transition-colors">
+                (<div className="listing-filter-controls w-72 p-5 rounded-lg border border-green-700 mt-3 absolute z-10 bg-white/90 backdrop-blur-lg right-0">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="col-span-1">
                             <CurrencyInput

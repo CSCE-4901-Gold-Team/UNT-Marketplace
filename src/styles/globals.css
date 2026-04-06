@@ -1,8 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
     --font-display: "Montserrat", "sans-serif";
     --color-green: #3B9842;
@@ -10,35 +8,30 @@
 }
 
 @layer base {
-    body {
-        @apply bg-white text-gray-900 transition-colors;
-    }
-
     h1 {
         font-size: var(--text-2xl);
         font-weight: var(--font-weight-semibold);
-        @apply text-gray-950
+        color: var(--color-gray-950);
     }
 
     h2 {
         font-size: var(--text-xl);
         font-weight: var(--font-weight-semibold);
-        @apply text-gray-950
+        color: var(--color-gray-950);
     }
 
     h3 {
         font-size: var(--text-lg);
         font-weight: var(--font-weight-semibold);
-        @apply text-gray-950
+        color: var(--color-gray-950);
     }
     
     p {
         font-size: var(--text-base);
-        @apply text-gray-900
     }
     
     a {
         text-decoration: underline;
-        @apply text-green-700
+        color: var(--color-green-700);
     }   
 }

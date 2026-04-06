@@ -42,7 +42,7 @@ export default function SignUpPage() {
     }, [registerFormResponse, router]);
     
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
                 <h1 className="mb-6 text-center">Create Your Account</h1>
 

@@ -38,7 +38,7 @@ function ResetPasswordContent() {
 
     if (!token) {
         return (
-            <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
+            <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
                 <Card>
                     <h1 className="mb-6 text-center text-2xl font-semibold">Invalid Reset Link</h1>
                     <p className="mb-6 text-center text-gray-600">
@@ -55,7 +55,7 @@ function ResetPasswordContent() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Set New Password</h1>
 

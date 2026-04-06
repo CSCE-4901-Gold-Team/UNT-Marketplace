@@ -53,7 +53,7 @@ function VerifyEmailContent() {
     }, [token]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Email Verification</h1>
 
@@ -82,7 +82,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
     return (
         <Suspense fallback={
-            <div className="flex min-h-screen items-center justify-center bg-gray-100 transition-colors">
+            <div className="flex min-h-screen items-center justify-center bg-gray-100">
                 <div className="text-center">Loading...</div>
             </div>
         }>

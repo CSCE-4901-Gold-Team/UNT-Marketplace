@@ -2,7 +2,6 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {IoMdCloseCircle} from "react-icons/io";
 import NavItem from "@/components/ui/NavItem";
 import { usePathname } from "next/navigation";
@@ -15,7 +14,6 @@ export default function MarketSidebar({
     showSidebar: boolean;
     setShowSidebarAction: (newVal: boolean) => void;
 }) {
-    const pathname = usePathname();
 
     const sidebarClassList = "flex flex-col w-11/12 max-w-[350px] fixed top-0 bottom-0 z-50 transition-all duration-600 ease-in-out " +
         (showSidebar ? "left-0" : "-left-full") +
@@ -30,10 +28,9 @@ export default function MarketSidebar({
                 </button>
 
                 {/* Sidebar Logo */}
-                <div id="marketSidebarLogo" className="bg-gradient-to-r from-green-600 to-green-700 text-white p-5 px-4 shadow-lg -me-2 rounded-r-2xl">
-                    <div className="flex justify-center">
-                        <Image src={UNTLogo} alt="UNT Logo" width={200} height={200} priority />
-                    </div>
+                <div id="marketSidebarLogo" className="bg-green text-white p-4 px-1.5 shadow me-[-.5rem]">
+                    <div className="text-3xl font-black text-center">UNT Marketplace</div>
+                    <div className="text-md text-end me-6">Buy. Sell. Swap.</div>
                 </div>
 
                 {/* TOP MENU */}

@@ -8,7 +8,6 @@ import {FormResponse} from "@/types/FormResponse";
 import {FormStatus} from "@/constants/FormStatus";
 import Alert from "@/components/ui/Alert";
 import Link from "next/link";
-import Image from "next/image";
 import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
@@ -39,10 +38,8 @@ export default function LoginPage() {
 
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
-                <div className="flex justify-center mb-6">
-                    <Image src={UNTLogo} alt="UNT Logo" width={150} height={150} priority />
-                </div>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 
                 { loginFormResponse.status === FormStatus.SUCCESS &&
@@ -88,7 +85,7 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             validationErrors={loginFormResponse.validationErrors}
                         />
-                        <p className="text-end text-sm mt-1"><Link href="/forgot-password" className="text-green-700 hover:underline">Forgot password</Link>
+                        <p className="text-end text-sm text-gray-50 mt-1"><Link href="/forgot-password" className="text-green-700 hover:underline">Forgot password</Link>
                         </p>
                     </div>
 
