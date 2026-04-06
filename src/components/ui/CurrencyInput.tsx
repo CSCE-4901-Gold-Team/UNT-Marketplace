@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import React from "react";
 import * as z from "zod";
@@ -37,7 +37,7 @@ export default function CurrencyInput({
     return (
         <div>
             { !!inputLabel && (
-                <label className="block text-sm font-medium dark:text-gray-200">{ inputLabel }</label>
+                <label className="block text-sm font-medium">{ inputLabel }</label>
             )}
 
             <div className="flex">

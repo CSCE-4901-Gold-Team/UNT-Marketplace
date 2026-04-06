@@ -3,7 +3,6 @@
 import React, {useState} from "react";
 import MarketSidebar from "@/components/ui/MarketSidebar";
 import {RiMenu3Fill} from "react-icons/ri";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function MarketHeader({
     children,
@@ -22,7 +21,6 @@ export default function MarketHeader({
                 >
                     <RiMenu3Fill />
                 </button>
-                <DarkModeToggle />
             </div>
 
             <MarketSidebar

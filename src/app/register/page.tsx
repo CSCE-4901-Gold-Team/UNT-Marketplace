@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, {useActionState, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,6 @@ import Alert from "@/components/ui/Alert";
 import Link from "next/link";
 import {toastService} from "@/lib/toast-service";
 import Card from "@/components/ui/Card";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -43,10 +42,7 @@ export default function SignUpPage() {
     }, [registerFormResponse, router]);
     
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
-            <div className="absolute top-4 right-4">
-                <DarkModeToggle />
-            </div>
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
             <Card>
                 <h1 className="mb-6 text-center">Create Your Account</h1>
 

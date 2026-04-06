@@ -11,34 +11,34 @@
 
 @layer base {
     body {
-        @apply bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors;
+        @apply bg-white text-gray-900 transition-colors;
     }
 
     h1 {
         font-size: var(--text-2xl);
         font-weight: var(--font-weight-semibold);
-        @apply text-gray-950 dark:text-gray-50;
+        @apply text-gray-950
     }
 
     h2 {
         font-size: var(--text-xl);
         font-weight: var(--font-weight-semibold);
-        @apply text-gray-950 dark:text-gray-50;
+        @apply text-gray-950
     }
 
     h3 {
         font-size: var(--text-lg);
         font-weight: var(--font-weight-semibold);
-        @apply text-gray-950 dark:text-gray-50;
+        @apply text-gray-950
     }
     
     p {
         font-size: var(--text-base);
-        @apply text-gray-900 dark:text-gray-100;
+        @apply text-gray-900
     }
     
     a {
         text-decoration: underline;
-        @apply text-green-700 dark:text-green-400;
+        @apply text-green-700
     }   
 }

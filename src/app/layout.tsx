@@ -3,7 +3,6 @@ import type {Metadata} from "next";
 import "@/styles/globals.css";
 import {ToastContainer} from "react-toastify";
 import RemoveExtensionAttrs from "@/components/layout/RemoveExtensionAttrs";
-import {ThemeProvider} from "@/components/ui/ThemeProvider";
 
 export const metadata: Metadata = {
     title: "UNT Marketplace",
@@ -21,11 +20,9 @@ export default function RootLayout({
             <body className="antialiased font-display" suppressHydrationWarning>
                 {/* cleans extension-injected attributes after hydration to avoid client/server mismatches */}
                 <RemoveExtensionAttrs />
-                <ThemeProvider>
-                    <div id="appContainer">
-                        {children}
-                    </div>
-                </ThemeProvider>
+                <div id="appContainer">
+                    {children}
+                </div>
                 <ToastContainer/>
             </body>
         </html>

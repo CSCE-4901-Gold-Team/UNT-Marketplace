@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, {useActionState, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,6 @@ import Image from "next/image";
 import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
-import DarkModeToggle from "@/components/ui/DarkModeToggle";
 import UNTLogo from "@/assets/UNT 16.png";
 
 export default function LoginPage() {
@@ -39,10 +38,7 @@ export default function LoginPage() {
     }, [loginFormResponse, router]);
 
     return (
-        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 gap-5 transition-colors">
-            <div className="absolute top-4 right-4">
-                <DarkModeToggle />
-            </div>
+        <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5 transition-colors">
             <Card>
                 <div className="flex justify-center mb-6">
                     <Image src={UNTLogo} alt="UNT Logo" width={150} height={150} priority />
@@ -92,7 +88,7 @@ export default function LoginPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             validationErrors={loginFormResponse.validationErrors}
                         />
-                        <p className="text-end text-sm mt-1"><Link href="/forgot-password" className="text-green-700 dark:text-green-400 hover:underline">Forgot password</Link>
+                        <p className="text-end text-sm mt-1"><Link href="/forgot-password" className="text-green-700 hover:underline">Forgot password</Link>
                         </p>
                     </div>
 
