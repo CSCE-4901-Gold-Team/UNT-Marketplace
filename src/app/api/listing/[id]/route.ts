@@ -2,6 +2,7 @@ import { $Enums } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { getSessionUserId } from "@/lib/session-utils";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -39,9 +40,7 @@ export async function GET(
 
         // Prevent students from accessing professor-only listings
         if (listing.isProfessorOnly && session) {
-            const userObj = session.user as unknown as { id?: string };
-            const sessionObj = session as unknown as { userId?: string };
-            const userId = userObj.id ?? sessionObj.userId;
+            const userId = getSessionUserId(session);
 
             if (userId) {
                 const user = await prisma.user.findUnique({

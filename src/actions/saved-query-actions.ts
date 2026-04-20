@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { getSessionUserId } from "@/lib/session-utils";
 
 /**
  * Server action to create a saved query
@@ -23,9 +24,7 @@ export async function createSavedQuery(data: {
             return { success: false, error: "Not authenticated" };
         }
 
-        const userObj = session.user as unknown as { id?: string };
-        const sessionObj = session as unknown as { userId?: string };
-        const userId = userObj.id ?? sessionObj.userId;
+        const userId = getSessionUserId(session);
 
         if (!userId) {
             return { success: false, error: "User ID not found" };
@@ -94,9 +93,7 @@ export async function getSavedQueries() {
             return { success: false, error: "Not authenticated" };
         }
 
-        const userObj = session.user as unknown as { id?: string };
-        const sessionObj = session as unknown as { userId?: string };
-        const userId = userObj.id ?? sessionObj.userId;
+        const userId = getSessionUserId(session);
 
         if (!userId) {
             return { success: false, error: "User ID not found" };
@@ -166,9 +163,7 @@ export async function updateSavedQuery(
             return { success: false, error: "Not authenticated" };
         }
 
-        const userObj = session.user as unknown as { id?: string };
-        const sessionObj = session as unknown as { userId?: string };
-        const userId = userObj.id ?? sessionObj.userId;
+        const userId = getSessionUserId(session);
 
         if (!userId) {
             return { success: false, error: "User ID not found" };
@@ -274,9 +269,7 @@ export async function deleteSavedQuery(id: string) {
             return { success: false, error: "Not authenticated" };
         }
 
-        const userObj = session.user as unknown as { id?: string };
-        const sessionObj = session as unknown as { userId?: string };
-        const userId = userObj.id ?? sessionObj.userId;
+        const userId = getSessionUserId(session);
 
         if (!userId) {
             return { success: false, error: "User ID not found" };
@@ -298,6 +291,73 @@ export async function deleteSavedQuery(id: string) {
         return { success: true };
     } catch (error) {
         console.error("Error deleting saved query:", error);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "Unknown error",
+        };
+    }
+}
+
+/**
+ * Server action to retrieve a single saved query by ID
+ */
+export async function getSavedQueryById(id: string) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+
+        if (!session || !session.user) {
+            return { success: false, error: "Not authenticated" };
+        }
+
+        const userId = getSessionUserId(session);
+
+        if (!userId) {
+            return { success: false, error: "User ID not found" };
+        }
+
+        const savedQuery = await prisma.savedQuery.findUnique({
+            where: { id },
+            include: {
+                categories: {
+                    include: {
+                        category: {
+                            select: { id: true, name: true, slug: true },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!savedQuery) {
+            return { success: false, error: "Saved query not found" };
+        }
+
+        if (savedQuery.userId !== userId) {
+            return { success: false, error: "Not authorized" };
+        }
+
+        return {
+            success: true,
+            query: {
+                id: savedQuery.id,
+                name: savedQuery.name,
+                searchTerm: savedQuery.searchTerm,
+                minPrice: savedQuery.minPrice?.toString(),
+                maxPrice: savedQuery.maxPrice?.toString(),
+                categories: savedQuery.categories.map((cat) => ({
+                    id: cat.category.id,
+                    name: cat.category.name,
+                    slug: cat.category.slug,
+                })),
+                enabled: savedQuery.enabled,
+                createdAt: savedQuery.createdAt,
+                lastEmailSentAt: savedQuery.lastEmailSentAt,
+            },
+        };
+    } catch (error) {
+        console.error("Error fetching saved query by ID:", error);
         return {
             success: false,
             error: error instanceof Error ? error.message : "Unknown error",

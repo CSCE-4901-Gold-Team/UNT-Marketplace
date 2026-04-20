@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, prisma } from "@/lib/auth";
+import { getSessionUserId } from "@/lib/session-utils";
 
 export async function GET(request: NextRequest) {
     try {
@@ -11,9 +12,7 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ role: null }, { status: 401 });
         }
 
-        const userObj = session.user as unknown as { id?: string };
-        const sessionObj = session as unknown as { userId?: string };
-        const userId = userObj.id ?? sessionObj.userId;
+        const userId = getSessionUserId(session);
 
         if (!userId) {
             return NextResponse.json({ role: null }, { status: 401 });

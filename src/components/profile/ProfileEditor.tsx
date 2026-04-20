@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Button from "@/components/ui/Button";
 import { toastService } from "@/lib/toast-service";
+import { updateProfileAction, uploadProfileImageAction } from "@/actions/profile-actions";
 
 interface Props {
   initialName?: string | null;
@@ -22,14 +23,9 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
     setLoading(true);
 
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), image: image.trim() || null }),
-      });
+      const result = await updateProfileAction({ name: name.trim(), image: image.trim() || null });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update profile");
+      if (!result.success) throw new Error(result.error || "Failed to update profile");
 
       toastService.toast("Profile updated successfully", "success");
     } catch (err) {
@@ -46,18 +42,11 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
     setUploadError(null);
 
     try {
-      const fd = new FormData();
-      fd.append("file", file);
+      const result = await uploadProfileImageAction(file);
 
-      const res = await fetch("/api/profile/upload", {
-        method: "POST",
-        body: fd,
-      });
+      if (!result.success) throw new Error(result.error || "Upload failed");
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Upload failed");
-
-      setImage(data.url);
+      setImage(result.url || "");
       toastService.toast("Image uploaded — remember to save changes.", "info");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
