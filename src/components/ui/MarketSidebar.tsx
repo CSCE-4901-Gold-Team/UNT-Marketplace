@@ -133,6 +133,8 @@ export default function MarketSidebar({
                     </div>
                 </div>
 
+                </div>
+
             </div>
         </div>
     );
