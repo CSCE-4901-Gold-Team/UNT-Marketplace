@@ -68,6 +68,10 @@ export async function updateProfileAction(data: { name: string; image?: string |
             return { success: false, error: "Name is required" };
         }
 
+        if (name.length > 100) {
+            return { success: false, error: "Name must be 100 characters or less" };
+        }
+
         const updated = await prisma.user.update({
             where: { id: userId },
             data: {
@@ -109,6 +113,16 @@ export async function uploadProfileImageAction(
 
         if (!file) {
             return { success: false, error: "No file provided" };
+        }
+
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+        if (!allowedTypes.includes(file.type)) {
+            return { success: false, error: "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed" };
+        }
+
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            return { success: false, error: "File too large. Maximum size is 5MB" };
         }
 
         const originalName = file.name || "upload";

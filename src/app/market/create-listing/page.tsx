@@ -4,6 +4,8 @@ import React, { useActionState, useEffect, useRef, useState } from "react";
 import { createListingAction } from "@/actions/listing-create";
 import { updateListingAction } from "@/actions/listing-update";
 import { deleteListingAction } from "@/actions/listing-delete";
+import { getListingById } from "@/actions/listing-actions";
+import { getCurrentUserRole } from "@/actions/user-actions";
 import { FormStatus } from "@/constants/FormStatus";
 import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
@@ -19,10 +21,11 @@ type EditableListingStatus = "AVAILABLE" | "DRAFT";
 type ListingCategory = { id: number; name: string };
 type ListingImage = { url: string };
 type ListingResponse = {
+    id?: string;
     title?: string;
     description?: string;
     price?: string;
-    listingStatus?: "AVAILABLE" | "DRAFT" | "SOLD" | "ARCHIVED";
+    listingStatus?: "AVAILABLE" | "DRAFT" | "SOLD" | "ARCHIVED" | string;
     isProfessorOnly?: boolean;
     categories?: ListingCategory[];
     images?: ListingImage[];
@@ -99,13 +102,7 @@ export default function CreateListing() {
     useEffect(() => {
         if (isEditing && listingId) {
             setIsLoadingData(true);
-            fetch(`/api/listing/${listingId}`)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
-                    }
-                    return res.json();
-                })
+            getListingById(listingId)
                 .then((data: ListingResponse) => {
                     setTitle(data.title || "");
                     setDescription(data.description || "");
@@ -135,9 +132,8 @@ export default function CreateListing() {
     }, [isEditing, listingId]);
 
     useEffect(() => {
-        fetch("/api/user-role")
-            .then((res) => res.ok ? res.json() : Promise.reject(new Error("Failed to load role")))
-            .then((data) => setUserRole(data?.role ?? null))
+        getCurrentUserRole()
+            .then((role) => setUserRole(role))
             .catch(() => setUserRole(null));
     }, []);
 

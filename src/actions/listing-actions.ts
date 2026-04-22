@@ -144,3 +144,86 @@ export async function getListings(
             isDeniedByAdmin: false,
     }));
 }
+
+export interface ListingDetailResponse {
+    id: string;
+    title: string;
+    description: string;
+    price: string;
+    listingStatus: string;
+    isProfessorOnly: boolean;
+    categories: Array<{ id: number; name: string }>;
+    images: Array<{ url: string }>;
+}
+
+/**
+ * Gets a single listing by ID with access control based on user role and listing status.
+ * 
+ * - Prevents students from accessing professor-only listings
+ * - Prevents users from accessing other users' draft listings
+ * 
+ * @param id The listing ID to fetch
+ * @returns Listing detail data or throws an error
+ */
+export async function getListingById(id: string): Promise<ListingDetailResponse> {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
+        redirect("/sign-in");
+    }
+
+    const listing = await prisma.listing.findUnique({
+        where: { id },
+        include: {
+            categories: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            images: {
+                select: {
+                    url: true,
+                }
+            }
+        }
+    });
+
+    if (!listing) {
+        throw new Error("Listing not found");
+    }
+
+    // Prevent students from accessing professor-only listings
+    if (listing.isProfessorOnly && session) {
+        const userId = session.user.id;
+
+        if (userId) {
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { role: true }
+            });
+
+            if (user?.role === UserRole.STUDENT) {
+                throw new Error("This listing is only available to faculty");
+            }
+        }
+    }
+
+    // Prevent users from accessing other users' draft listings
+    if (listing.listingStatus === "DRAFT" && session?.user?.id !== listing.ownerId) {
+        throw new Error("Listing not found");
+    }
+
+    return {
+        id: listing.id,
+        title: listing.title,
+        description: listing.description,
+        price: listing.price.toString(),
+        listingStatus: listing.listingStatus,
+        isProfessorOnly: listing.isProfessorOnly,
+        categories: listing.categories,
+        images: listing.images,
+    };
+}
