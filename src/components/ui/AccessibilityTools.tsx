@@ -1,6 +1,6 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 
 const FONT_SCALE_STEP = 0.1;
 const MIN_FONT_SCALE = 1;
@@ -23,7 +23,10 @@ function getReadableText() {
 export default function AccessibilityTools() {
     const [isOpen, setIsOpen] = useState(false);
     const [fontScale, setFontScale] = useState(MIN_FONT_SCALE);
+    const [isReading, setIsReading] = useState(false);
     const [statusMessage, setStatusMessage] = useState("Accessibility tools ready.");
+    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const stopRequestedRef = useRef(false);
 
     useEffect(() => {
         document.documentElement.style.setProperty("--accessibility-font-scale", String(fontScale));
@@ -32,8 +35,10 @@ export default function AccessibilityTools() {
     useEffect(() => {
         return () => {
             if ("speechSynthesis" in window) {
+                stopRequestedRef.current = true;
                 window.speechSynthesis.cancel();
             }
+            utteranceRef.current = null;
         };
     }, []);
 
@@ -48,20 +53,9 @@ export default function AccessibilityTools() {
         setIsOpen(true);
     };
 
-    const decreaseText = () => {
-        const nextScale = Math.max(MIN_FONT_SCALE, Number((fontScale - FONT_SCALE_STEP).toFixed(1)));
-        setFontScale(nextScale);
-        setStatusMessage(
-            nextScale === fontScale
-                ? "Text is already at the minimum size."
-                : `Text size decreased to ${Math.round(nextScale * 100)}%.`
-        );
-        setIsOpen(true);
-    };
-
     const readPage = () => {
         if (!("speechSynthesis" in window)) {
-            setStatusMessage("Text reader is not supported in this browser.");
+            setStatusMessage("Text to speech is not supported in this browser.");
             setIsOpen(true);
             return;
         }
@@ -73,20 +67,80 @@ export default function AccessibilityTools() {
             return;
         }
 
+        const synth = window.speechSynthesis;
+        stopRequestedRef.current = false;
+
+        if (synth.speaking || synth.pending) {
+            synth.cancel();
+        }
+
+        const speakText = (allowRetry: boolean) => {
+            const utterance = new SpeechSynthesisUtterance(readableText.slice(0, 4000));
+            utterance.rate = 0.98;
+            utterance.pitch = 1;
+            utterance.onstart = () => {
+                setIsReading(true);
+                setStatusMessage("Reading page text aloud.");
+            };
+            utterance.onend = () => {
+                setIsReading(false);
+                setStatusMessage("Finished reading the page.");
+                utteranceRef.current = null;
+            };
+            utterance.onerror = (event: SpeechSynthesisErrorEvent) => {
+                const errorCode = event.error;
+
+                if (stopRequestedRef.current || errorCode === "canceled" || errorCode === "interrupted") {
+                    setIsReading(false);
+                    setStatusMessage("Stopped reading.");
+                    utteranceRef.current = null;
+                    return;
+                }
+
+                if (allowRetry) {
+                    setStatusMessage("Preparing speech voice...");
+                    window.setTimeout(() => {
+                        if (!stopRequestedRef.current) {
+                            speakText(false);
+                        }
+                    }, 250);
+                    return;
+                }
+
+                setIsReading(false);
+                setStatusMessage("Text to speech could not start. Try again in this browser.");
+                utteranceRef.current = null;
+            };
+
+            utteranceRef.current = utterance;
+            synth.speak(utterance);
+        };
+
+        speakText(true);
+        setIsOpen(true);
+    };
+
+    const stopReading = () => {
+        if (!("speechSynthesis" in window)) {
+            return;
+        }
+
+        stopRequestedRef.current = true;
         window.speechSynthesis.cancel();
+        utteranceRef.current = null;
+        setIsReading(false);
+        setStatusMessage("Stopped reading.");
+        setIsOpen(true);
+    };
 
-        const utterance = new SpeechSynthesisUtterance(readableText.slice(0, 4000));
-        utterance.rate = 0.98;
-        utterance.pitch = 1;
-        utterance.onend = () => {
-            setStatusMessage("Finished reading the page.");
-        };
-        utterance.onerror = () => {
-            setStatusMessage("The text reader could not start.");
-        };
-
-        window.speechSynthesis.speak(utterance);
-        setStatusMessage("Reading page text aloud.");
+    const decreaseText = () => {
+        const nextScale = Math.max(MIN_FONT_SCALE, Number((fontScale - FONT_SCALE_STEP).toFixed(1)));
+        setFontScale(nextScale);
+        setStatusMessage(
+            nextScale === fontScale
+                ? "Text is already at the minimum size."
+                : `Text size decreased to ${Math.round(nextScale * 100)}%.`
+        );
         setIsOpen(true);
     };
 
@@ -143,13 +197,24 @@ export default function AccessibilityTools() {
                         </div>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={readPage}
-                        className="mt-3 w-full rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white dark:focus:ring-offset-gray-900"
-                    >
-                        Read Page
-                    </button>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                            type="button"
+                            onClick={readPage}
+                            className="rounded-xl bg-gray-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:bg-gray-100 dark:text-gray-900 dark:hover:bg-white dark:focus:ring-offset-gray-900"
+                        >
+                            Read Page
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={stopReading}
+                            disabled={!isReading}
+                            className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-gray-700"
+                        >
+                            Stop
+                        </button>
+                    </div>
 
                     <p className="mt-3 text-sm text-gray-600 dark:text-gray-300" aria-live="polite">
                         {statusMessage}
