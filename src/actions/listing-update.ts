@@ -12,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 import { censorProfanity } from "@/lib/profanity-filter";
 import { revalidatePath } from "next/cache";
 import { MessageProfanityFlagStatus } from "@prisma/client";
+import { imageStorage } from "@/lib/image-storage-adapter";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),
@@ -21,11 +22,10 @@ const UpdateListingRequest = z.object({
     listingStatus: z.enum(["AVAILABLE", "DRAFT"]).optional(),
     isProfessorOnly: z.boolean().optional(),
     categoryIds: z.array(z.number()).min(1, "At least one category is required"),
-    imagePath: z.string().optional(),
 });
 
 export async function updateListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
-    
+
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -48,7 +48,6 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         listingStatus: formData.get("listingStatus") as "AVAILABLE" | "DRAFT" | null,
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
-        imagePath: formData.get("imagePath") as string || "",
     });
 
     if (!parsedFormData.success) {
@@ -62,14 +61,12 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         };
     }
 
-    // use shared singleton
     const listingId = parsedFormData.data.listingId;
 
     try {
-        // Verify the listing exists and belongs to the user
         const existingListing = await prisma.listing.findUnique({
             where: { id: listingId },
-            select: { ownerId: true, listingStatus: true }
+            select: { ownerId: true, listingStatus: true, images: { select: { url: true } } }
         });
 
         if (!existingListing) {
@@ -92,26 +89,50 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        // Handle image update if provided
-        const imagePath = parsedFormData.data.imagePath;
-        
-        let imagesParsed: string[] = [];
-        
-        if (imagePath && imagePath !== "" && imagePath !== "[]") {
-            // Parse images (could be JSON array or single string)
+        // Parse staged image changes from form
+        const newImagesBase64Raw = formData.get("newImagesBase64") as string;
+        const existingImageUrlsRaw = formData.get("existingImageUrls") as string;
+        const removedImageUrlsRaw = formData.get("removedImageUrls") as string;
+
+        let newImagesBase64: string[] = [];
+        if (newImagesBase64Raw) {
             try {
-                const parsed = JSON.parse(imagePath);
-                if (Array.isArray(parsed)) {
-                    imagesParsed = parsed.filter(img => img && img !== "");
-                } else if (parsed && parsed !== "") {
-                    imagesParsed = [parsed];
-                }
-            } catch {
-                if (imagePath && imagePath !== "") {
-                    imagesParsed = [imagePath];
-                }
-            }
+                newImagesBase64 = JSON.parse(newImagesBase64Raw);
+                if (!Array.isArray(newImagesBase64)) newImagesBase64 = [];
+            } catch { /* ignore */ }
         }
+
+        let existingImageUrls: string[] = [];
+        if (existingImageUrlsRaw) {
+            try {
+                existingImageUrls = JSON.parse(existingImageUrlsRaw);
+                if (!Array.isArray(existingImageUrls)) existingImageUrls = [];
+            } catch { /* ignore */ }
+        }
+
+        let removedImageUrls: string[] = [];
+        if (removedImageUrlsRaw) {
+            try {
+                removedImageUrls = JSON.parse(removedImageUrlsRaw);
+                if (!Array.isArray(removedImageUrls)) removedImageUrls = [];
+            } catch { /* ignore */ }
+        }
+
+        // Save base64 images to filesystem (staged → persisted on save)
+        const savedNewUrls: string[] = [];
+        for (const base64 of newImagesBase64) {
+            if (!base64 || typeof base64 !== "string") continue;
+            const match = base64.match(/^data:image\/([^;]+);base64,(.+)$/);
+            if (!match) continue;
+
+            const ext = `.${match[1].split("/")[1] || "jpg"}`;
+            const buffer = Buffer.from(match[2], "base64");
+            const result = await imageStorage.save(buffer, "listings", ext);
+            savedNewUrls.push(result.url);
+        }
+
+        // Combine: newly saved + existing kept URLs
+        const allImageUrls = [...savedNewUrls, ...existingImageUrls];
 
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
@@ -141,9 +162,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 parsedFormData.data.listingStatus === $Enums.ListingStatus.AVAILABLE
             ) {
                 const user = await prisma.user.findUnique({
-                    where: {
-                        id: session.user.id,
-                    },
+                    where: { id: session.user.id },
                     select: { listingApproved: true },
                 });
 
@@ -179,21 +198,15 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             }
         }
 
-        // Always update images when editing (user has full control in UI)
-        if (imagesParsed.length > 0) {
-            updateData.images = {
-                deleteMany: {},
-                create: imagesParsed.map((url, index) => ({
-                    url,
-                    imageType: $Enums.ImageType.LISTING,
-                    sortOrder: index,
-                })),
-            };
-        } else {
-            updateData.images = {
-                deleteMany: {},
-            };
-        }
+        // Update images in DB
+        updateData.images = {
+            deleteMany: {},
+            create: allImageUrls.map((url, index) => ({
+                url,
+                imageType: $Enums.ImageType.LISTING,
+                sortOrder: index,
+            })),
+        };
 
         await prisma.$transaction(async (tx) => {
             await tx.listing.update({
@@ -232,10 +245,14 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             revalidatePath("/admin");
         }
 
+        // Delete image files that were removed by the user
+        if (removedImageUrls.length > 0) {
+            await imageStorage.deleteMany("listings", removedImageUrls);
+        }
+
     } catch (error) {
         console.error("Error updating listing:", error);
-        
-        // Check if it's a payload size error
+
         if (error instanceof Error && error.message.includes('payload')) {
             return {
                 status: FormStatus.ERROR,
@@ -245,7 +262,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                 }
             };
         }
-        
+
         return {
             status: FormStatus.ERROR,
             message: {
@@ -255,6 +272,5 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         };
     }
 
-    // Redirect to the listing page after successful update
     redirect(`/market/listing/${listingId}?updated=true`);
 }

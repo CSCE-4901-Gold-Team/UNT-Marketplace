@@ -2,9 +2,9 @@
 
 import { prisma, auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import fs from "fs";
 import path from "path";
 import { getSessionUserId } from "@/lib/session-utils";
+import { imageStorage } from "@/lib/image-storage-adapter";
 
 /**
  * Server action to get user's current profile data
@@ -98,9 +98,12 @@ export async function updateProfileAction(data: { name: string; image?: string |
 
 /**
  * Server action to upload a profile image file
+ * @param file The image file to upload
+ * @param oldImageUrl Optional existing profile image URL to replace
  */
 export async function uploadProfileImageAction(
-    file: File
+    file: File,
+    oldImageUrl?: string | null
 ): Promise<{ success: true; url: string } | { success: false; error: string }> {
     try {
         const session = await auth.api.getSession({
@@ -115,31 +118,25 @@ export async function uploadProfileImageAction(
             return { success: false, error: "No file provided" };
         }
 
-        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
-        if (!allowedTypes.includes(file.type)) {
-            return { success: false, error: "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed" };
-        }
-
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-            return { success: false, error: "File too large. Maximum size is 5MB" };
+        const validation = await imageStorage.validate(file);
+        if (!validation.valid) {
+            return { success: false, error: validation.error! };
         }
 
         const originalName = file.name || "upload";
-        const ext = path.extname(originalName) || "";
-        const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
-
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
-        await fs.promises.mkdir(uploadDir, { recursive: true });
+        const ext = path.extname(originalName) || ".jpg";
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
-        const dest = path.join(uploadDir, filename);
-        await fs.promises.writeFile(dest, buffer);
+        let result;
+        if (oldImageUrl) {
+            result = await imageStorage.replace("profiles", oldImageUrl, buffer, ext);
+        } else {
+            result = await imageStorage.save(buffer, "profiles", ext);
+        }
 
-        const url = `/uploads/${filename}`;
-        return { success: true, url };
+        return { success: true, url: result.url };
     } catch (error) {
         console.error("Error uploading profile image:", error);
         return {

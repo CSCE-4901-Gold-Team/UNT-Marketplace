@@ -6,6 +6,7 @@ import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { imageStorage } from "@/lib/image-storage-adapter";
 
 export async function deleteListingAction(listingId: string): Promise<FormResponse> {
     const session = await auth.api.getSession({
@@ -26,7 +27,7 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
         // Verify the listing exists and belongs to the user
         const listing = await prisma.listing.findUnique({
             where: { id: listingId },
-            select: { ownerId: true }
+            select: { ownerId: true, images: { select: { url: true } } }
         });
 
         if (!listing) {
@@ -62,6 +63,12 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
                 where: { id: listingId }
             });
         });
+
+        // Delete physical image files from disk
+        if (listing.images.length > 0) {
+            const imageUrls = listing.images.map((img) => img.url);
+            await imageStorage.deleteMany("listings", imageUrls);
+        }
 
     } catch (error) {
         console.error("Error deleting listing:", error);

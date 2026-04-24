@@ -65,7 +65,6 @@ export default function ListingCard({
                             alt={`${listing.title} image ${currentImageIndex + 1}`}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
-                            unoptimized
                         />
                     ) : (
                         <div className="w-full h-full bg-gray-300" />

@@ -42,7 +42,7 @@ export default function ProfileEditor({ initialName, initialEmail, initialImage 
     setUploadError(null);
 
     try {
-      const result = await uploadProfileImageAction(file);
+      const result = await uploadProfileImageAction(file, image || undefined);
 
       if (!result.success) throw new Error(result.error || "Upload failed");
 

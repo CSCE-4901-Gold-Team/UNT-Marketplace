@@ -12,6 +12,7 @@ import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
 import { censorProfanity } from "@/lib/profanity-filter";
 import { revalidatePath } from "next/cache";
+import { imageStorage } from "@/lib/image-storage-adapter";
 
 const CreateListingRequest = z.object({
     title: z.string().min(1, "Title is required"),
@@ -19,7 +20,6 @@ const CreateListingRequest = z.object({
     price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Invalid price format"),
     isProfessorOnly: z.boolean().optional(),
     categoryIds: z.array(z.number()).min(1, "At least one category is required"),
-    imagePath: z.string().optional(),
 });
 
 export async function createListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
@@ -57,7 +57,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         price: formData.get("price"),
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
-        imagePath: formData.get("imagePath") as string || "",
     });
 
     console.log("Parsed form data:", parsedFormData);
@@ -126,23 +125,43 @@ export async function createListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        // Use the image path directly (base64 or file path)
-        const imagePath = parsedFormData.data.imagePath || null;
-        let imagesParsed: string[] = [];
-        
-        // Parse images (could be JSON array or single string)
-        if (imagePath) {
+       // Parse new images: base64 strings to save, and existing server URLs
+        let imageUrls: string[] = [];
+
+        const newImagesBase64Raw = formData.get("newImagesBase64") as string;
+        const existingImageUrlsRaw = formData.get("existingImageUrls") as string;
+
+        let newImagesBase64: string[] = [];
+        if (newImagesBase64Raw) {
             try {
-                imagesParsed = JSON.parse(imagePath);
-                if (!Array.isArray(imagesParsed)) {
-                    imagesParsed = [imagePath];
-                }
-            } catch {
-                imagesParsed = [imagePath];
-            }
+                newImagesBase64 = JSON.parse(newImagesBase64Raw);
+                if (!Array.isArray(newImagesBase64)) newImagesBase64 = [];
+            } catch { /* ignore parse errors */ }
         }
 
-        // Censored title/description; DRAFT if profanity or user requires approval; optional profanity flag row.
+        let existingImageUrls: string[] = [];
+        if (existingImageUrlsRaw) {
+            try {
+                existingImageUrls = JSON.parse(existingImageUrlsRaw);
+                if (!Array.isArray(existingImageUrls)) existingImageUrls = [];
+            } catch { /* ignore parse errors */ }
+        }
+
+      // Save base64 images to filesystem (persisted on save)
+        const savedNewUrls: string[] = [];
+        for (const base64 of newImagesBase64) {
+            if (!base64 || typeof base64 !== "string") continue;
+            const match = base64.match(/^data:image\/([^;]+);base64,(.+)$/);
+            if (!match) continue;
+
+            const ext = `.${match[1].split("/")[1] || "jpg"}`;
+            const buffer = Buffer.from(match[2], "base64");
+            const result = await imageStorage.save(buffer, "listings", ext);
+            savedNewUrls.push(result.url);
+        }
+
+        imageUrls = [...savedNewUrls, ...existingImageUrls];
+
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
         const titleC = censorProfanity(rawTitle);
@@ -152,47 +171,55 @@ export async function createListingAction(_initialState: FormResponse, formData:
         const listingStatus =
             wasCensored || !user.listingApproved ? "DRAFT" : "AVAILABLE";
 
-        const newListing = await prisma.$transaction(async (tx) => {
-            const listing = await tx.listing.create({
-                data: {
-                    title: titleC.censored,
-                    description: descC.censored,
-                    price: parseFloat(parsedFormData.data.price),
-                    isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                    listingStatus,
-                    ownerId: session.user.id,
-                    categories: {
-                        connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
-                    },
-                    ...(imagesParsed.length > 0 && {
-                        images: {
-                            create: imagesParsed.map((url, index) => ({
-                                url: url,
-                                imageType: "LISTING",
-                                sortOrder: index,
-                            })),
-                        },
-                    }),
-                },
-            });
-            if (wasCensored) {
-                await tx.listingProfanityFlag.create({
+        try {
+            const newListing = await prisma.$transaction(async (tx) => {
+                const listing = await tx.listing.create({
                     data: {
-                        listingId: listing.id,
+                        title: titleC.censored,
+                        description: descC.censored,
+                        price: parseFloat(parsedFormData.data.price),
+                        isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+                        listingStatus,
                         ownerId: session.user.id,
-                        originalTitle: rawTitle,
-                        originalDescription: rawDescription,
+                        categories: {
+                            connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
+                        },
+                        ...(imageUrls.length > 0 && {
+                            images: {
+                                create: imageUrls.map((url, index) => ({
+                                    url: url,
+                                    imageType: "LISTING",
+                                    sortOrder: index,
+                                })),
+                            },
+                        }),
                     },
                 });
+                if (wasCensored) {
+                    await tx.listingProfanityFlag.create({
+                        data: {
+                            listingId: listing.id,
+                            ownerId: session.user.id,
+                            originalTitle: rawTitle,
+                            originalDescription: rawDescription,
+                        },
+                    });
+                }
+                return listing;
+            });
+
+            if (wasCensored) {
+                revalidatePath("/admin");
             }
-            return listing;
-        });
 
-        if (wasCensored) {
-            revalidatePath("/admin");
+            newListingId = newListing.id;
+        } catch (dbError) {
+            // Clean up orphaned image files if DB save failed
+            if (savedNewUrls.length > 0) {
+                await imageStorage.deleteMany("listings", savedNewUrls);
+            }
+            throw dbError;
         }
-
-        newListingId = newListing.id;
     } catch (error) {
         console.error("Error creating listing:", error);
         return {

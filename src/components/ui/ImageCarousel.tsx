@@ -37,7 +37,6 @@ export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
                     fill
                     className="object-contain"
                     priority
-                    unoptimized
                 />
 
                 {/* Navigation Arrows - Only show if more than 1 image */}

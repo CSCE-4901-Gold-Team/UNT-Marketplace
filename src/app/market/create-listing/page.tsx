@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useActionState, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import * as z from "zod";
 import { createListingAction } from "@/actions/listing-create";
 import { updateListingAction } from "@/actions/listing-update";
 import { deleteListingAction } from "@/actions/listing-delete";
@@ -11,7 +12,7 @@ import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
 import PriceInput from "@/components/ui/PriceInput";
 import CategoryChipsInput from "@/components/ui/CategoryChipsInput";
-import ImageUpload from "@/components/ui/ImageUpload";
+import ImageUpload, { ImageUploadState } from "@/components/ui/ImageUpload";
 import Button from "@/components/ui/Button";
 import { useSearchParams } from "next/navigation";
 import { toastService } from "@/lib/toast-service";
@@ -31,21 +32,11 @@ type ListingResponse = {
     images?: ListingImage[];
 };
 
-
-const initialState: FormResponse = {
-    status: FormStatus.INITIALIZED
-};
-
 export default function CreateListing() {
     const searchParams = useSearchParams();
     const isEditing = searchParams.get('edit') === 'true';
     const listingId = searchParams.get('id');
-    
-    const [state, formAction, isPending] = useActionState(
-        isEditing ? updateListingAction : createListingAction, 
-        initialState
-    );
-    
+
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
@@ -53,12 +44,21 @@ export default function CreateListing() {
     const [isProfessorOnly, setIsProfessorOnly] = useState(false);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
     const [categoryOptions, setCategoryOptions] = useState<{id: number, name: string}[]>([]);
-    const [selectedImages, setSelectedImages] = useState<string[]>([]);
+    const [initialImages, setInitialImages] = useState<string[]>([]);
+    const [imageUploadState, setImageUploadState] = useState<ImageUploadState>({
+        newBase64: [],
+        existingUrls: [],
+        removedUrls: [],
+    });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(false);
     const [isLoadingCategories, setIsLoadingCategories] = useState(true);
     const [userRole, setUserRole] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [validationErrors, setValidationErrors] = useState<z.core.$ZodIssue[]>([]);
+    const formRef = useRef<HTMLFormElement>(null);
     const lastToastMessageRef = useRef<string | null>(null);
 
     const canSetProfessorOnly = userRole === "FACULTY" || userRole === "ADMIN";
@@ -98,7 +98,6 @@ export default function CreateListing() {
         };
     }, []);
 
-    // Load listing data if editing
     useEffect(() => {
         if (isEditing && listingId) {
             setIsLoadingData(true);
@@ -109,16 +108,14 @@ export default function CreateListing() {
                     setPrice(data.price || "");
                     setListingStatus((data.listingStatus === "DRAFT" ? "DRAFT" : "AVAILABLE") as EditableListingStatus);
                     setIsProfessorOnly(data.isProfessorOnly || false);
-                    
-                    // Set selected category IDs
+
                     if (data.categories && data.categories.length > 0) {
                         setSelectedCategoryIds(data.categories.map((c: { id: number }) => c.id));
                     }
-                    
-                    // Load existing images into selectedImages for editing
+
                     if (data.images && data.images.length > 0) {
                         const imageUrls = data.images.map((img) => img.url);
-                        setSelectedImages(imageUrls);
+                        setInitialImages(imageUrls);
                     }
 
                 })
@@ -143,17 +140,68 @@ export default function CreateListing() {
         }
     }, [canSetProfessorOnly]);
 
-    useEffect(() => {
-        const message = state.message?.content;
-        if (!message) return;
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        setSubmitError(null);
+        setValidationErrors([]);
 
-        const isPendingReviewMessage = message.toLowerCase().includes("pending review");
-        if (!isPendingReviewMessage) return;
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("description", description);
+        formData.append("price", price);
+        formData.append("isProfessorOnly", isProfessorOnly.toString());
+        formData.append("categoryIds", JSON.stringify(selectedCategoryIds));
+        formData.append("newImagesBase64", JSON.stringify(imageUploadState.newBase64));
+        formData.append("existingImageUrls", JSON.stringify(imageUploadState.existingUrls));
+
+        if (isEditing && listingId) {
+            formData.append("listingId", listingId);
+            formData.append("listingStatus", listingStatus);
+            formData.append("removedImageUrls", JSON.stringify(imageUploadState.removedUrls));
+        }
+
+        let result: FormResponse;
+        try {
+            result = isEditing
+                ? await updateListingAction({ status: FormStatus.INITIALIZED }, formData)
+                : await createListingAction({ status: FormStatus.INITIALIZED }, formData);
+        } catch (error) {
+            const errObj = error as { digest?: string };
+            if (errObj?.digest?.startsWith?.("NEXT_REDIRECT")) {
+                return;
+            }
+            console.error("Unexpected error:", error);
+            setSubmitError("An unexpected error occurred");
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (result.status === FormStatus.SUCCESS) {
+            toastService.toast("Listing saved successfully", "success");
+        } else if (result.validationErrors && result.validationErrors.length > 0) {
+            setValidationErrors(result.validationErrors);
+            toastService.toast("Please fix the validation errors", "error");
+        } else if (result.message?.content) {
+            const msg = result.message.content.toLowerCase();
+            if (msg.includes("pending review")) {
+                toastService.toast(result.message.content, "warn");
+            } else {
+                setSubmitError(result.message.content);
+                toastService.toast(result.message.content, "error");
+            }
+        }
+
+        setIsSubmitting(false);
+    };
+
+    useEffect(() => {
+        const message = submitError;
+        if (!message) return;
         if (lastToastMessageRef.current === message) return;
 
-        toastService.toast(message, "warn");
         lastToastMessageRef.current = message;
-    }, [state.message]);
+    }, [submitError]);
 
     const handleDelete = async () => {
         if (!listingId) return;
@@ -171,11 +219,11 @@ export default function CreateListing() {
             <div className="w-full max-w-4xl">
                 <h1 className="text-4xl mb-6">{isEditing ? 'Edit Listing' : 'Create New Listing'}</h1>
 
-                <form action={formAction} className="flex flex-col gap-4">
-                    
+                <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-4">
+
                     {/* Hidden field for listing ID when editing */}
                     {isEditing && <input type="hidden" name="listingId" value={listingId || ""} />}
-                    
+
                     {/* Title */}
                     <TextInput
                         inputLabel="Title"
@@ -184,7 +232,7 @@ export default function CreateListing() {
                         placeholder="MacBook Pro 2020"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        validationErrors={state.validationErrors}
+                        validationErrors={validationErrors}
                         required
                     />
 
@@ -195,7 +243,7 @@ export default function CreateListing() {
                         placeholder="Like new, charger included"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        validationErrors={state.validationErrors}
+                        validationErrors={validationErrors}
                         required
                     />
 
@@ -206,7 +254,7 @@ export default function CreateListing() {
                         placeholder="0.00"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        validationErrors={state.validationErrors}
+                        validationErrors={validationErrors}
                         required
                     />
 
@@ -243,15 +291,14 @@ export default function CreateListing() {
                             </label>
                         </div>
                     )}
-                    
+
                     {/* Image Upload - Works for both create and edit */}
                     <ImageUpload
                         inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
-                        name="imagePath"
-                        selectedImages={selectedImages}
-                    onImagesChange={setSelectedImages}
-                    maxImages={5}
-                />
+                        initialImages={initialImages}
+                        onStateChange={setImageUploadState}
+                        maxImages={5}
+                    />
                     {/* Categories */}
                     <CategoryChipsInput
                         inputLabel="Categories"
@@ -259,28 +306,28 @@ export default function CreateListing() {
                         options={categoryOptions}
                         value={selectedCategoryIds}
                         onChange={setSelectedCategoryIds}
-                        validationErrors={state.validationErrors}
-                        disabled={isPending || isLoadingData || isLoadingCategories}
+                        validationErrors={validationErrors}
+                        disabled={isSubmitting || isLoadingData || isLoadingCategories}
                         isLoading={isLoadingCategories}
                     />
 
                     {/* Submit Button */}
                     <div className="flex gap-4">
-                        <Button 
-                            type="submit" 
+                        <Button
+                            type="submit"
                             buttonSize="lg"
-                            showSpinner={isPending || state.status === FormStatus.SUCCESS}
-                            disabled={isPending || isLoadingData || isLoadingCategories || state.status === FormStatus.SUCCESS}
+                            showSpinner={isSubmitting}
+                            disabled={isSubmitting || isLoadingData || isLoadingCategories}
                         >
                             {isEditing ? 'Update Listing' : 'Create Listing'}
                         </Button>
                         {isEditing && (
-                            <Button 
+                            <Button
                                 type="button"
                                 buttonVariant="secondary"
                                 buttonSize="lg"
                                 onClick={() => window.location.href = `/market/listing/${listingId}`}
-                                disabled={isPending || isLoadingData || isLoadingCategories || state.status === FormStatus.SUCCESS}
+                                disabled={isSubmitting || isLoadingData || isLoadingCategories}
                             >
                                 Cancel
                             </Button>
