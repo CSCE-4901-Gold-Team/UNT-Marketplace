@@ -2,6 +2,7 @@
 
 import React, {useActionState, useEffect, useState} from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import TextInput from "@/components/ui/TextInput";
 import Button from "@/components/ui/Button";
 import {FormResponse} from "@/types/FormResponse";
@@ -11,6 +12,7 @@ import Link from "next/link";
 import {toastService} from "@/lib/toast-service";
 import {loginAction} from "@/actions/account-login";
 import Card from "@/components/ui/Card";
+import UNTLogo from "@/assets/UNT 16.png";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -38,6 +40,9 @@ export default function LoginPage() {
     return (
         <div className="flex flex-col min-h-screen items-center justify-center bg-gray-100 px-4 gap-5">
             <Card>
+                <div className="mb-4 flex justify-center">
+                    <Image src={UNTLogo} alt="UNT Logo" width={180} height={180} priority />
+                </div>
                 <h1 className="mb-6 text-center text-2xl font-semibold">Login</h1>
 
                 { loginFormResponse.status === FormStatus.SUCCESS &&
