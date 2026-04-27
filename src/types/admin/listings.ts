@@ -17,4 +17,5 @@ export interface PendingListing {
     category: string;
     price: string;
     date: string;
+    pendingReason: "FIRST_LISTING" | "PROFANITY" | "BOTH";
 }

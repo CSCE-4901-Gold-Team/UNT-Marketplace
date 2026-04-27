@@ -42,6 +42,9 @@ model User {
     listingProfanityFlags    ListingProfanityFlag[] @relation("ListingProfanityOwner")
     listingProfanityReviews  ListingProfanityFlag[] @relation("ListingProfanityReviewer")
     savedQueries             SavedQuery[]
+    /// When true, the viewer opts in to see moderator-cleared profanity listings with original wording and unblurred images (18+).
+    allowMatureListingContent Boolean @default(false)
+    profanityModerationTermsCreated ProfanityModerationTerm[]
 
     @@map("user")
 }
@@ -282,6 +285,24 @@ model ListingProfanityFlag {
     @@index([listingId])
     @@index([ownerId])
     @@map("listing_profanity_flag")
+}
+
+enum ProfanityListType {
+    WHITELIST
+    BLACKLIST
+}
+
+model ProfanityModerationTerm {
+    id            String            @id @default(cuid())
+    listType      ProfanityListType
+    term          String
+    createdAt     DateTime          @default(now())
+    createdById   String?
+    creator       User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+    @@unique([listType, term])
+    @@index([listType])
+    @@map("profanity_moderation_term")
 }
 
 model Verification {

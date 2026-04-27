@@ -8,9 +8,15 @@ interface ProfileTabsProps {
   initialName: string;
   initialEmail: string;
   initialImage: string | null;
+  initialAllowMatureListingContent: boolean;
 }
 
-export function ProfileTabs({ initialName, initialEmail, initialImage }: ProfileTabsProps) {
+export function ProfileTabs({
+  initialName,
+  initialEmail,
+  initialImage,
+  initialAllowMatureListingContent,
+}: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<"profile" | "searches">("profile");
 
   return (
@@ -42,7 +48,12 @@ export function ProfileTabs({ initialName, initialEmail, initialImage }: Profile
       {/* Tab Content */}
       <div className="mt-6">
         {activeTab === "profile" && (
-          <ProfileEditor initialName={initialName} initialEmail={initialEmail} initialImage={initialImage} />
+          <ProfileEditor
+            initialName={initialName}
+            initialEmail={initialEmail}
+            initialImage={initialImage}
+            initialAllowMatureListingContent={initialAllowMatureListingContent}
+          />
         )}
         {activeTab === "searches" && <SavedQueriesManager />}
       </div>

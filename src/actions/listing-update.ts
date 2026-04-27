@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
 import { censorProfanity } from "@/lib/profanity-filter";
+import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { revalidatePath } from "next/cache";
 import { MessageProfanityFlagStatus } from "@prisma/client";
 
@@ -115,8 +116,9 @@ export async function updateListingAction(_initialState: FormResponse, formData:
 
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
-        const titleC = censorProfanity(rawTitle);
-        const descC = censorProfanity(rawDescription);
+        const { whitelist, blacklist } = await getProfanityModerationTermLists();
+        const titleC = censorProfanity(rawTitle, { whitelist, blacklist });
+        const descC = censorProfanity(rawDescription, { whitelist, blacklist });
         const wasCensored = titleC.wasCensored || descC.wasCensored;
 
         const updateData: Prisma.ListingUpdateInput = {

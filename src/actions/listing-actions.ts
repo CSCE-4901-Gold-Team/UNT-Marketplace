@@ -1,7 +1,7 @@
 "use server";
 
 import {auth} from "@/lib/auth";
-import {$Enums} from "@prisma/client";
+import {$Enums, MessageProfanityFlagStatus} from "@prisma/client";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getCurrentUserRole} from "@/actions/user-actions";
@@ -12,6 +12,71 @@ import {ListingFilters} from "@/types/ListingFilters";
 import {ListingUtils} from "@/utils/ListingUtils";
 import { enforceUserStatus, checkUserStatus } from "@/utils/StatusEnforcer";
 import { prisma } from "@/lib/prisma";
+
+async function withProfanityViewerFields(
+    listings: ListingWithRelations[],
+    viewerId: string,
+    getRowExtras: (
+        listing: ListingWithRelations
+    ) => Pick<ListingObject, "isPendingApproval" | "isDeniedByAdmin">
+): Promise<ListingObject[]> {
+    if (listings.length === 0) {
+        return [];
+    }
+
+    const viewer = await prisma.user.findUnique({
+        where: { id: viewerId },
+        select: { allowMatureListingContent: true },
+    });
+    const allowMature = viewer?.allowMatureListingContent ?? false;
+
+    const ids = listings.map((l) => l.id);
+    const flags = await prisma.listingProfanityFlag.findMany({
+        where: {
+            listingId: { in: ids },
+            status: MessageProfanityFlagStatus.REVIEWED_NO_ACTION,
+        },
+        orderBy: [{ reviewedAt: "desc" }, { createdAt: "desc" }],
+        select: {
+            listingId: true,
+            originalTitle: true,
+            originalDescription: true,
+        },
+    });
+
+    const releasedByListing = new Map<string, { title: string; description: string }>();
+    for (const f of flags) {
+        if (!releasedByListing.has(f.listingId)) {
+            releasedByListing.set(f.listingId, {
+                title: f.originalTitle,
+                description: f.originalDescription,
+            });
+        }
+    }
+
+    return listings.map((listing) => {
+        const extras = getRowExtras(listing);
+        const base: ListingObject = {
+            ...listing,
+            price: listing.price.toNumber(),
+            ...extras,
+        };
+        const released = releasedByListing.get(listing.id);
+        if (!released) {
+            return base;
+        }
+        return {
+            ...base,
+            ...(allowMature
+                ? {
+                      matureAlternateTitle: released.title,
+                      matureAlternateDescription: released.description,
+                  }
+                : {}),
+            blurProfanityReleasedCardImage: !allowMature,
+        };
+    });
+}
 
 /**
  * Returns all listings based on listing status and current user's role.
@@ -85,12 +150,18 @@ export async function getListings(
             }
         });
 
-        return listings.map(listing => ({
-            ...listing,
-            price: listing.price.toNumber(),
-            isPendingApproval: listing.listingStatus === ListingStatus.DRAFT && !currentUser?.listingApproved,
-            isDeniedByAdmin: listing.listingStatus === ListingStatus.ARCHIVED && !currentUser?.listingApproved,
-        }));
+        return withProfanityViewerFields(
+            listings,
+            session.user.id,
+            (listing) => ({
+                isPendingApproval:
+                    listing.listingStatus === ListingStatus.DRAFT &&
+                    !currentUser?.listingApproved,
+                isDeniedByAdmin:
+                    listing.listingStatus === ListingStatus.ARCHIVED &&
+                    !currentUser?.listingApproved,
+            })
+        );
     }
 
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
@@ -136,11 +207,8 @@ export async function getListings(
         });
     }
 
-    // Convert and return listings
-    return listings.map(listing => ({
-            ...listing,
-            price: listing.price.toNumber(),
-            isPendingApproval: false,
-            isDeniedByAdmin: false,
+    return withProfanityViewerFields(listings, session.user.id, () => ({
+        isPendingApproval: false,
+        isDeniedByAdmin: false,
     }));
 }
