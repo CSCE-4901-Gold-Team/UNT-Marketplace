@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import fs from "fs";
-import path from "path";
+import { imageAdapter } from "@/lib/image-adapter";
 
 export async function POST(req: Request) {
   try {
@@ -18,21 +17,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
 
-  const f = file as unknown as { name?: string; arrayBuffer: () => Promise<ArrayBuffer> };
-  const originalName = f.name || "upload";
-  const ext = path.extname(originalName) || "";
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}${ext}`;
+    const f = file as unknown as { name?: string; arrayBuffer: () => Promise<ArrayBuffer> };
+    const buffer = Buffer.from(await f.arrayBuffer());
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads");
-  await fs.promises.mkdir(uploadDir, { recursive: true });
+    const url = await imageAdapter.saveFromBuffer(buffer, f.name || "upload.jpg", {
+      type: "profile",
+    });
 
-  const arrayBuffer = await f.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
-
-    const dest = path.join(uploadDir, filename);
-    await fs.promises.writeFile(dest, buffer);
-
-    const url = `/uploads/${filename}`;
     return NextResponse.json({ success: true, url });
   } catch (err) {
     console.error("/api/profile/upload error:", err);

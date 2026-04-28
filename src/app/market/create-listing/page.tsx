@@ -253,9 +253,9 @@ export default function CreateListing() {
                         inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
                         name="imagePath"
                         selectedImages={selectedImages}
-                    onImagesChange={setSelectedImages}
-                    maxImages={5}
-                />
+                        onImagesChange={setSelectedImages}
+                        maxImages={5}
+                    />
                     {/* Categories */}
                     <CategoryChipsInput
                         inputLabel="Categories"

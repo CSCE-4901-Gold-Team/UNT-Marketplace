@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth, prisma } from "@/lib/auth";
+import { imageAdapter } from "@/lib/image-adapter";
 
 export async function PATCH(req: Request) {
     try {
@@ -20,11 +21,20 @@ export async function PATCH(req: Request) {
         const sessionObj = session as unknown as { userId?: string };
         const userId = userObj.id ?? sessionObj.userId;
 
+        // Fetch current image to check for cleanup
+        const existing = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { image: true },
+        });
+
+        const newImage = image?.trim() || null;
+
+        // Update both name and image
         const updated = await prisma.user.update({
             where: { id: userId },
             data: {
                 name: name.trim(),
-                image: image ?? null,
+                image: newImage,
             },
             select: {
                 id: true,
@@ -33,6 +43,15 @@ export async function PATCH(req: Request) {
                 image: true,
             },
         });
+
+        // Delete old profile file if it was a local upload and changed
+        if (
+            existing?.image &&
+            imageAdapter.isLocalFile(existing.image) &&
+            existing.image !== newImage
+        ) {
+            await imageAdapter.deleteFile(existing.image);
+        }
 
         return NextResponse.json({ success: true, user: updated });
     } catch (err) {
