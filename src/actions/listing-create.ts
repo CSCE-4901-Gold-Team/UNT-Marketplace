@@ -90,7 +90,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { listingApproved: true },
+            select: { listingApproved: true, role: true },
         });
 
         if (!user) {
@@ -103,7 +103,8 @@ export async function createListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        requiresAdminApproval = !user.listingApproved;
+        const isAdmin = user.role === "ADMIN";
+        requiresAdminApproval = !isAdmin && !user.listingApproved;
 
         const pendingListing = await prisma.listing.findFirst({
             where: {
@@ -117,7 +118,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             },
         });
 
-        if (!user.listingApproved && pendingListing) {
+        if (!isAdmin && !user.listingApproved && pendingListing) {
             return {
                 status: FormStatus.ERROR,
                 message: {

@@ -166,10 +166,11 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                     where: {
                         id: session.user.id,
                     },
-                    select: { listingApproved: true },
+                    select: { listingApproved: true, role: true },
                 });
 
-                if (!user?.listingApproved) {
+                const isAdmin = user?.role === "ADMIN";
+                if (!isAdmin && !user?.listingApproved) {
                     return {
                         status: FormStatus.ERROR,
                         message: {
