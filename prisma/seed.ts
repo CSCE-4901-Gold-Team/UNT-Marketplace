@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+﻿import { PrismaClient } from "@prisma/client";
 import { $Enums } from "@prisma/client";
 import ListingStatus = $Enums.ListingStatus;
 import ImageType = $Enums.ImageType;
@@ -431,6 +431,13 @@ async function main() {
                 }
             }
         });
+
+        if (!session || !session.user.roles?.includes("ADMIN")) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        // proceed with admin-only logic
+        return NextResponse.json({ message: "Welcome, admin!" });
     }
 
     // Seed analytics for the admin-owned listing (last 90 days).
