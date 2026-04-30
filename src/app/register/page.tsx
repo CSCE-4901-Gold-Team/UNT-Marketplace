@@ -36,7 +36,7 @@ export default function SignUpPage() {
         if (registerFormResponse.status === FormStatus.SUCCESS) {
             // Don't redirect immediately - let the page show a message that redirects after delay
             setTimeout(() => {
-                router.push("/");
+                router.push("/market");
             }, 3000); // Redirect after 3 seconds
         }
     }, [registerFormResponse, router]);

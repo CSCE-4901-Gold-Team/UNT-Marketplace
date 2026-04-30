@@ -1,11 +1,9 @@
-"use server"
-
 import React from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import ProfileEditor from "@/components/profile/ProfileEditor";
 import Link from "next/link";
+import { ProfileTabs } from "@/components/ProfileTabs";
 
 export default async function ProfilePage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -14,19 +12,19 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const { name, email, image } = session.user;
+  const { name = "", email = "", image = null } = session.user;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="container mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-lg block relative" >
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">My Profile</h1>
-          <Link href="/market" className="text-green-600 hover:text-green-800 font-bold bottom-1.5 right-10 absolute">
-            Back to Marketplace &rarr;
-          </Link>
-        </div>
+    <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
+      <div className="w-full max-w-4xl mx-auto">
+        <Link href="/market" className="text-green hover:underline mb-4 inline-block">
+          ← Back to Marketplace
+        </Link>
 
-        <ProfileEditor initialName={name} initialEmail={email} initialImage={image} />
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <h1 className="text-4xl font-bold mb-6">My Profile</h1>
+          <ProfileTabs initialName={name} initialEmail={email} initialImage={image} />
+        </div>
       </div>
     </main>
   );

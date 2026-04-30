@@ -20,19 +20,28 @@ datasource db {
 // -------- User Schema --------
 
 model User {
-    id            String       @id
-    email         String       @unique
-    name          String
-    emailVerified Boolean      @default(false)
-    image         String?
-    createdAt     DateTime     @default(now())
-    updatedAt     DateTime     @default(now()) @updatedAt
-    sessions      Session[]
-    accounts      Account[]
-    listings      Listing[]
-    role          UserRole     @default(STUDENT)
-    statuses      UserStatus[]
-    reports       Report[]
+    id                       String                    @id
+    email                    String                    @unique
+    name                     String
+    emailVerified            Boolean                   @default(false)
+    listingApproved          Boolean                   @default(false)
+    image                    String?
+    createdAt                DateTime                  @default(now())
+    updatedAt                DateTime                  @default(now()) @updatedAt
+    sessions                 Session[]
+    accounts                 Account[]
+    listings                 Listing[]
+    role                     UserRole                  @default(STUDENT)
+    statuses                 UserStatus[]
+    reports                  Report[]
+    conversationParticipants ConversationParticipant[]
+    sentMessages             Message[]
+    events                   ListingEvent[]
+    profanityFlagsSent       MessageProfanityFlag[] @relation("ProfanityFlagSender")
+    profanityFlagsReviewed   MessageProfanityFlag[] @relation("ProfanityFlagReviewer")
+    listingProfanityFlags    ListingProfanityFlag[] @relation("ListingProfanityOwner")
+    listingProfanityReviews  ListingProfanityFlag[] @relation("ListingProfanityReviewer")
+    savedQueries             SavedQuery[]
 
     @@map("user")
 }
@@ -74,10 +83,13 @@ model Listing {
     listingStatus   ListingStatus @default(AVAILABLE)
 
     // Relations
-    owner      User       @relation(fields: [ownerId], references: [id])
-    images     Image[]
-    categories Category[]
-    reports    Report[]
+    owner                 User                   @relation(fields: [ownerId], references: [id])
+    images                Image[]
+    categories            Category[]
+    reports               Report[]
+    conversations         Conversation[]
+    events                ListingEvent[]
+    listingProfanityFlags ListingProfanityFlag[]
 }
 
 enum ListingStatus {
@@ -106,20 +118,21 @@ model Category {
     name     String    @unique
     slug     String    @unique
     listings Listing[]
+    savedQueries CategoryOnSavedQuery[]
 }
 
 model Report {
-    id        String         @id @default(cuid())
-    listingId String
+    id         String       @id @default(cuid())
+    listingId  String
     reporterId String
-    reason    ReportReason
-    details   String?
-    status    ReportStatus   @default(PENDING)
-    createdAt DateTime       @default(now())
-    updatedAt DateTime       @default(now()) @updatedAt
+    reason     ReportReason
+    details    String?
+    status     ReportStatus @default(PENDING)
+    createdAt  DateTime     @default(now())
+    updatedAt  DateTime     @default(now()) @updatedAt
 
-    listing   Listing        @relation(fields: [listingId], references: [id], onDelete: Cascade)
-    reporter  User           @relation(fields: [reporterId], references: [id])
+    listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    reporter User    @relation(fields: [reporterId], references: [id])
 
     @@unique([listingId, reporterId])
     @@map("report")
@@ -179,6 +192,98 @@ model Account {
     @@map("account")
 }
 
+// -------- Messaging --------
+
+model Conversation {
+    id        String   @id @default(cuid())
+    listingId String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now()) @updatedAt
+
+    listing        Listing?                  @relation(fields: [listingId], references: [id], onDelete: SetNull)
+    participants   ConversationParticipant[]
+    messages       Message[]
+    profanityFlags MessageProfanityFlag[]
+
+    @@map("conversation")
+}
+
+model ConversationParticipant {
+    id             Int       @id @default(autoincrement())
+    conversationId String
+    userId         String
+    lastReadAt     DateTime?
+    createdAt      DateTime  @default(now())
+
+    conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([conversationId, userId])
+    @@map("conversation_participant")
+}
+
+model Message {
+    id             String   @id @default(cuid())
+    conversationId String
+    senderId       String
+    body           String
+    createdAt      DateTime @default(now())
+
+    conversation  Conversation          @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender        User                  @relation(fields: [senderId], references: [id])
+    profanityFlag MessageProfanityFlag?
+
+    @@map("message")
+}
+
+enum MessageProfanityFlagStatus {
+    PENDING
+    REVIEWED_NO_ACTION
+    ACTIONED
+}
+
+model MessageProfanityFlag {
+    id             String                     @id @default(cuid())
+    messageId      String                     @unique
+    conversationId String
+    senderId       String
+    originalBody   String
+    createdAt      DateTime                   @default(now())
+    status         MessageProfanityFlagStatus @default(PENDING)
+    reviewedAt     DateTime?
+    reviewedById   String?
+
+    message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+    conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+    sender       User         @relation("ProfanityFlagSender", fields: [senderId], references: [id])
+    reviewer     User?        @relation("ProfanityFlagReviewer", fields: [reviewedById], references: [id])
+
+    @@index([status])
+    @@index([senderId])
+    @@map("message_profanity_flag")
+}
+
+model ListingProfanityFlag {
+    id                  String                   @id @default(cuid())
+    listingId           String
+    ownerId             String
+    originalTitle       String
+    originalDescription String
+    createdAt           DateTime                 @default(now())
+    status              MessageProfanityFlagStatus @default(PENDING)
+    reviewedAt          DateTime?
+    reviewedById        String?
+
+    listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+    owner    User    @relation("ListingProfanityOwner", fields: [ownerId], references: [id])
+    reviewer User?   @relation("ListingProfanityReviewer", fields: [reviewedById], references: [id])
+
+    @@index([status])
+    @@index([listingId])
+    @@index([ownerId])
+    @@map("listing_profanity_flag")
+}
+
 model Verification {
     id         String   @id
     identifier String
@@ -188,4 +293,73 @@ model Verification {
     updatedAt  DateTime @default(now()) @updatedAt
 
     @@map("verification")
+}
+
+model ListingEvent {
+    listing   Listing   @relation(fields: [listingId], references: [id])
+    listingId String
+    user      User?     @relation(fields: [userId], references: [id])
+    userId    String?
+    sessionId String
+    eventType EventType
+    createdAt DateTime  @default(dbgenerated("CURRENT_DATE")) @db.Date
+
+    @@unique([sessionId, listingId, eventType, createdAt], name: "session_listing_event_created")
+    @@index([listingId])
+    @@index([userId])
+    @@index([createdAt])
+}
+
+enum EventType {
+    LISTING_IMPRESSION
+    LISTING_VIEW
+    CONTACT_SELLER
+    SAVE_LISTING
+    SHARE_LISTING
+}
+
+// -------- Saved Queries / Search Alerts --------
+
+model SavedQuery {
+    id        String   @id @default(cuid())
+    userId    String
+    name      String
+    searchTerm String?
+    categories CategoryOnSavedQuery[]
+    minPrice  Decimal? @db.Decimal(10, 2)
+    maxPrice  Decimal? @db.Decimal(10, 2)
+    enabled   Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @default(now()) @updatedAt
+    lastEmailSentAt DateTime?
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([enabled])
+    @@map("saved_query")
+}
+
+model CategoryOnSavedQuery {
+    id           Int        @id @default(autoincrement())
+    savedQueryId String
+    categoryId   Int
+    savedQuery   SavedQuery @relation(fields: [savedQueryId], references: [id], onDelete: Cascade)
+    category     Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@unique([savedQueryId, categoryId])
+    @@map("category_on_saved_query")
+}
+
+model QueryNotificationLog {
+    id        String   @id @default(cuid())
+    queryId   String
+    sentAt    DateTime @default(now())
+    listingCount Int
+    recipientEmail String
+    status    String   @default("sent")
+
+    @@index([queryId])
+    @@index([sentAt])
+    @@map("query_notification_log")
 }

@@ -1,9 +1,8 @@
-import { PrismaClient, $Enums } from "@prisma/client";
+import { $Enums } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
     request: NextRequest,
@@ -72,6 +71,7 @@ export async function GET(
             title: listing.title,
             description: listing.description,
             price: listing.price.toString(),
+            listingStatus: listing.listingStatus,
             isProfessorOnly: listing.isProfessorOnly,
             categories: listing.categories,
             images: listing.images,
@@ -79,7 +79,5 @@ export async function GET(
     } catch (error) {
         console.error("Error fetching listing:", error);
         return NextResponse.json({ error: "Failed to fetch listing" }, { status: 500 });
-    } finally {
-        await prisma.$disconnect();
     }
 }

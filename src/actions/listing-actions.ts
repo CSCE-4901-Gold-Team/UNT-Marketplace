@@ -1,7 +1,7 @@
 "use server";
 
 import {auth} from "@/lib/auth";
-import {$Enums, PrismaClient} from "@prisma/client";
+import {$Enums} from "@prisma/client";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import {getCurrentUserRole} from "@/actions/user-actions";
@@ -11,8 +11,7 @@ import {ListingObject, ListingWithRelations} from "@/models/ListingObject";
 import {ListingFilters} from "@/types/ListingFilters";
 import {ListingUtils} from "@/utils/ListingUtils";
 import { enforceUserStatus, checkUserStatus } from "@/utils/StatusEnforcer";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 /**
  * Returns all listings based on listing status and current user's role.
@@ -58,6 +57,41 @@ export async function getListings(
             {description: {search: searchQuery}}
         ]
     } : {};
+
+    const isMyListingsView = filters?.mine === true;
+
+    if (isMyListingsView) {
+        const currentUser = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { listingApproved: true },
+        });
+
+        listings = await prisma.listing.findMany({
+            skip: skipN,
+            take: takeN,
+            where: {
+                ...searchObject,
+                AND: [
+                    { ownerId: session.user.id },
+                    ...filterObject
+                ]
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            include: {
+                images: true,
+                categories: true,
+            }
+        });
+
+        return listings.map(listing => ({
+            ...listing,
+            price: listing.price.toNumber(),
+            isPendingApproval: listing.listingStatus === ListingStatus.DRAFT && !currentUser?.listingApproved,
+            isDeniedByAdmin: listing.listingStatus === ListingStatus.ARCHIVED && !currentUser?.listingApproved,
+        }));
+    }
 
     if (currentUserRole === UserRole.FACULTY || currentUserRole === UserRole.ADMIN) {
         // Admin/Faculty
@@ -106,5 +140,7 @@ export async function getListings(
     return listings.map(listing => ({
             ...listing,
             price: listing.price.toNumber(),
+            isPendingApproval: false,
+            isDeniedByAdmin: false,
     }));
 }

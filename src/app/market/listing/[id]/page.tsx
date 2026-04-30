@@ -1,15 +1,12 @@
-import { PrismaClient } from "@prisma/client";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import ListingDetailClient from "./ListingDetailClient";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import ImageCarousel from "@/components/ui/ImageCarousel";
 import { Suspense } from "react";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -46,13 +43,16 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
         }
     });
 
-    await prisma.$disconnect();
-
     if (!listing) {
         notFound();
     }
 
     const isOwner = session?.user?.id === listing.ownerId;
+    const postedDate = new Intl.DateTimeFormat("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+    }).format(new Date(listing.createdAt));
 
     return (
         <main className="min-h-screen px-8 py-4 lg:px-20 lg:py-12">
@@ -66,14 +66,25 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
 
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     <div className="flex justify-between items-start mb-4">
-                        <h1 className="text-4xl font-bold">{listing.title}</h1>
+                        <div>
+                            <h1 className="text-4xl font-bold">{listing.title}</h1>
+                            <p className="text-sm text-gray-500 mt-2">Posted {postedDate}</p>
+                        </div>
                         {isOwner && (
-                            <Link 
-                                href={`/market/create-listing?edit=true&id=${listing.id}`}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                            >
-                                Edit
-                            </Link>
+                            <div className="flex gap-2">
+                                <Link
+                                    href={`/market/listing/${listing.id}/analytics`}
+                                    className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200"
+                                >
+                                    View Analytics
+                                </Link>
+                                <Link 
+                                    href={`/market/create-listing?edit=true&id=${listing.id}`}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
                         )}
                     </div>
                     
@@ -109,16 +120,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                         </div>
                     </div>
                 )}
-                    <ListingDetailClient listingId={id} />
-                </div>
-
-                <div className="flex gap-4 mt-6">
-                    <button className="flex-1 bg-green text-white py-3 rounded-lg hover:opacity-90">
-                        Contact Seller
-                    </button>
-                    <button className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-                        Share
-                    </button>
+                    <ListingDetailClient listingId={id} isOwner={isOwner} />
                 </div>
             </div>
         </main>
