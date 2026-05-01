@@ -85,7 +85,7 @@ test.describe("Listing Image Edit", () => {
 
             const beforeCount = await page.locator("img[alt*='Preview']").count();
 
-            const newImagePath = createTestImageFile("/tmp/edit-add-image.png");
+            const newImagePath = createTestImageFile("public/uploads/edit-add-image.png");
             const fileInput = page.locator('input[type="file"]').first();
             await fileInput.setInputFiles(newImagePath);
 

@@ -5,7 +5,7 @@ import fs from "fs";
 
 test.describe("Profile Upload API Integration", () => {
     test("profile upload endpoint requires authentication", async ({ browser }) => {
-        const testImagePath = createTestImageFile("/tmp/unauth-image.png");
+        const testImagePath = createTestImageFile("public/uploads/unauth-image.png");
         const buffer = fs.readFileSync(testImagePath);
 
         const baseURL = process.env.APP_URL || "http://169.254.83.107:3000";

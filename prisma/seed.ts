@@ -7,6 +7,22 @@ import { auth } from "../src/lib/auth";
 const prisma = new PrismaClient()
 
 async function main() {
+    const adminUser = await auth.api.signUpEmail({
+        body: {
+            name: "Admin",
+            email: "admin@my.unt.edu",
+            password: "testtest",
+        },
+    });
+
+    await prisma.user.update({
+        where: { id: adminUser.user.id },
+        data: {
+            emailVerified: true,
+            role: $Enums.UserRole.ADMIN
+        }
+    });
+
     const testUser = await auth.api.signUpEmail({
         body: {
             name: "Test User",
@@ -19,7 +35,6 @@ async function main() {
         where: { id: testUser.user.id },
         data: {
             emailVerified: true,
-            role: $Enums.UserRole.ADMIN
         }
     });
 

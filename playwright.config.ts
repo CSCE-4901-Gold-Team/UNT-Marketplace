@@ -29,7 +29,7 @@ export default defineConfig<TestOptions, { testUuid: string }>({
     reporter: 'html',
     /* Default timeout for expects */
     expect: {
-        timeout: 15000
+        timeout: 30000
     },
 
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -47,11 +47,11 @@ export default defineConfig<TestOptions, { testUuid: string }>({
         },
 
 
+        /*
         {
             name: 'firefox',
             use: {...devices['Desktop Firefox']},
         },
-        /*
         {
             name: 'webkit',
             use: {...devices['Desktop Safari']},

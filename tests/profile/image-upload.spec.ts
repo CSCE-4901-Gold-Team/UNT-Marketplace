@@ -10,7 +10,7 @@ test.describe("Profile Image Upload", () => {
 
         await expect(page.getByRole("heading", { name: "My Profile" })).toBeVisible({ timeout: 10000 });
 
-        const testImagePath = createTestImageFile("/tmp/profile-ui-image.png");
+        const testImagePath = createTestImageFile("public/uploads/profile-ui-image.png");
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
 
@@ -31,7 +31,7 @@ test.describe("Profile Image Upload", () => {
 
         await page.goto("/profile");
 
-        const testImagePath = createTestImageFile("/tmp/profile-jpeg-test.png");
+        const testImagePath = createTestImageFile("public/uploads/profile-jpeg-test.png");
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
 

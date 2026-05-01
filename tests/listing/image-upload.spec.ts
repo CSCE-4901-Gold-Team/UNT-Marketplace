@@ -7,7 +7,7 @@ test.describe("Listing Image Upload", () => {
         test.setTimeout(60000);
         await login(page, "admin");
 
-        const testImagePath = createTestImageFile("/tmp/test-listing-image.png");
+        const testImagePath = createTestImageFile("public/uploads/test-listing-image.png");
 
         await page.goto("/market/create-listing");
 
@@ -58,7 +58,7 @@ test.describe("Listing Image Upload", () => {
     test("image upload component shows preview count", async ({ page }) => {
         await login(page, "admin");
 
-        const testImagePath = createTestImageFile("/tmp/test-count-image.png");
+        const testImagePath = createTestImageFile("public/uploads/test-count-image.png");
 
         await page.goto("/market/create-listing");
 
@@ -76,7 +76,7 @@ test.describe("Listing Image Upload", () => {
     test("can remove images before saving", async ({ page }) => {
         await login(page, "admin");
 
-        const testImagePath = createTestImageFile("/tmp/test-remove-image.png");
+        const testImagePath = createTestImageFile("public/uploads/test-remove-image.png");
 
         await page.goto("/market/create-listing");
 
@@ -106,7 +106,7 @@ test.describe("Listing Image Upload", () => {
         test.setTimeout(90000);
         await login(page, "admin");
 
-        const testImagePath = createTestImageFile("/tmp/test-persist-image.png");
+        const testImagePath = createTestImageFile("public/uploads/test-persist-image.png");
 
         await page.goto("/market/create-listing");
 
