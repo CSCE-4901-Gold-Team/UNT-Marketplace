@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { $Enums } from "@prisma/client";
+import { $Enums, Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
@@ -20,6 +20,7 @@ const CreateListingRequest = z.object({
     isProfessorOnly: z.boolean().optional(),
     categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
+    pickupAddress: z.string().optional(),
 });
 
 export async function createListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
@@ -58,6 +59,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
+        pickupAddress: formData.get("pickupAddress") as string || "",
     });
 
     console.log("Parsed form data:", parsedFormData);
@@ -152,7 +154,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         const listingStatus =
             wasCensored || !user.listingApproved ? "DRAFT" : "AVAILABLE";
 
-        const newListing = await prisma.$transaction(async (tx) => {
+        const newListing = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const listing = await tx.listing.create({
                 data: {
                     title: titleC.censored,
@@ -161,6 +163,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
                     listingStatus,
                     ownerId: session.user.id,
+                    pickupAddress: parsedFormData.data.pickupAddress || null,
                     categories: {
                         connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
                     },

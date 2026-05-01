@@ -22,6 +22,7 @@ const UpdateListingRequest = z.object({
     isProfessorOnly: z.boolean().optional(),
     categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
+    pickupAddress: z.string().optional(),
 });
 
 export async function updateListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
@@ -49,6 +50,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
+        pickupAddress: formData.get("pickupAddress") as string || "",
     });
 
     if (!parsedFormData.success) {
@@ -124,6 +126,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             description: descC.censored,
             price: new Prisma.Decimal(parsedFormData.data.price),
             isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+            pickupAddress: parsedFormData.data.pickupAddress || null,
             categories: {
                 set: parsedFormData.data.categoryIds.map((id) => ({ id })),
             },
