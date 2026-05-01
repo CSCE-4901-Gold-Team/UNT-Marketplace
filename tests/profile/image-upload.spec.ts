@@ -14,7 +14,8 @@ test.describe("Profile Image Upload", () => {
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
 
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
 
@@ -35,7 +36,8 @@ test.describe("Profile Image Upload", () => {
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
 
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
@@ -74,7 +76,8 @@ test.describe("Profile Image Upload", () => {
         const testImagePath1 = createTestImageFile("public/uploads/profile-replace-image-1.png");
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath1);
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
@@ -85,7 +88,8 @@ test.describe("Profile Image Upload", () => {
 
         const testImagePath2 = createTestImageFile("public/uploads/profile-replace-image-2.png");
         await fileInput.setInputFiles(testImagePath2);
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
@@ -108,7 +112,8 @@ test.describe("Profile Image Upload", () => {
         const testImagePath = createTestImageFile("public/uploads/profile-remove-image.png");
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
