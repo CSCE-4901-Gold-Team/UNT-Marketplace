@@ -22,7 +22,7 @@ export async function getAdminStats() {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -70,7 +70,7 @@ export async function getRecentlyListedItems(limit: number = 5, skip: number = 0
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -123,7 +123,7 @@ export async function getPendingListingApprovals(
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -192,7 +192,7 @@ export async function getAllUsers(limit: number = 50, skip: number = 0) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -230,7 +230,7 @@ export async function approveFirstListing(listingId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -291,7 +291,7 @@ export async function rejectFirstListing(listingId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -314,7 +314,7 @@ export async function getPendingListingReports(limit: number = 50, skip: number 
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -403,7 +403,7 @@ export async function getReportById(reportId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -439,7 +439,7 @@ export async function deleteListing(listingId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -462,7 +462,7 @@ export async function suspendUserWithExpiry(userId: string, expiresAt: Date) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -488,7 +488,7 @@ export async function banUserPermanently(userId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -514,7 +514,7 @@ export async function activateUser(userId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -540,7 +540,7 @@ export async function getUserSuspensionStatus(userId: string) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -575,7 +575,7 @@ export async function getSuspendedUsers(limit: number = 50, skip: number = 0) {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -635,7 +635,7 @@ export async function resolveReport(reportId: string, action: 'RESOLVED' | 'DISM
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -679,7 +679,7 @@ export async function getPendingProfanityFlags(limit: number = 25, skip: number 
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -734,7 +734,7 @@ export async function reviewProfanityFlag(
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -788,7 +788,7 @@ export async function getPendingListingProfanityFlags(
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -839,7 +839,7 @@ export async function reviewListingProfanityFlag(
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -910,7 +910,7 @@ export async function getProfanityModerationTerms(): Promise<ProfanityModeration
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -938,7 +938,7 @@ export async function addProfanityModerationTerm(
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -975,7 +975,7 @@ export async function deleteProfanityModerationTerm(id: string): Promise<{ succe
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();

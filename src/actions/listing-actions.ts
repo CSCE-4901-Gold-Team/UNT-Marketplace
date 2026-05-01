@@ -99,7 +99,7 @@ export async function getListings(
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     // Enforce user status - allow viewing listings even if suspended

@@ -48,7 +48,7 @@ async function requireAdminSession() {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const currentUserRole = await getCurrentUserRole();
