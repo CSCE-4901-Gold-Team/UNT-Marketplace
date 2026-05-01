@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
-import { prisma } from "@/lib/prisma";
 import type { SaveOptions } from "@/types/ImageTypes";
 import { ImageConstants } from "@/constants/ImageConstants";
 import { ImageUtils } from "@/utils/ImageUtils";
