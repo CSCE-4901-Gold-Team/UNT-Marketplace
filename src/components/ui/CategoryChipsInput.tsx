@@ -14,7 +14,7 @@ export default function CategoryChipsInput({
     inputLabel,
     name,
     value = [],
-    onChange,
+    onChangeAction,
     options = [],
     validationErrors,
     disabled = false,
@@ -23,7 +23,7 @@ export default function CategoryChipsInput({
     inputLabel: string;
     name: string;
     value?: number[];
-    onChange: (values: number[]) => void;
+    onChangeAction: (values: number[]) => void;
     options?: CategoryOption[];
     validationErrors?: z.core.$ZodIssue[];
     disabled?: boolean;
@@ -64,13 +64,13 @@ export default function CategoryChipsInput({
     function removeCategory(id: number) {
         if (disabled) return;
 
-        onChange(value.filter((categoryId) => categoryId !== id));
+        onChangeAction(value.filter((categoryId) => categoryId !== id));
     }
 
     function selectCategory(id: number) {
         if (disabled || value.includes(id)) return;
 
-        onChange([...value, id]);
+        onChangeAction([...value, id]);
         setSearchValue("");
         setIsOpen(true);
         setHighlightedIndex(0);

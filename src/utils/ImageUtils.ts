@@ -1,10 +1,11 @@
+import crypto from "crypto";
 import path from "path";
 import { ImageConstants } from "@/constants/ImageConstants";
 
 export const ImageUtils = {
     generateFilename(): string {
         const timestamp = Date.now();
-        const random = Math.random().toString(36).slice(2, 10);
+        const random = crypto.randomBytes(8).toString("hex");
         return `${timestamp}-${random}.jpg`;
     },
 

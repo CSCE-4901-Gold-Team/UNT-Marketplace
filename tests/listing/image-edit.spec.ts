@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { login, logout } from "../helpers/auth";
-import { createTestImageFile, selectCategory } from "../helpers/image-helper";
+import { createTestImageFile } from "../helpers/image-helper";
 import {
     seedTestListing,
     cleanupTestListing,

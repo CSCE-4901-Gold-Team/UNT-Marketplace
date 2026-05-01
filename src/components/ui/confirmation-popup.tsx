@@ -8,8 +8,8 @@ type ConfirmationPopupProps = {
     cancelLabel?: string;
     pending?: boolean;
     tone?: "default" | "danger";
-    onConfirm: () => void | Promise<void>;
-    onClose: () => void;
+    onConfirmAction: () => void | Promise<void>;
+    onCloseAction: () => void;
 };
 
 export default function ConfirmationPopup({
@@ -20,8 +20,8 @@ export default function ConfirmationPopup({
     cancelLabel = "Cancel",
     pending = false,
     tone = "default",
-    onConfirm,
-    onClose
+    onConfirmAction,
+    onCloseAction
 }: ConfirmationPopupProps) {
     if (!open) return null;
 
@@ -37,14 +37,14 @@ export default function ConfirmationPopup({
 
                 <div className="flex justify-end gap-3 mt-6">
                     <button
-                        onClick={onClose}
+                        onClick={onCloseAction}
                         className="px-4 py-2 bg-gray-200 rounded-xl hover:bg-gray-300 transition disabled:opacity-50"
                         disabled={pending}
                     >
                         {cancelLabel}
                     </button>
                     <button
-                        onClick={onConfirm}
+                        onClick={onConfirmAction}
                         className={`px-4 py-2 text-white rounded-xl transition disabled:opacity-50 ${confirmButtonClasses}`}
                         disabled={pending}
                     >

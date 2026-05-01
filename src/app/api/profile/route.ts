@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth, prisma } from "@/lib/auth";
 import { imageAdapter } from "@/lib/image-adapter";
+import { ImageUtils } from "@/utils/ImageUtils";
 
 export async function PATCH(req: Request) {
     try {
@@ -47,7 +48,7 @@ export async function PATCH(req: Request) {
         // Delete old profile file if it was a local upload and changed
         if (
             existing?.image &&
-            imageAdapter.isLocalFile(existing.image) &&
+            ImageUtils.isLocalFile(existing.image) &&
             existing.image !== newImage
         ) {
             await imageAdapter.deleteFile(existing.image);

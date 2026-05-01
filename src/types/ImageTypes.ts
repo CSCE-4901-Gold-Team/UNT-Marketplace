@@ -4,7 +4,3 @@ export interface SaveOptions {
     maxDimension?: number;
     quality?: number;
 }
-
-export interface ImageUploadResult {
-    url: string;
-}

@@ -99,27 +99,10 @@ async function deleteListingFiles(urls: string[]): Promise<void> {
     await Promise.all(localUrls.map(deleteFile));
 }
 
-async function validate(input: string | Buffer, options?: Partial<SaveOptions>): Promise<boolean> {
-    const opts = resolveOptions(options);
-    try {
-        const buffer = typeof input === "string"
-            ? ImageUtils.base64ToBuffer(input)
-            : input;
-        await validateBuffer(buffer, opts);
-        return true;
-    } catch {
-        return false;
-    }
-}
-
 export const imageAdapter = {
     // File operations
     saveFromBase64,
     saveFromBuffer,
     deleteFile,
     deleteListingFiles,
-    validate,
-
-    // Utilities
-    isLocalFile: ImageUtils.isLocalFile,
 } as const;

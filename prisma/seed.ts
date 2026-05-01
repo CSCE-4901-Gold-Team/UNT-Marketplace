@@ -18,7 +18,8 @@ async function main() {
     await prisma.user.update({
         where: { id: testUser.user.id },
         data: {
-            emailVerified: true
+            emailVerified: true,
+            role: $Enums.UserRole.ADMIN
         }
     });
 

@@ -30,8 +30,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         headers: await headers()
     });
 
-    const currentUserRole = await getCurrentUserRole();
-
     if (!session?.user) {
         return {
             status: FormStatus.ERROR,
@@ -41,6 +39,8 @@ export async function createListingAction(_initialState: FormResponse, formData:
             }
         };
     }
+
+    const currentUserRole = await getCurrentUserRole();
 
     // Enforce user status - check if suspended or banned
     try {
@@ -65,7 +65,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
     });
 
     if (!parsedFormData.success) {
-        console.log("Validation errors:", parsedFormData.error.issues);
         return {
             status: FormStatus.ERROR,
             validationErrors: parsedFormData.error.issues,

@@ -180,7 +180,7 @@ export async function getPendingListingApprovals(
             category: listing.categories[0]?.name || "Uncategorized",
             price: `$${listing.price.toNumber().toFixed(2)}`,
             date: listing.createdAt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }),
-            pendingReason,
+            pendingReason: pendingReason as "FIRST_LISTING" | "PROFANITY" | "BOTH",
         };
     });
 }
