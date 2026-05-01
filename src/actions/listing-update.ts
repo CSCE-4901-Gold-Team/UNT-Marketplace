@@ -103,7 +103,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             try {
                 const parsed = JSON.parse(submittedRaw);
                 if (Array.isArray(parsed)) {
-                    allSubmitted = parsed.filter((img: unknown) => typeof img === "string" && img !== "");
+                    allSubmitted = parsed.filter((img) => typeof img === "string" && img !== "");
                 } else if (parsed && typeof parsed === "string" && parsed !== "") {
                     allSubmitted = [parsed];
                 }

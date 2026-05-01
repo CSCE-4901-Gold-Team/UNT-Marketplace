@@ -30,6 +30,8 @@ export async function createListingAction(_initialState: FormResponse, formData:
         headers: await headers()
     });
 
+    const currentUserRole = await getCurrentUserRole();
+
     if (!session?.user) {
         return {
             status: FormStatus.ERROR,
@@ -62,8 +64,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
         imagePath: formData.get("imagePath") as string || "",
     });
 
-    console.log("Parsed form data:", parsedFormData);
-
     if (!parsedFormData.success) {
         console.log("Validation errors:", parsedFormData.error.issues);
         return {
@@ -77,7 +77,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     if (parsedFormData.data.isProfessorOnly) {
-        const currentUserRole = await getCurrentUserRole();
         if (currentUserRole !== $Enums.UserRole.FACULTY) {
             return {
                 status: FormStatus.ERROR
@@ -92,7 +91,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
     try {
         const user = await prisma.user.findUnique({
             where: { id: session.user.id },
-            select: { listingApproved: true, role: true },
+            select: { listingApproved: true },
         });
 
         if (!user) {
@@ -105,8 +104,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        const isAdmin = user.role === "ADMIN";
-        requiresAdminApproval = !isAdmin && !user.listingApproved;
+        requiresAdminApproval = currentUserRole !== $Enums.UserRole.ADMIN && !user.listingApproved;
 
         const pendingListing = await prisma.listing.findFirst({
             where: {
@@ -120,7 +118,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             },
         });
 
-        if (!isAdmin && !user.listingApproved && pendingListing) {
+        if (requiresAdminApproval && pendingListing) {
             return {
                 status: FormStatus.ERROR,
                 message: {

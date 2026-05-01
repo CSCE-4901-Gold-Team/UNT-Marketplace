@@ -52,8 +52,6 @@ async function validateBuffer(buffer: Buffer, options: Required<SaveOptions>): P
     }
 }
 
-// --- Public API: File operations ---
-
 async function saveFromBase64(base64String: string, options?: Partial<SaveOptions>): Promise<string> {
     const opts = resolveOptions(options);
     const buffer = ImageUtils.base64ToBuffer(base64String);
@@ -115,67 +113,6 @@ async function validate(input: string | Buffer, options?: Partial<SaveOptions>):
     }
 }
 
-// --- Public API: Database operations ---
-
-async function createImageRecords(listingId: string, urls: string[]): Promise<void> {
-    if (urls.length === 0) return;
-    await prisma.image.createMany({
-        data: urls.map((url, i) => ({
-            url,
-            listingId,
-            imageType: "LISTING",
-            sortOrder: i,
-        })),
-    });
-}
-
-async function deleteImageRecords(listingId: string, urlsToDelete: string[]): Promise<void> {
-    if (urlsToDelete.length === 0) return;
-    await prisma.image.deleteMany({
-        where: {
-            listingId,
-            url: { in: urlsToDelete },
-        },
-    });
-}
-
-async function deleteAllForListing(listingId: string): Promise<void> {
-    const images = await prisma.image.findMany({
-        where: { listingId },
-        select: { url: true },
-    });
-
-    await deleteListingFiles(images.map((img) => img.url));
-
-    await prisma.image.deleteMany({
-        where: { listingId },
-    });
-}
-
-async function setProfileImage(
-    userId: string,
-    newUrl: string | null,
-): Promise<{ id: string; name: string; email: string; image: string | null }> {
-    const existing = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { image: true },
-    });
-
-    const updated = await prisma.user.update({
-        where: { id: userId },
-        data: { image: newUrl },
-        select: { id: true, name: true, email: true, image: true },
-    });
-
-    if (existing?.image && ImageUtils.isLocalFile(existing.image) && existing.image !== newUrl) {
-        await deleteFile(existing.image);
-    }
-
-    return updated;
-}
-
-// --- Exported adapter ---
-
 export const imageAdapter = {
     // File operations
     saveFromBase64,
@@ -183,12 +120,6 @@ export const imageAdapter = {
     deleteFile,
     deleteListingFiles,
     validate,
-
-    // Database operations
-    createImageRecords,
-    deleteImageRecords,
-    deleteAllForListing,
-    setProfileImage,
 
     // Utilities
     isLocalFile: ImageUtils.isLocalFile,

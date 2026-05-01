@@ -57,15 +57,15 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
 
         await prisma.$transaction(async (tx) => {
             await tx.listingEvent.deleteMany({
-                where: { listingId: listingId },
+                where: { listingId: listingId }
             });
 
             await tx.image.deleteMany({
-                where: { listingId: listingId },
+                where: { listingId: listingId }
             });
 
             await tx.listing.delete({
-                where: { id: listingId },
+                where: { id: listingId }
             });
         });
 
