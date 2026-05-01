@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Button from "@/components/ui/Button";
 import { toastService } from "@/lib/toast-service";
 import { updateAllowMatureListingContentPreference } from "@/actions/user-actions";
+import { updateProfile, uploadProfileImage } from "@/actions/profile-actions";
 
 interface Props {
   initialName?: string | null;
@@ -33,14 +34,8 @@ export default function ProfileEditor({
     setLoading(true);
 
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), image: image.trim() || null }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to update profile");
+      const result = await updateProfile(name.trim(), image.trim() || null);
+      if (!result.success) throw new Error(result.error || "Failed to update profile");
 
       toastService.toast("Profile updated successfully", "success");
     } catch (err) {
@@ -57,23 +52,24 @@ export default function ProfileEditor({
     setUploadError(null);
 
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-
-      const res = await fetch("/api/profile/upload", {
-        method: "POST",
-        body: fd,
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Upload failed");
-
-      setImage(data.url);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result as string;
+        const result = await uploadProfileImage(base64);
+        if (result.success && result.url) {
+          setImage(result.url);
+        } else {
+          const msg = result.error || "Upload failed";
+          setUploadError(msg);
+          toastService.toast(msg, "error");
+        }
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setUploadError(msg || "Upload failed");
       toastService.toast(msg || "Upload failed", "error");
-    } finally {
       setUploading(false);
     }
   };

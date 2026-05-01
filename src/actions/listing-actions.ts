@@ -9,6 +9,7 @@ import UserRole = $Enums.UserRole;
 import ListingStatus = $Enums.ListingStatus;
 import {ListingObject, ListingWithRelations} from "@/models/ListingObject";
 import {ListingFilters} from "@/types/ListingFilters";
+import {ListingByIdResult} from "@/types/ListingTypes";
 import {ListingUtils} from "@/utils/ListingUtils";
 import { enforceUserStatus, checkUserStatus } from "@/utils/StatusEnforcer";
 import { prisma } from "@/lib/prisma";
@@ -211,4 +212,66 @@ export async function getListings(
         isPendingApproval: false,
         isDeniedByAdmin: false,
     }));
+}
+
+/**
+ * Returns a single listing by ID with access control checks.
+ * Used for editing listings.
+ */
+export async function getListById(id: string): Promise<ListingByIdResult> {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session) {
+        redirect("/login");
+    }
+
+    const listing = await prisma.listing.findUnique({
+        where: { id },
+        include: {
+            categories: {
+                select: {
+                    id: true,
+                    name: true,
+                },
+            },
+            images: {
+                select: {
+                    url: true,
+                },
+            },
+        },
+    });
+
+    if (!listing) {
+        return { success: false, error: "Listing not found" };
+    }
+
+    // Prevent students from accessing professor-only listings
+    if (listing.isProfessorOnly) {
+        const currentUserRole = await getCurrentUserRole();
+        if (currentUserRole === UserRole.STUDENT) {
+            return { success: false, error: "This listing is only available to faculty" };
+        }
+    }
+
+    // Prevent users from accessing other users' draft listings
+    if (listing.listingStatus === ListingStatus.DRAFT && session.user.id !== listing.ownerId) {
+        return { success: false, error: "Listing not found" };
+    }
+
+    return {
+        success: true,
+        listing: {
+            id: listing.id,
+            title: listing.title,
+            description: listing.description,
+            price: listing.price.toString(),
+            listingStatus: listing.listingStatus,
+            isProfessorOnly: listing.isProfessorOnly,
+            categories: listing.categories,
+            images: listing.images,
+        },
+    };
 }
