@@ -11,6 +11,7 @@ import {
     getPendingProfanityFlags,
     reviewProfanityFlag,
     getPendingListingProfanityFlags,
+    type ListingProfanityQueueSort,
     reviewListingProfanityFlag,
     type ProfanityFlagRow,
     type ListingProfanityFlagRow,
@@ -60,6 +61,7 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
     const [listingProfanityPage, setListingProfanityPage] = useState(1);
     const [listingProfanityTotalCount, setListingProfanityTotalCount] = useState(0);
     const [listingProfanityFlagIdForAction, setListingProfanityFlagIdForAction] = useState<string | null>(null);
+    const [listingProfanitySort, setListingProfanitySort] = useState<ListingProfanityQueueSort>("newest");
     const [queueStats, setQueueStats] = useState({
         pendingProfanityFlags: 0,
         pendingListingProfanityFlags: 0,
@@ -86,7 +88,8 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                     getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
                     getPendingListingProfanityFlags(
                         LISTING_PROFANITY_PER_PAGE,
-                        (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                        (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE,
+                        listingProfanitySort
                     ),
                 ]);
 
@@ -116,7 +119,11 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
         };
 
         load();
-    }, [userRole, router, usersPage, suspendedUsersPage, profanityPage, listingProfanityPage]);
+    }, [userRole, router, usersPage, suspendedUsersPage, profanityPage, listingProfanityPage, listingProfanitySort]);
+
+    useEffect(() => {
+        setListingProfanityPage(1);
+    }, [listingProfanitySort]);
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
         if (selectedUser) {
@@ -179,7 +186,8 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                 getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
                 getPendingListingProfanityFlags(
                     LISTING_PROFANITY_PER_PAGE,
-                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE,
+                    listingProfanitySort
                 ),
             ]);
             setQueueStats({
@@ -230,7 +238,8 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                 getPendingProfanityFlags(PROFANITY_PER_PAGE, (profanityPage - 1) * PROFANITY_PER_PAGE),
                 getPendingListingProfanityFlags(
                     LISTING_PROFANITY_PER_PAGE,
-                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE,
+                    listingProfanitySort
                 ),
             ]);
             setQueueStats({
@@ -281,7 +290,8 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
                 getAdminStats(),
                 getPendingListingProfanityFlags(
                     LISTING_PROFANITY_PER_PAGE,
-                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE
+                    (listingProfanityPage - 1) * LISTING_PROFANITY_PER_PAGE,
+                    listingProfanitySort
                 ),
             ]);
             setQueueStats({
@@ -480,9 +490,30 @@ export default function AdminUsers({ userRole }: { userRole: string | null }) {
             <div>
                 <h2 className="text-2xl font-bold mb-4">Listing moderation (profanity)</h2>
                 <p className="text-gray-600 text-sm mb-4 max-w-3xl">
-                    When a listing title or description matches the profanity filter, the public listing shows censored text;
-                    originals appear here for review. Dismiss if acceptable, or suspend or ban the seller if needed.
+                    When a listing matches the profanity filter, censored text is stored on the listing; originals stay
+                    on this flag for review. Dismiss when acceptable so the listing can publish; users who opt in under
+                    Profile (18+) see originals and unblurred images. Suspend or ban the seller if needed.
                 </p>
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <label htmlFor="listingProfanitySort" className="text-sm font-semibold text-gray-700">
+                        Sort by flag date
+                    </label>
+                    <select
+                        id="listingProfanitySort"
+                        value={listingProfanitySort}
+                        onChange={(e) => setListingProfanitySort(e.target.value as ListingProfanityQueueSort)}
+                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+                    >
+                        <option value="newest">Newest first</option>
+                        <option value="oldest">Oldest first</option>
+                    </select>
+                    <Link
+                        href="/admin/profanity"
+                        className="text-sm text-green font-semibold hover:underline ml-auto"
+                    >
+                        Whitelist / blacklist terms →
+                    </Link>
+                </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     {loading ? (
                         <div className="text-gray-500 text-center py-8">Loading...</div>

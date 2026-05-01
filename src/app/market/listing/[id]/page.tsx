@@ -7,47 +7,77 @@ import ImageCarousel from "@/components/ui/ImageCarousel";
 import { Suspense } from "react";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 import { prisma } from "@/lib/prisma";
+import { MessageProfanityFlagStatus } from "@prisma/client";
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const session = await auth.api.getSession({
         headers: await headers()
     });
-    const listing = await prisma.listing.findUnique({
-        where: {
-            id: id
-        },
-        include: {
-            owner: {
-                select: {
-                    name: true,
-                    email: true,
-                }
+    const [listing, viewerPrefs] = await Promise.all([
+        prisma.listing.findUnique({
+            where: {
+                id: id
             },
-            categories: {
-                select: {
-                    id: true,
-                    name: true,
-                }
-            },
-            images: {
-                select: {
-                    id: true,
-                    url: true,
-                    sortOrder: true,
+            include: {
+                owner: {
+                    select: {
+                        name: true,
+                        email: true,
+                    }
                 },
-                orderBy: {
-                    sortOrder: 'asc',
-                }
+                categories: {
+                    select: {
+                        id: true,
+                        name: true,
+                    }
+                },
+                images: {
+                    select: {
+                        id: true,
+                        url: true,
+                        sortOrder: true,
+                    },
+                    orderBy: {
+                        sortOrder: 'asc',
+                    }
+                },
+                listingProfanityFlags: {
+                    where: { status: MessageProfanityFlagStatus.REVIEWED_NO_ACTION },
+                    orderBy: [{ reviewedAt: "desc" }, { createdAt: "desc" }],
+                    select: {
+                        originalTitle: true,
+                        originalDescription: true,
+                    },
+                    take: 1,
+                },
             }
-        }
-    });
+        }),
+        session?.user?.id
+            ? prisma.user.findUnique({
+                where: { id: session.user.id },
+                select: { allowMatureListingContent: true },
+            })
+            : Promise.resolve(null),
+    ]);
 
     if (!listing) {
         notFound();
     }
 
     const isOwner = session?.user?.id === listing.ownerId;
+    const releasedProfanityRow = listing.listingProfanityFlags[0];
+    const allowMature = viewerPrefs?.allowMatureListingContent ?? false;
+    const displayTitle =
+        releasedProfanityRow && allowMature
+            ? releasedProfanityRow.originalTitle
+            : listing.title;
+    const displayDescription =
+        releasedProfanityRow && allowMature
+            ? releasedProfanityRow.originalDescription
+            : listing.description;
+    const blurListingImages = Boolean(releasedProfanityRow) && !allowMature;
+
     const postedDate = new Intl.DateTimeFormat("en-US", {
         month: "short",
         day: "numeric",
@@ -67,7 +97,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                 <div className="bg-white rounded-lg shadow-lg p-8">
                     <div className="flex justify-between items-start mb-4">
                         <div>
-                            <h1 className="text-4xl font-bold">{listing.title}</h1>
+                            <h1 className="text-4xl font-bold">{displayTitle}</h1>
                             <p className="text-sm text-gray-500 mt-2">Posted {postedDate}</p>
                         </div>
                         {isOwner && (
@@ -89,7 +119,21 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                     </div>
                     
                     {/* Image Carousel */}
-                    <ImageCarousel images={listing.images} alt={listing.title} />
+                    <ImageCarousel
+                        images={listing.images}
+                        alt={displayTitle}
+                        blurImages={blurListingImages}
+                    />
+                    {blurListingImages ? (
+                        <p className="text-sm text-gray-500 mb-6 -mt-2">
+                            This listing matched the profanity filter and was cleared by a moderator; the public
+                            listing stays censored unless you enable the 18+ option in{" "}
+                            <Link href="/profile" className="text-green underline hover:no-underline">
+                                Account → Profile Settings
+                            </Link>
+                            .
+                        </p>
+                    ) : null}
 
                     <div className="flex items-center justify-between mb-6 pb-6 border-b">
                         <span className="text-4xl font-bold text-green">${listing.price.toString()}</span>
@@ -102,7 +146,7 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
 
                     <div className="mb-6">
                         <h2 className="text-xl font-semibold mb-2">Description</h2>
-                        <p className="text-gray-700 whitespace-pre-wrap">{listing.description}</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{displayDescription}</p>
                     </div>
 
                 {listing.categories.length > 0 && (

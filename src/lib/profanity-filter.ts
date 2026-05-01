@@ -1,6 +1,7 @@
 /**
- * Censors profanity in user-generated text (e.g. direct messages, listings) by replacing matched words/phrases
- * with asterisks (same length as the match). Longer patterns are applied first.
+ * Censors profanity in user-generated text by replacing matched words/phrases
+ * with asterisks. Supports admin-defined blacklist (extra matches) and whitelist
+ * (allowed phrases/words skipped by the built-in list and blacklist).
  */
 
 function escapeRegExp(s: string): string {
@@ -100,32 +101,118 @@ const WORDS: string[] = [
 
 const ENTRIES = [...PHRASES, ...WORDS].sort((a, b) => b.length - a.length);
 
-const CENSOR_REGEXES: RegExp[] = ENTRIES.map((entry) => {
+export function buildEntryRegex(entry: string): RegExp {
     const parts = entry.trim().split(/\s+/).map(escapeRegExp);
     const body =
         parts.length === 1 ? `\\b${parts[0]}\\b` : `\\b${parts.join("\\s+")}\\b`;
     return new RegExp(body, "gi");
-});
+}
+
+const BUILTIN_LABELED: { label: string; re: RegExp }[] = ENTRIES.map((entry) => ({
+    label: entry,
+    re: buildEntryRegex(entry),
+}));
+
+const PLACEHOLDER_START = "\uE000";
+const PLACEHOLDER_END = "\uE001";
+
+function maskWhitelistSegments(
+    text: string,
+    whitelist: string[]
+): { masked: string; placeholders: Map<string, string> } {
+    const placeholders = new Map<string, string>();
+    const sorted = [...whitelist]
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .sort((a, b) => b.length - a.length);
+
+    let out = text;
+    let idx = 0;
+    for (const term of sorted) {
+        const re = buildEntryRegex(term);
+        out = out.replace(re, (match) => {
+            const key = `${PLACEHOLDER_START}WL${idx++}${PLACEHOLDER_END}`;
+            placeholders.set(key, match);
+            return key;
+        });
+    }
+    return { masked: out, placeholders };
+}
+
+function restoreWhitelistSegments(text: string, placeholders: Map<string, string>): string {
+    let out = text;
+    for (const [key, val] of placeholders) {
+        out = out.split(key).join(val);
+    }
+    return out;
+}
+
+function buildLabeledPatterns(
+    extraBlacklist: string[]
+): { label: string; re: RegExp }[] {
+    const extras = [...extraBlacklist]
+        .map((t) => t.trim())
+        .filter(Boolean)
+        .sort((a, b) => b.length - a.length)
+        .map((entry) => ({
+            label: entry,
+            re: buildEntryRegex(entry),
+        }));
+    return [...BUILTIN_LABELED, ...extras];
+}
+
+export interface CensorProfanityOptions {
+    /** Phrases/words that must not be censored (e.g. academic or place names). */
+    whitelist?: string[];
+    /** Extra phrases/words to censor like the built-in list. */
+    blacklist?: string[];
+    /** When true, `matches` lists which patterns fired (built-in label or custom term). */
+    collectMatches?: boolean;
+}
 
 export interface CensorProfanityResult {
-    /** Text with matches replaced by asterisks (same length per match). */
     censored: string;
-    /** True if any pattern matched. */
     wasCensored: boolean;
+    /** Populated when `collectMatches` is true. */
+    matches?: string[];
 }
 
 /**
- * Returns a copy of `text` with profane words/phrases replaced by asterisks
- * (one asterisk per character in the match), and whether anything was censored.
+ * Returns censored text, whether anything was censored, and optional match labels.
  */
-export function censorProfanity(text: string): CensorProfanityResult {
-    let result = text;
+export function censorProfanity(text: string, options?: CensorProfanityOptions): CensorProfanityResult {
+    const whitelist = options?.whitelist ?? [];
+    const blacklist = options?.blacklist ?? [];
+    const collectMatches = options?.collectMatches ?? false;
+    const matches: string[] = [];
+
+    const { masked, placeholders } = maskWhitelistSegments(text, whitelist);
+    const labeled = buildLabeledPatterns(blacklist);
+
+    let result = masked;
     let wasCensored = false;
-    for (const re of CENSOR_REGEXES) {
+
+    for (const { label, re } of labeled) {
         result = result.replace(re, (match) => {
             wasCensored = true;
+            if (collectMatches) {
+                matches.push(label);
+            }
             return "*".repeat(match.length);
         });
     }
+
+    result = restoreWhitelistSegments(result, placeholders);
+
+    if (collectMatches && matches.length > 0) {
+        const seen = new Set<string>();
+        const deduped = matches.filter((m) => {
+            if (seen.has(m)) return false;
+            seen.add(m);
+            return true;
+        });
+        return { censored: result, wasCensored, matches: deduped };
+    }
+
     return { censored: result, wasCensored };
 }
