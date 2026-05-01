@@ -38,7 +38,7 @@ Next.js 15 App Router, React 19, TypeScript, PostgreSQL, Prisma, better-auth, Pl
 
 ## Architecture
 - **`src/actions/`** &mdash; Server actions (`"use server"`) for all business logic (listings, auth, chat, admin, etc.)
-- **`src/app/api/`** &mdash; API routes organized by feature: `auth/`, `cron/`, `listing/`, `profile/`, `saved-queries/`, `user-role/`
+- **`src/app/api/`** &mdash; API routes organized by feature: `auth/`, `cron/` (all other endpoints converted to server actions)
 - **`src/components/`** &mdash; UI components: `admin/`, `features/`, `layout/`, `profile/`, `ui/`, `suspense/`
 - **`src/lib/`** &mdash; Core services: `auth.ts`, `prisma.ts`, `email-service.ts`, `profanity-filter.ts`, `toast-service.ts`, `image-adapter.ts`
 - **`src/models/`**, **`src/types/`**, **`src/schemas/`** &mdash; Data models, TypeScript types, Zod validation schemas
@@ -49,6 +49,10 @@ Next.js 15 App Router, React 19, TypeScript, PostgreSQL, Prisma, better-auth, Pl
 - `serverActions.bodySizeLimit: '10mb'` &mdash; raised for base64 image uploads
 - `eslint.ignoreDuringBuilds: true` &mdash; ESLint errors won't block production builds
 - ESLint config (`eslint.config.mjs`) ignores `generated/**`
+
+## Output Truncation
+- When running commands with potentially long output (lint, build, tests), redirect and truncate: `command 2>&1 | tail -20`
+- This avoids context overflow from large tool outputs.
 
 ## Image Handling
 All image upload, compression, storage, and deletion goes through the `imageAdapter` in `src/lib/image-adapter.ts`. Images are compressed with `sharp` and saved as static files in `public/uploads/`. The DB stores relative file paths, not base64. See `docs/image-adapter.md` for full details.
