@@ -3,16 +3,39 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { $Enums } from "@prisma/client";
 import UserRole = $Enums.UserRole;
 import UserStatusType = $Enums.UserStatusType;
-import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { prisma } from "@/lib/prisma";
 
 /**
  * Returns the role of the session's user
  * @return {Promise<$Enums.UserRole>}
  */
+export async function updateAllowMatureListingContentPreference(
+    allowMatureListingContent: boolean
+): Promise<{ success: boolean }> {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
+    if (!session?.user) {
+        redirect("/login");
+    }
+
+    await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+            allowMatureListingContent: allowMatureListingContent
+        }
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/market");
+    return { success: true };
+}
+
 export async function getCurrentUserRole(): Promise<$Enums.UserRole> {
     // Validate session
     const session = await auth.api.getSession({
@@ -20,7 +43,7 @@ export async function getCurrentUserRole(): Promise<$Enums.UserRole> {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const user = await prisma.user.findFirst({
@@ -42,7 +65,7 @@ export async function updateAdminUser(userId: string, data: { name?: string; ema
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const userRole = await getCurrentUserRole();
@@ -78,7 +101,7 @@ export async function getUserStatus(userId: string): Promise<{status: number, us
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     // Get role of current user and validate
@@ -134,7 +157,7 @@ async function createUserStatus(userId: string, userStatus: UserStatusType, expi
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     // Get role of current user and validate

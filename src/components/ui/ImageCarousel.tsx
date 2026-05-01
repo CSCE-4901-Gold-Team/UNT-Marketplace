@@ -6,9 +6,11 @@ import Image from "next/image";
 interface ImageCarouselProps {
     images: { id: number; url: string; sortOrder: number }[];
     alt: string;
+    /** Strong blur on images (e.g. listings cleared by moderators after a profanity match). */
+    blurImages?: boolean;
 }
 
-export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
+export default function ImageCarousel({ images, alt, blurImages = false }: ImageCarouselProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     if (images.length === 0) {
@@ -35,7 +37,11 @@ export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
                     src={images[currentIndex].url}
                     alt={`${alt} - Image ${currentIndex + 1}`}
                     fill
-                    className="object-contain"
+                    className={
+                        blurImages
+                            ? "object-contain blur-2xl scale-105 select-none"
+                            : "object-contain"
+                    }
                     priority
                     unoptimized
                 />
@@ -87,7 +93,11 @@ export default function ImageCarousel({ images, alt }: ImageCarouselProps) {
                                 src={image.url}
                                 alt={`Thumbnail ${index + 1}`}
                                 fill
-                                className="object-cover"
+                                className={
+                                    blurImages
+                                        ? "object-cover blur-md scale-105 select-none"
+                                        : "object-cover"
+                                }
                                 unoptimized
                             />
                         </button>

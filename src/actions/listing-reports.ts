@@ -6,6 +6,7 @@ import { CreateReportSchema, CreateReportInput } from "@/schemas/report-schemas"
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { prisma } from "@/lib/prisma";
 import { censorProfanity } from "@/lib/profanity-filter";
+import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { revalidatePath } from "next/cache";
 
 interface SubmitReportResult {
@@ -58,8 +59,9 @@ export async function submitListingReport(
         }
 
         const { listingId, reason, details: rawDetails } = validationResult.data;
+        const { whitelist, blacklist } = await getProfanityModerationTermLists();
         const detailsCensored = rawDetails?.trim()
-            ? censorProfanity(rawDetails.trim()).censored
+            ? censorProfanity(rawDetails.trim(), { whitelist, blacklist }).censored
             : null;
 
         // Check if listing exists

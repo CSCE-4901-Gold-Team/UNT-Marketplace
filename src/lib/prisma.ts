@@ -11,7 +11,7 @@
  * module once, so it effectively acts as a singleton per invocation.
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/prisma/generated";
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined;

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getAdminStats, getFirstListingsAwaitingApproval, getSuspendedUsers } from "@/actions/admin-actions";
+import { getAdminStats, getPendingListingApprovals, getSuspendedUsers } from "@/actions/admin-actions";
 
 export default function Admin({ userRole }: { userRole: string | null }) {
     const [stats, setStats] = useState({
@@ -26,7 +26,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
             try {
                 const [statsData, pendingData, suspendedData] = await Promise.all([
                     getAdminStats(),
-                    getFirstListingsAwaitingApproval(),
+                    getPendingListingApprovals(200, 0, "oldest"),
                     getSuspendedUsers(),
                 ]);
 
@@ -77,7 +77,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Pending Approvals</div>
                     <div className="text-3xl font-black text-orange-500">{loading ? "-" : stats.pendingCount}</div>
-                    <div className="text-xs text-gray-400 mt-1">First listings to review</div>
+                    <div className="text-xs text-gray-400 mt-1">Pending due to first listing and/or profanity</div>
                 </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
                     <div className="text-gray-500 text-sm font-semibold mb-2">Pending Reports</div>
@@ -93,7 +93,7 @@ export default function Admin({ userRole }: { userRole: string | null }) {
 
             <div>
                 <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                     <Link href="/admin/users" className="bg-orange-500 rounded-3xl h-[200px] flex items-center justify-center text-white hover:shadow-xl transition-shadow">
                         <div className="text-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-12 mx-auto mb-3">
@@ -127,6 +127,15 @@ export default function Admin({ userRole }: { userRole: string | null }) {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                             </svg>
                             <div className="text-xl font-bold">Handle Reports</div>
+                        </div>
+                    </Link>
+
+                    <Link href="/admin/profanity" className="bg-amber-700 rounded-3xl h-[200px] flex items-center justify-center text-white hover:shadow-xl transition-shadow">
+                        <div className="text-center px-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-12 mx-auto mb-3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664M5.25 12v3.75m0-3.75h3.75m-3.75 0H9m-3.75 0H5.25m0 0v-.75A2.25 2.25 0 017.5 9h9a2.25 2.25 0 012.25 2.25v.75m-13.5 0H3.75m0 0h-.75a.75.75 0 01-.75-.75V15m14.25 0h.75a.75.75 0 00.75-.75v-3m-18 0V9.75m18 0v.75a.75.75 0 01-.75.75H3.75a.75.75 0 01-.75-.75V9.75" />
+                            </svg>
+                            <div className="text-xl font-bold">Profanity lists</div>
                         </div>
                     </Link>
                 </div>

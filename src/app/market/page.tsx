@@ -21,8 +21,8 @@ export default async function MarketPage({
         mine: isMyListingsView,
     };
 
-    const listingsResponse = getListings("", initialFilters, 0, 12);
-    const userRole = getCurrentUserRole();
+    const listingsResponse = await getListings("", initialFilters, 0, 12);
+    const userRole = await getCurrentUserRole();
     const session = await auth.api.getSession({
         headers: await headers(),
     });
