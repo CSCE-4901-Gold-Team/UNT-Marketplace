@@ -2,6 +2,7 @@
 
 import { auth, prisma } from "@/lib/auth";
 import { censorProfanity } from "@/lib/profanity-filter";
+import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -269,7 +270,11 @@ export async function sendMessage(conversationId: string, body: string): Promise
     if (!trimmed) throw new Error("Message cannot be empty");
     if (trimmed.length > 2000) throw new Error("Message too long");
 
-    const { censored: bodyToStore, wasCensored } = censorProfanity(trimmed);
+    const { whitelist, blacklist } = await getProfanityModerationTermLists();
+    const { censored: bodyToStore, wasCensored } = censorProfanity(trimmed, {
+        whitelist,
+        blacklist,
+    });
 
     // Verify user is a participant
     const participant = await prisma.conversationParticipant.findUnique({

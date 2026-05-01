@@ -35,11 +35,13 @@ export default function ListingCard({
     const currentImage = hasValidImage ? sortedImages[currentImageIndex] : null;
     const isOwner = listing.ownerId === currentUserId;
     const editListingUrl = `/market/create-listing?edit=true&id=${listing.id}`;
+    const baseDisplayTitle = listing.matureAlternateTitle ?? listing.title;
     const listingTitle = listing.isDeniedByAdmin
-        ? `${listing.title} (DENIED)`
+        ? `${baseDisplayTitle} (DENIED)`
         : listing.listingStatus === "DRAFT" && listing.isPendingApproval
-            ? `${listing.title} (PENDING)`
-            : listing.title;
+            ? `${baseDisplayTitle} (PENDING)`
+            : baseDisplayTitle;
+    const blurCardImage = Boolean(listing.blurProfanityReleasedCardImage);
 
     const showCarouselControls = sortedImages.length > 1;
 
@@ -62,9 +64,13 @@ export default function ListingCard({
                     {hasValidImage ? (
                         <Image
                             src={currentImage!.url}
-                            alt={`${listing.title} image ${currentImageIndex + 1}`}
+                            alt={`${baseDisplayTitle} image ${currentImageIndex + 1}`}
                             fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                            className={
+                                blurCardImage
+                                    ? "object-cover blur-xl scale-105 select-none group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                                    : "object-cover group-hover:scale-105 transition-transform duration-500 ease-in-out"
+                            }
                             unoptimized
                         />
                     ) : (
@@ -77,7 +83,7 @@ export default function ListingCard({
                                 type="button"
                                 onClick={showPreviousImage}
                                 className="absolute left-2 top-1/2 -translate-y-1/2 z-20 bg-black/55 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label={`Previous image for ${listing.title}`}
+                                aria-label={`Previous image for ${baseDisplayTitle}`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -87,7 +93,7 @@ export default function ListingCard({
                                 type="button"
                                 onClick={showNextImage}
                                 className="absolute right-2 top-1/2 -translate-y-1/2 z-20 bg-black/55 hover:bg-black/70 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                                aria-label={`Next image for ${listing.title}`}
+                                aria-label={`Next image for ${baseDisplayTitle}`}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -119,7 +125,7 @@ export default function ListingCard({
 
             <Link
                 href={listingUrl}
-                aria-label={`Open ${listing.title}`}
+                aria-label={`Open ${baseDisplayTitle}`}
                 className="absolute inset-0 z-10"
             />
         </div>

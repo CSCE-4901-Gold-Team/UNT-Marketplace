@@ -9,7 +9,8 @@
     "vercel-build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "tests": "npx playwright test"
   },
   "dependencies": {
     "@prisma/client": "^6.16.3",

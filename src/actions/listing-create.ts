@@ -12,6 +12,7 @@ import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
 import { imageAdapter } from "@/lib/image-adapter";
 import { censorProfanity } from "@/lib/profanity-filter";
+import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { revalidatePath } from "next/cache";
 
 const CreateListingRequest = z.object({
@@ -86,6 +87,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
 
     let newListingId: string;
     let requiresAdminApproval = false;
+    let pendingReason: "profanity" | "first_listing" | "both" | null = null;
 
     try {
         const user = await prisma.user.findUnique({
@@ -157,12 +159,18 @@ export async function createListingAction(_initialState: FormResponse, formData:
         // Censored title/description; DRAFT if profanity or user requires approval; optional profanity flag row.
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
-        const titleC = censorProfanity(rawTitle);
-        const descC = censorProfanity(rawDescription);
+        const { whitelist, blacklist } = await getProfanityModerationTermLists();
+        const titleC = censorProfanity(rawTitle, { whitelist, blacklist });
+        const descC = censorProfanity(rawDescription, { whitelist, blacklist });
         const wasCensored = titleC.wasCensored || descC.wasCensored;
 
         const listingStatus =
             wasCensored || !user.listingApproved ? "DRAFT" : "AVAILABLE";
+        if (listingStatus === "DRAFT") {
+            if (wasCensored && !user.listingApproved) pendingReason = "both";
+            else if (wasCensored) pendingReason = "profanity";
+            else pendingReason = "first_listing";
+        }
 
         try {
             const newListing = await prisma.$transaction(async (tx) => {
@@ -229,5 +237,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect after successful creation (outside try-catch)
-    redirect(`/market/listing/${newListingId}?created=true${requiresAdminApproval ? "&requiresApproval=true" : ""}`);
+    const pendingReasonParam = pendingReason ? `&pendingReason=${pendingReason}` : "";
+    redirect(`/market/listing/${newListingId}?created=true${requiresAdminApproval ? "&requiresApproval=true" : ""}${pendingReasonParam}`);
 }
