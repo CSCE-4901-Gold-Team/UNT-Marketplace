@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Prisma, $Enums } from "@prisma/client";
+import { Prisma, $Enums } from "@/prisma/generated";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
@@ -13,7 +13,7 @@ import { censorProfanity } from "@/lib/profanity-filter";
 import { imageAdapter } from "@/lib/image-adapter";
 import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { revalidatePath } from "next/cache";
-import { MessageProfanityFlagStatus } from "@prisma/client";
+import { MessageProfanityFlagStatus } from "@/prisma/generated";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),

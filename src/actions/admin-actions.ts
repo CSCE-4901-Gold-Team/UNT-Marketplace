@@ -7,7 +7,7 @@ import {
     ProfanityListType,
     ReportStatus,
     UserStatusType,
-} from "@prisma/client";
+} from "@/prisma/generated";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";

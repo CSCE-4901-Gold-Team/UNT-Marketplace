@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ProfanityListType } from "@prisma/client";
+import { ProfanityListType } from "@/prisma/generated";
 import {
     addProfanityModerationTerm,
     deleteProfanityModerationTerm,

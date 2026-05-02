@@ -1,6 +1,6 @@
 import { prisma } from "../../src/lib/prisma";
 import { imageAdapter } from "../../src/lib/image-adapter";
-import { ImageType } from "@prisma/client";
+import { ImageType } from "@/prisma/generated";
 
 export interface SeedListingResult {
     listingId: string;

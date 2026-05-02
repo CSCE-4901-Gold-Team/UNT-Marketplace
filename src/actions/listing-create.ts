@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/prisma/generated";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";

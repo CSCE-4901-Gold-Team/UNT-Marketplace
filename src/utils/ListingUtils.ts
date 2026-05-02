@@ -1,5 +1,5 @@
 ﻿import {ListingFilters} from "@/types/ListingFilters";
-import {$Enums} from "@prisma/client";
+import {$Enums} from "@/prisma/generated";
 import ListingStatus = $Enums.ListingStatus;
 
 /**
