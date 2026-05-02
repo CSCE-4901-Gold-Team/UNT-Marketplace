@@ -85,7 +85,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         }
     }
 
-    let newListingId = "";
+    let newListingId: string;
     let requiresAdminApproval = false;
     let pendingReason: "profanity" | "first_listing" | "both" | null = null;
     let newPaths: string[] = [];
@@ -188,7 +188,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     ...(imagesParsed.length > 0 && {
                         images: {
                             create: imagesParsed.map((url, index) => ({
-                                url,
+                                url: url,
                                 imageType: "LISTING",
                                 sortOrder: index,
                             })),
