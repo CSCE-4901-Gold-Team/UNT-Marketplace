@@ -233,7 +233,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     });
                 }
                 return listing;
-            });
+            };
 
             if (wasCensored) {
                 revalidatePath("/admin");
