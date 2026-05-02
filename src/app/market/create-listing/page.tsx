@@ -25,6 +25,7 @@ type ListingResponse = {
     price?: string;
     listingStatus?: "AVAILABLE" | "DRAFT" | "SOLD" | "ARCHIVED";
     isProfessorOnly?: boolean;
+    pickupAddress?: string;
     categories?: ListingCategory[];
     images?: ListingImage[];
 };
@@ -47,6 +48,7 @@ export default function CreateListing() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
+    const [pickupAddress, setPickupAddress] = useState("");
     const [listingStatus, setListingStatus] = useState<EditableListingStatus>("AVAILABLE");
     const [isProfessorOnly, setIsProfessorOnly] = useState(false);
     const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
@@ -80,7 +82,7 @@ export default function CreateListing() {
 
                 if (!isMounted) return;
 
-                setCategoryOptions(categories.map((category) => ({
+                setCategoryOptions(categories.map((category: { id: number; name: string; slug: string; listingCount: number }) => ({
                     id: category.id,
                     name: category.name
                 })));
@@ -118,6 +120,7 @@ export default function CreateListing() {
                     setTitle(data.title || "");
                     setDescription(data.description || "");
                     setPrice(data.price || "");
+                    setPickupAddress(data.pickupAddress || "");
                     setListingStatus((data.listingStatus === "DRAFT" ? "DRAFT" : "AVAILABLE") as EditableListingStatus);
                     setIsProfessorOnly(data.isProfessorOnly || false);
                     
@@ -298,6 +301,16 @@ export default function CreateListing() {
                         onChange={(e) => setPrice(e.target.value)}
                         validationErrors={state.validationErrors}
                         required
+                    />
+
+                    <TextInput
+                        inputLabel="Pickup Address (optional)"
+                        name="pickupAddress"
+                        type="text"
+                        placeholder="123 Main St, Denton, TX"
+                        value={pickupAddress}
+                        onChange={(e) => setPickupAddress(e.target.value)}
+                        validationErrors={state.validationErrors}
                     />
 
                     {isEditing && (

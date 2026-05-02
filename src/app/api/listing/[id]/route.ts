@@ -73,6 +73,7 @@ export async function GET(
             price: listing.price.toString(),
             listingStatus: listing.listingStatus,
             isProfessorOnly: listing.isProfessorOnly,
+            pickupAddress: listing.pickupAddress,
             categories: listing.categories,
             images: listing.images,
         });

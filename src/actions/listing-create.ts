@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { $Enums } from "@/prisma/generated";
+import { Prisma, $Enums } from "@/prisma/generated";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
@@ -22,6 +22,7 @@ const CreateListingRequest = z.object({
     isProfessorOnly: z.boolean().optional(),
     categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
+    pickupAddress: z.string().optional(),
 });
 
 export async function createListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
@@ -62,6 +63,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         isProfessorOnly: formData.get("isProfessorOnly") === "true",
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
+        pickupAddress: formData.get("pickupAddress") as string || "",
     });
 
     if (!parsedFormData.success) {
@@ -86,6 +88,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
     let newListingId: string;
     let requiresAdminApproval = false;
     let pendingReason: "profanity" | "first_listing" | "both" | null = null;
+    let newPaths: string[] = [];
 
     try {
         const user = await prisma.user.findUnique({
@@ -149,7 +152,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         );
 
         // Save new files to disk BEFORE transaction (sharp compression)
-        const newPaths = await Promise.all(
+        newPaths = await Promise.all(
             newBase64s.map((b64) => imageAdapter.saveFromBase64(b64, { type: "listing" })),
         );
 
@@ -169,60 +172,66 @@ export async function createListingAction(_initialState: FormResponse, formData:
             else pendingReason = "first_listing";
         }
 
-        try {
-            const newListing = await prisma.$transaction(async (tx) => {
-                const listing = await tx.listing.create({
-                    data: {
-                        title: titleC.censored,
-                        description: descC.censored,
-                        price: parseFloat(parsedFormData.data.price),
-                        isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                        listingStatus,
-                        ownerId: session.user.id,
-                        categories: {
-                            connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
-                        },
+        const newListing = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+            const listing = await tx.listing.create({
+                data: {
+                    title: titleC.censored,
+                    description: descC.censored,
+                    price: parseFloat(parsedFormData.data.price),
+                    isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+                    listingStatus,
+                    ownerId: session.user.id,
+                    pickupAddress: parsedFormData.data.pickupAddress || null,
+                    categories: {
+                        connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
                     },
-                });
-
-                // Create Image records with file paths
-                if (newPaths.length > 0) {
-                    await tx.image.createMany({
-                        data: newPaths.map((url, index) => ({
-                            url,
-                            listingId: listing.id,
-                            imageType: "LISTING",
-                            sortOrder: index,
-                        })),
-                    });
-                }
-
-                if (wasCensored) {
-                    await tx.listingProfanityFlag.create({
-                        data: {
-                            listingId: listing.id,
-                            ownerId: session.user.id,
-                            originalTitle: rawTitle,
-                            originalDescription: rawDescription,
+                    ...(imagesParsed.length > 0 && {
+                        images: {
+                            create: imagesParsed.map((url, index) => ({
+                                url: url,
+                                imageType: "LISTING",
+                                sortOrder: index,
+                            })),
                         },
-                    });
-                }
-                return listing;
+                    }),
+                },
             });
 
-            if (wasCensored) {
-                revalidatePath("/admin");
+            if (newPaths.length > 0) {
+                await tx.image.createMany({
+                    data: newPaths.map((url, index) => ({
+                        url,
+                        listingId: listing.id,
+                        imageType: "LISTING",
+                        sortOrder: index,
+                    })),
+                });
             }
 
-            newListingId = newListing.id;
-        } catch (error) {
-            // Transaction failed — clean up orphaned files
-            if (newPaths.length > 0) {
-                await imageAdapter.deleteListingFiles(newPaths);
+            if (wasCensored) {
+                await tx.listingProfanityFlag.create({
+                    data: {
+                        listingId: listing.id,
+                        ownerId: session.user.id,
+                        originalTitle: rawTitle,
+                        originalDescription: rawDescription,
+                    },
+                });
             }
-            throw error;
+
+            return listing;
+        });
+
+        if (wasCensored) {
+            revalidatePath("/admin");
         }
+
+        newListingId = newListing.id;
     } catch (error) {
+        if (newPaths.length > 0) {
+            await imageAdapter.deleteListingFiles(newPaths);
+        }
+
         console.error("Error creating listing:", error);
         return {
             status: FormStatus.ERROR,

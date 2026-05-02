@@ -1,6 +1,7 @@
 import React from "react";
 import type {Metadata} from "next";
 import "@/styles/globals.css";
+import "leaflet/dist/leaflet.css";
 import {ToastContainer} from "react-toastify";
 import RemoveExtensionAttrs from "@/components/layout/RemoveExtensionAttrs";
 

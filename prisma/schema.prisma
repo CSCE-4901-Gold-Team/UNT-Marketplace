@@ -82,6 +82,7 @@ model Listing {
     description     String
     price           Decimal       @db.Decimal(10, 2)
     isProfessorOnly Boolean       @default(false)
+    pickupAddress   String?
     createdAt       DateTime      @default(now())
     updatedAt       DateTime      @default(now()) @updatedAt
     listingStatus   ListingStatus @default(AVAILABLE)

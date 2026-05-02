@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import type { PendingListing } from "@/types/admin/listings";
 import {
     ListingStatus,
     MessageProfanityFlagStatus,
@@ -117,7 +118,7 @@ export async function getPendingListingApprovals(
     limit: number = 10,
     skip: number = 0,
     sort: PendingApprovalSort = "oldest"
-) {
+): Promise<PendingListing[]> {
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -165,7 +166,7 @@ export async function getPendingListingApprovals(
     return listings.map(listing => {
         const isFirstListingPending = !listing.owner.listingApproved;
         const isProfanityPending = listing.listingProfanityFlags.length > 0;
-        const pendingReason =
+        const pendingReason: PendingListing["pendingReason"] =
             isFirstListingPending && isProfanityPending
                 ? "BOTH"
                 : isProfanityPending

@@ -7,6 +7,7 @@ import ImageCarousel from "@/components/ui/ImageCarousel";
 import { Suspense } from "react";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 import { prisma } from "@/lib/prisma";
+import ListingLocationMap from "@/components/ui/ListingLocationMap";
 import { MessageProfanityFlagStatus } from "@/prisma/generated";
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -149,11 +150,17 @@ export default async function ListingDetail({ params }: { params: Promise<{ id: 
                         <p className="text-gray-700 whitespace-pre-wrap">{displayDescription}</p>
                     </div>
 
+                    {listing.pickupAddress && (
+                        <div className="mb-6">
+                            <ListingLocationMap address={listing.pickupAddress} />
+                        </div>
+                    )}
+
                 {listing.categories.length > 0 && (
                     <div className="mb-6">
                         <h2 className="text-xl font-semibold mb-2">Categories</h2>
                         <div className="flex flex-wrap gap-2">
-                            {listing.categories.map((category) => (
+                            {listing.categories.map((category: { id: number; name: string }) => (
                                 <span
                                     key={category.id}
                                     className="bg-gray-100 text-gray-700 px-3 py-1 rounded"
