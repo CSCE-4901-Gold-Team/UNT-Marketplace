@@ -4,6 +4,8 @@ import React, { useActionState, useEffect, useRef, useState } from "react";
 import { createListingAction } from "@/actions/listing-create";
 import { updateListingAction } from "@/actions/listing-update";
 import { deleteListingAction } from "@/actions/listing-delete";
+import { getListById } from "@/actions/listing-actions";
+import { getCurrentUserRole } from "@/actions/user-actions";
 import { FormStatus } from "@/constants/FormStatus";
 import { FormResponse } from "@/types/FormResponse";
 import TextInput from "@/components/ui/TextInput";
@@ -17,18 +19,6 @@ import { getCategories, getCategoriesCount } from "@/actions/category-actions";
 import { previewListingProfanityForForm } from "@/actions/listing-profanity-preview";
 
 type EditableListingStatus = "AVAILABLE" | "DRAFT";
-type ListingCategory = { id: number; name: string };
-type ListingImage = { url: string };
-type ListingResponse = {
-    title?: string;
-    description?: string;
-    price?: string;
-    listingStatus?: "AVAILABLE" | "DRAFT" | "SOLD" | "ARCHIVED";
-    isProfessorOnly?: boolean;
-    categories?: ListingCategory[];
-    images?: ListingImage[];
-};
-
 
 const initialState: FormResponse = {
     status: FormStatus.INITIALIZED
@@ -107,33 +97,30 @@ export default function CreateListing() {
     useEffect(() => {
         if (isEditing && listingId) {
             setIsLoadingData(true);
-            fetch(`/api/listing/${listingId}`)
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error(`HTTP error! status: ${res.status}`);
+            getListById(listingId)
+                .then((result) => {
+                    if (!result.success || !result.listing) {
+                        throw new Error(result.error || "Failed to load listing");
                     }
-                    return res.json();
-                })
-                .then((data: ListingResponse) => {
+                    const data = result.listing;
                     setTitle(data.title || "");
                     setDescription(data.description || "");
                     setPrice(data.price || "");
                     setListingStatus((data.listingStatus === "DRAFT" ? "DRAFT" : "AVAILABLE") as EditableListingStatus);
                     setIsProfessorOnly(data.isProfessorOnly || false);
-                    
+
                     // Set selected category IDs
                     if (data.categories && data.categories.length > 0) {
                         setSelectedCategoryIds(data.categories.map((c: { id: number }) => c.id));
                     }
-                    
+
                     // Load existing images into selectedImages for editing
                     if (data.images && data.images.length > 0) {
                         const imageUrls = data.images.map((img) => img.url);
                         setSelectedImages(imageUrls);
                     }
-
                 })
-                .catch(err => {
+                .catch((err) => {
                     console.error('Error loading listing:', err);
                 })
                 .finally(() => {
@@ -143,10 +130,17 @@ export default function CreateListing() {
     }, [isEditing, listingId]);
 
     useEffect(() => {
-        fetch("/api/user-role")
-            .then((res) => res.ok ? res.json() : Promise.reject(new Error("Failed to load role")))
-            .then((data) => setUserRole(data?.role ?? null))
-            .catch(() => setUserRole(null));
+        let isMounted = true;
+        getCurrentUserRole()
+            .then((role) => {
+                if (isMounted) setUserRole(role);
+            })
+            .catch(() => {
+                if (isMounted) setUserRole(null);
+            });
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
     useEffect(() => {

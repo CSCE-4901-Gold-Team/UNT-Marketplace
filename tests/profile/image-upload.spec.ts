@@ -14,7 +14,8 @@ test.describe("Profile Image Upload", () => {
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
 
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
 
@@ -35,7 +36,8 @@ test.describe("Profile Image Upload", () => {
         const fileInput = page.locator('input[type="file"]').first();
         await fileInput.setInputFiles(testImagePath);
 
-        await expect(page.getByText("Image uploaded")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
 
         await page.getByRole("button", { name: "Save", exact: true }).click();
         await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
@@ -61,6 +63,72 @@ test.describe("Profile Image Upload", () => {
         await page.goto("/profile");
 
         await expect(page.getByRole("heading", { name: "My Profile" })).toBeVisible({ timeout: 10000 });
+
+        await logout(page);
+    });
+
+    test("replacing profile image removes old file", async ({ page }) => {
+        await login(page, "student");
+
+        await page.goto("/profile");
+        await expect(page.getByRole("heading", { name: "My Profile" })).toBeVisible({ timeout: 10000 });
+
+        const testImagePath1 = createTestImageFile("public/uploads/profile-replace-image-1.png");
+        const fileInput = page.locator('input[type="file"]').first();
+        await fileInput.setInputFiles(testImagePath1);
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
+
+        await page.getByRole("button", { name: "Save", exact: true }).click();
+        await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
+
+        const avatarImg1 = page.locator('img[class*="rounded-full"]').first();
+        await expect(avatarImg1).toBeVisible({ timeout: 10000 });
+        const firstSrc = await avatarImg1.getAttribute("src");
+
+        const testImagePath2 = createTestImageFile("public/uploads/profile-replace-image-2.png");
+        await fileInput.setInputFiles(testImagePath2);
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
+
+        await page.getByRole("button", { name: "Save", exact: true }).click();
+        await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
+
+        const avatarImg2 = page.locator('img[class*="rounded-full"]').first();
+        await expect(avatarImg2).toBeVisible({ timeout: 10000 });
+        const secondSrc = await avatarImg2.getAttribute("src");
+
+        expect(secondSrc).not.toBe(firstSrc);
+
+        await logout(page);
+    });
+
+    test("removing profile image clears avatar", async ({ page }) => {
+        await login(page, "student");
+
+        await page.goto("/profile");
+        await expect(page.getByRole("heading", { name: "My Profile" })).toBeVisible({ timeout: 10000 });
+
+        const testImagePath = createTestImageFile("public/uploads/profile-remove-image.png");
+        const fileInput = page.locator('input[type="file"]').first();
+        await fileInput.setInputFiles(testImagePath);
+        await expect(page.getByText("Uploading...")).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText("Uploading...")).toBeHidden({ timeout: 10000 });
+
+        await page.getByRole("button", { name: "Save", exact: true }).click();
+        await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
+
+        const avatarImg = page.locator('img[class*="rounded-full"]').first();
+        await expect(avatarImg).toBeVisible({ timeout: 10000 });
+
+        const imageUrlInput = page.locator('input[placeholder="https://..."]');
+        await imageUrlInput.fill("");
+
+        await page.getByRole("button", { name: "Save", exact: true }).click();
+        await expect(page.getByText("Profile updated successfully")).toBeVisible({ timeout: 10000 });
+
+        const initialsFallback = page.locator('div[class*="rounded-full"][class*="bg-gray-200"]').first();
+        await expect(initialsFallback).toBeVisible({ timeout: 10000 });
 
         await logout(page);
     });

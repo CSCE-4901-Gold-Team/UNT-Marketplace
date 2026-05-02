@@ -4,7 +4,7 @@ import { createTestImageFile, selectCategory } from "../helpers/image-helper";
 
 test.describe("Listing Image Upload", () => {
     test("can create listing with images", async ({ page }) => {
-        test.setTimeout(60000);
+        test.slow();
         await login(page, "admin");
 
         const testImagePath = createTestImageFile("public/uploads/test-listing-image.png");
@@ -103,7 +103,8 @@ test.describe("Listing Image Upload", () => {
 
     // Full pipeline test: upload image, save listing, verify image persists on listing detail page
     test("uploaded image persists after saving listing", async ({ page }) => {
-        test.setTimeout(90000);
+        test.slow();
+
         await login(page, "admin");
 
         const testImagePath = createTestImageFile("public/uploads/test-persist-image.png");

@@ -41,7 +41,7 @@ test.describe('User registration tests', () => {
         await page.getByRole('button', { name: 'Register' }).click();
 
         await expect(page.getByText('Registration successful!')).toBeVisible({ timeout: 30000 });
-        await expect(page).toHaveURL('/market', { timeout: 30000 });
+        await expect(page).toHaveURL('/login', { timeout: 30000 });
     });
 });
 

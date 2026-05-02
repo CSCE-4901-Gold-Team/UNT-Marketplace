@@ -10,7 +10,7 @@ import {
 
 test.describe("Listing Image Edit", () => {
     test("can edit listing and remove an image", async ({ page }) => {
-        test.setTimeout(60000);
+        test.slow();
 
         const ownerId = await getAdminUserId();
         const categoryId = await getFirstCategoryId();
@@ -64,7 +64,7 @@ test.describe("Listing Image Edit", () => {
     });
 
     test("can edit listing and add a new image", async ({ page }) => {
-        test.setTimeout(60000);
+        test.slow();
 
         const ownerId = await getAdminUserId();
         const categoryId = await getFirstCategoryId();
@@ -114,7 +114,8 @@ test.describe("Listing Image Edit", () => {
     });
 
     test("can delete a listing", async ({ page }) => {
-        test.setTimeout(60000);
+        test.slow();
+
         const ownerId = await getAdminUserId();
         const categoryId = await getFirstCategoryId();
         const { listingId, imagePaths } = await seedTestListing({
