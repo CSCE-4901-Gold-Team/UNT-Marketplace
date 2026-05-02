@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendQueryDigestEmail, ListingForDigest } from "@/lib/email-service";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Decimal } from "@/prisma/generated/runtime/library";
 
 /**
  * Process all enabled saved queries and send email digests for queries

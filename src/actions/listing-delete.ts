@@ -6,6 +6,7 @@ import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {redirect} from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { imageAdapter } from "@/lib/image-adapter";
 
 export async function deleteListingAction(listingId: string): Promise<FormResponse> {
     const session = await auth.api.getSession({
@@ -49,6 +50,11 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
             };
         }
 
+        const images = await prisma.image.findMany({
+            where: { listingId: listingId },
+            select: { url: true },
+        });
+
         await prisma.$transaction(async (tx) => {
             await tx.listingEvent.deleteMany({
                 where: { listingId: listingId }
@@ -62,6 +68,11 @@ export async function deleteListingAction(listingId: string): Promise<FormRespon
                 where: { id: listingId }
             });
         });
+
+        // Delete files from disk after transaction succeeds
+        if (images.length > 0) {
+            await imageAdapter.deleteListingFiles(images.map((img) => img.url));
+        }
 
     } catch (error) {
         console.error("Error deleting listing:", error);

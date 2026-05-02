@@ -1,4 +1,4 @@
-import {Prisma} from "@prisma/client";
+import {Prisma} from "@/prisma/generated";
 
 // Price is return from Prisma as a Decimal.js object, which can't
 //  be streamed to React client components. The following type

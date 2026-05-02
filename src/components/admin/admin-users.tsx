@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/prisma/generated";
 import type { User, SuspendedUser } from "@/types/admin/users";
 import {
     getAdminStats,
