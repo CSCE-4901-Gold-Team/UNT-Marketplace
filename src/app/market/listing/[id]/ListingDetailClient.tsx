@@ -4,7 +4,7 @@ import {useEffect, useState, useTransition} from "react";
 import ReportListingModal from "@/components/ui/ReportListingModal";
 import {getOrCreateConversation} from "@/actions/chat-actions";
 import {useRouter} from "next/navigation";
-import {EventType} from "@prisma/client";
+import {EventType} from "@/prisma/generated";
 import {fireContactSeller, fireEvent} from "@/actions/analytics-actions";
 
 interface ListingDetailClientProps {

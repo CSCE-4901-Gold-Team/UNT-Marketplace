@@ -1,4 +1,4 @@
-import {Category} from "@prisma/client";
+import {Category} from "@/prisma/generated";
 
 /**
  * Custom Listing Filter type used to construct Prisma filter queries

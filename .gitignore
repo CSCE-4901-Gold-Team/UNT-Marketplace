@@ -45,7 +45,7 @@ prisma/generated
 
 .idea/dataSources.xml
 
-/public/images/uploads/*
+/public/uploads/*
 
 # Playwright
 node_modules/

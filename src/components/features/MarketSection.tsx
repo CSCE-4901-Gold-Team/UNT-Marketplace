@@ -10,7 +10,7 @@ import Button from "@/components/ui/Button";
 import { FaMagnifyingGlass } from "react-icons/fa6";
 import MarketFilterControls from "@/components/ui/MarketFilterControls";
 import { ListingFilters } from "@/types/ListingFilters";
-import { EventType, $Enums } from "@prisma/client";
+import { EventType, $Enums } from "@/prisma/generated";
 import UserRole = $Enums.UserRole;
 import Link from "next/link";
 import {fireListingEvents} from "@/actions/analytics-actions";

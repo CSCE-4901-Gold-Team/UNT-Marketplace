@@ -69,7 +69,6 @@ export default function ProfileEditor({
       if (!res.ok) throw new Error(data?.error || "Upload failed");
 
       setImage(data.url);
-      toastService.toast("Image uploaded — remember to save changes.", "info");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setUploadError(msg || "Upload failed");

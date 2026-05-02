@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import ListingSuccessToast from "@/components/ui/ListingSuccessToast";
 import { prisma } from "@/lib/prisma";
 import ListingLocationMap from "@/components/ui/ListingLocationMap";
-import { MessageProfanityFlagStatus } from "@prisma/client";
+import { MessageProfanityFlagStatus } from "@/prisma/generated";
 
 export default async function ListingDetail({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;

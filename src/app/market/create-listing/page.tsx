@@ -361,7 +361,7 @@ export default function CreateListing() {
                         name="categoryIds"
                         options={categoryOptions}
                         value={selectedCategoryIds}
-                        onChange={setSelectedCategoryIds}
+                        onChangeAction={setSelectedCategoryIds}
                         validationErrors={state.validationErrors}
                         disabled={isPending || isLoadingData || isLoadingCategories}
                         isLoading={isLoadingCategories}

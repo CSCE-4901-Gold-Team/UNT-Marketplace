@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { ProfanityListType } from "@prisma/client";
+import { ProfanityListType } from "@/prisma/generated";
 
 type Cache = {
     whitelist: string[];

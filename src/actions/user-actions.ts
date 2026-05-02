@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/prisma/generated";
 import UserRole = $Enums.UserRole;
 import UserStatusType = $Enums.UserStatusType;
 import { prisma } from "@/lib/prisma";

@@ -5,14 +5,15 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Prisma, $Enums } from "@prisma/client";
+import { Prisma, $Enums } from "@/prisma/generated";
 import { redirect } from "next/navigation";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
 import { censorProfanity } from "@/lib/profanity-filter";
+import { imageAdapter } from "@/lib/image-adapter";
 import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { revalidatePath } from "next/cache";
-import { MessageProfanityFlagStatus } from "@prisma/client";
+import { MessageProfanityFlagStatus } from "@/prisma/generated";
 
 const UpdateListingRequest = z.object({
     listingId: z.string(),
@@ -24,6 +25,7 @@ const UpdateListingRequest = z.object({
     categoryIds: z.array(z.number()).min(1, "At least one category is required"),
     imagePath: z.string().optional(),
     pickupAddress: z.string().optional(),
+    removedImageUrls: z.string().optional(),
 });
 
 export async function updateListingAction(_initialState: FormResponse, formData: FormData): Promise<FormResponse> {
@@ -52,6 +54,7 @@ export async function updateListingAction(_initialState: FormResponse, formData:
         categoryIds: JSON.parse(formData.get("categoryIds") as string || "[]"),
         imagePath: formData.get("imagePath") as string || "",
         pickupAddress: formData.get("pickupAddress") as string || "",
+        removedImageUrls: formData.get("removedImageUrls") as string || "[]",
     });
 
     if (!parsedFormData.success) {
@@ -95,26 +98,45 @@ export async function updateListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        // Handle image update if provided
-        const imagePath = parsedFormData.data.imagePath;
-        
-        let imagesParsed: string[] = [];
-        
-        if (imagePath && imagePath !== "" && imagePath !== "[]") {
-            // Parse images (could be JSON array or single string)
+        // Parse submitted images
+        const submittedRaw = parsedFormData.data.imagePath || "[]";
+        let allSubmitted: string[] = [];
+        if (submittedRaw && submittedRaw !== "" && submittedRaw !== "[]") {
             try {
-                const parsed = JSON.parse(imagePath);
+                const parsed = JSON.parse(submittedRaw);
                 if (Array.isArray(parsed)) {
-                    imagesParsed = parsed.filter(img => img && img !== "");
-                } else if (parsed && parsed !== "") {
-                    imagesParsed = [parsed];
+                    allSubmitted = parsed.filter((img) => typeof img === "string" && img !== "");
+                } else if (parsed && typeof parsed === "string" && parsed !== "") {
+                    allSubmitted = [parsed];
                 }
             } catch {
-                if (imagePath && imagePath !== "") {
-                    imagesParsed = [imagePath];
+                if (submittedRaw && submittedRaw !== "") {
+                    allSubmitted = [submittedRaw];
                 }
             }
         }
+
+        // Parse removed image URLs
+        const removedRaw = parsedFormData.data.removedImageUrls || "[]";
+        let removedUrls: string[] = [];
+        try {
+            const parsed = JSON.parse(removedRaw);
+            if (Array.isArray(parsed)) {
+                removedUrls = parsed.filter((u: unknown) => typeof u === "string" && u !== "");
+            }
+        } catch {
+            // ignore parse errors
+        }
+
+        // Separate new uploads (base64) from kept existing images (file paths)
+        const newBase64s = allSubmitted.filter(
+            (s) => typeof s === "string" && s.startsWith("data:"),
+        );
+
+        // Save new files to disk BEFORE transaction (sharp compression)
+        const newPaths = await Promise.all(
+            newBase64s.map((b64) => imageAdapter.saveFromBase64(b64, { type: "listing" })),
+        );
 
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
@@ -149,10 +171,11 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                     where: {
                         id: session.user.id,
                     },
-                    select: { listingApproved: true },
+                    select: { listingApproved: true, role: true },
                 });
 
-                if (!user?.listingApproved) {
+                const isAdmin = user?.role === "ADMIN";
+                if (!isAdmin && !user?.listingApproved) {
                     return {
                         status: FormStatus.ERROR,
                         message: {
@@ -178,60 +201,82 @@ export async function updateListingAction(_initialState: FormResponse, formData:
                     status: FormStatus.ERROR,
                     message: {
                         type: "error",
-                        content: "Only faculty accounts can set a listing as professor-only."
-                    }
+                        content: "Only faculty accounts can set a listing as professor-only.",
+                    },
                 };
             }
         }
 
-        // Always update images when editing (user has full control in UI)
-        if (imagesParsed.length > 0) {
-            updateData.images = {
-                deleteMany: {},
-                create: imagesParsed.map((url, index) => ({
-                    url,
-                    imageType: $Enums.ImageType.LISTING,
-                    sortOrder: index,
-                })),
-            };
-        } else {
-            updateData.images = {
-                deleteMany: {},
-            };
-        }
-
-        await prisma.$transaction(async (tx) => {
-            await tx.listing.update({
-                where: { id: listingId },
-                data: updateData,
-            });
-            if (wasCensored) {
-                const pending = await tx.listingProfanityFlag.findFirst({
-                    where: {
-                        listingId,
-                        status: MessageProfanityFlagStatus.PENDING,
-                    },
+        try {
+            await prisma.$transaction(async (tx) => {
+                // Update listing fields
+                await tx.listing.update({
+                    where: { id: listingId },
+                    data: updateData,
                 });
-                if (pending) {
-                    await tx.listingProfanityFlag.update({
-                        where: { id: pending.id },
-                        data: {
-                            originalTitle: rawTitle,
-                            originalDescription: rawDescription,
-                        },
-                    });
-                } else {
-                    await tx.listingProfanityFlag.create({
-                        data: {
-                            listingId,
-                            ownerId: session.user.id,
-                            originalTitle: rawTitle,
-                            originalDescription: rawDescription,
-                        },
+
+                // Delete ONLY removed image records (not all images)
+                if (removedUrls.length > 0) {
+                    await tx.image.deleteMany({
+                        where: { listingId, url: { in: removedUrls } },
                     });
                 }
+
+                // Create records ONLY for new images
+                if (newPaths.length > 0) {
+                    const remaining = await tx.image.findMany({
+                        where: { listingId, url: { notIn: removedUrls } },
+                        orderBy: { sortOrder: "asc" },
+                    });
+                    await tx.image.createMany({
+                        data: newPaths.map((url, i) => ({
+                            url,
+                            listingId,
+                            imageType: $Enums.ImageType.LISTING,
+                            sortOrder: remaining.length + i,
+                        })),
+                    });
+                }
+
+                if (wasCensored) {
+                    const pending = await tx.listingProfanityFlag.findFirst({
+                        where: {
+                            listingId,
+                            status: MessageProfanityFlagStatus.PENDING,
+                        },
+                    });
+                    if (pending) {
+                        await tx.listingProfanityFlag.update({
+                            where: { id: pending.id },
+                            data: {
+                                originalTitle: rawTitle,
+                                originalDescription: rawDescription,
+                            },
+                        });
+                    } else {
+                        await tx.listingProfanityFlag.create({
+                            data: {
+                                listingId,
+                                ownerId: session.user.id,
+                                originalTitle: rawTitle,
+                                originalDescription: rawDescription,
+                            },
+                        });
+                    }
+                }
+            });
+
+            // Transaction succeeded — clean up removed files from disk
+            if (removedUrls.length > 0) {
+                await imageAdapter.deleteListingFiles(removedUrls);
             }
-        });
+        } catch (txError) {
+            // Transaction failed — clean up newly written files
+            if (newPaths.length > 0) {
+                await imageAdapter.deleteListingFiles(newPaths);
+            }
+            throw txError;
+        }
 
         if (wasCensored) {
             revalidatePath("/admin");

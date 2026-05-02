@@ -2,7 +2,7 @@
 
 import {auth, prisma} from "@/lib/auth";
 import {headers} from "next/headers";
-import {EventType} from "@prisma/client";
+import {EventType} from "@/prisma/generated";
 
 function startOfToday(): Date {
     const d = new Date();
