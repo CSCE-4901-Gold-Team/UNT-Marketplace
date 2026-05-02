@@ -5,7 +5,7 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { $Enums } from "@/prisma/generated";
+import { Prisma, $Enums } from "@/prisma/generated";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
@@ -85,9 +85,10 @@ export async function createListingAction(_initialState: FormResponse, formData:
         }
     }
 
-    let newListingId: string;
+    let newListingId = "";
     let requiresAdminApproval = false;
     let pendingReason: "profanity" | "first_listing" | "both" | null = null;
+    let newPaths: string[] = [];
 
     try {
         const user = await prisma.user.findUnique({
@@ -151,7 +152,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         );
 
         // Save new files to disk BEFORE transaction (sharp compression)
-        const newPaths = await Promise.all(
+        newPaths = await Promise.all(
             newBase64s.map((b64) => imageAdapter.saveFromBase64(b64, { type: "listing" })),
         );
 
@@ -187,7 +188,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     ...(imagesParsed.length > 0 && {
                         images: {
                             create: imagesParsed.map((url, index) => ({
-                                url: url,
+                                url,
                                 imageType: "LISTING",
                                 sortOrder: index,
                             })),
@@ -195,23 +196,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     }),
                 },
             });
-            if (wasCensored) {
-                await tx.listingProfanityFlag.create({
-                    data: {
-                        title: titleC.censored,
-                        description: descC.censored,
-                        price: parseFloat(parsedFormData.data.price),
-                        isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                        listingStatus,
-                        ownerId: session.user.id,
-                        categories: {
-                            connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
-                        },
-                    },
-                });
-            }
 
-            // Create Image records with file paths
             if (newPaths.length > 0) {
                 await tx.image.createMany({
                     data: newPaths.map((url, index) => ({
@@ -233,22 +218,20 @@ export async function createListingAction(_initialState: FormResponse, formData:
                     },
                 });
             }
-            return listing;
 
-            if (wasCensored) {
-                revalidatePath("/admin");
-            }
+            return listing;
         });
 
-            newListingId = newListing.id;
-        } catch (error) {
-            // Transaction failed — clean up orphaned files
-            if (newPaths.length > 0) {
-                await imageAdapter.deleteListingFiles(newPaths);
-            }
-            throw error;
+        if (wasCensored) {
+            revalidatePath("/admin");
         }
+
+        newListingId = newListing.id;
     } catch (error) {
+        if (newPaths.length > 0) {
+            await imageAdapter.deleteListingFiles(newPaths);
+        }
+
         console.error("Error creating listing:", error);
         return {
             status: FormStatus.ERROR,
