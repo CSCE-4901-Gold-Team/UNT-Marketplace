@@ -209,35 +209,36 @@ export async function createListingAction(_initialState: FormResponse, formData:
                         },
                     },
                 });
+            }
 
-                // Create Image records with file paths
-                if (newPaths.length > 0) {
-                    await tx.image.createMany({
-                        data: newPaths.map((url, index) => ({
-                            url,
-                            listingId: listing.id,
-                            imageType: "LISTING",
-                            sortOrder: index,
-                        })),
-                    });
-                }
+            // Create Image records with file paths
+            if (newPaths.length > 0) {
+                await tx.image.createMany({
+                    data: newPaths.map((url, index) => ({
+                        url,
+                        listingId: listing.id,
+                        imageType: "LISTING",
+                        sortOrder: index,
+                    })),
+                });
+            }
 
-                if (wasCensored) {
-                    await tx.listingProfanityFlag.create({
-                        data: {
-                            listingId: listing.id,
-                            ownerId: session.user.id,
-                            originalTitle: rawTitle,
-                            originalDescription: rawDescription,
-                        },
-                    });
-                }
-                return listing;
-            };
+            if (wasCensored) {
+                await tx.listingProfanityFlag.create({
+                    data: {
+                        listingId: listing.id,
+                        ownerId: session.user.id,
+                        originalTitle: rawTitle,
+                        originalDescription: rawDescription,
+                    },
+                });
+            }
+            return listing;
 
             if (wasCensored) {
                 revalidatePath("/admin");
             }
+        });
 
             newListingId = newListing.id;
         } catch (error) {
