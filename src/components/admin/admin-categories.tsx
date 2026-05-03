@@ -298,8 +298,8 @@ export default function AdminCategories({ userRole }: { userRole: string | null 
                 cancelLabel="Cancel"
                 tone="danger"
                 pending={actionInProgress}
-                onConfirm={handleDeleteCategory}
-                onClose={() => setCategoryPendingDeletion(null)}
+                onConfirmAction={handleDeleteCategory}
+                onCloseAction={() => setCategoryPendingDeletion(null)}
             />
         </main>
     );

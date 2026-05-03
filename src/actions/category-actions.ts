@@ -1,7 +1,7 @@
 "use server";
 
 import * as z from "zod";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/prisma/generated";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -48,7 +48,7 @@ async function requireAdminSession() {
     });
 
     if (!session) {
-        redirect("/sign-in");
+        redirect("/login");
     }
 
     const currentUserRole = await getCurrentUserRole();

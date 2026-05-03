@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { RecentListing, PendingListing } from "@/types/admin/listings";
-import { getAdminStats, getRecentlyListedItems, getFirstListingsAwaitingApproval, approveFirstListing, rejectFirstListing, deleteListing } from "@/actions/admin-actions";
+import { getAdminStats, getRecentlyListedItems, getPendingListingApprovals, approveFirstListing, rejectFirstListing, deleteListing, type PendingApprovalSort } from "@/actions/admin-actions";
 import Pagination from "@/components/ui/Pagination";
 
 export default function AdminListings({ userRole }: { userRole: string | null }) {
@@ -21,6 +21,7 @@ export default function AdminListings({ userRole }: { userRole: string | null })
 
     const [listingsPage, setListingsPage] = useState(1);
     const [pendingListingsPage, setPendingListingsPage] = useState(1);
+    const [pendingApprovalsSort, setPendingApprovalsSort] = useState<PendingApprovalSort>("oldest");
 
     const [totalListingsCount, setTotalListingsCount] = useState(0);
     const [totalPendingListingsCount, setTotalPendingListingsCount] = useState(0);
@@ -36,7 +37,11 @@ export default function AdminListings({ userRole }: { userRole: string | null })
                 const [statsData, recentData, pendingData] = await Promise.all([
                     getAdminStats(),
                     getRecentlyListedItems(LISTINGS_PER_PAGE + 1, (listingsPage - 1) * LISTINGS_PER_PAGE),
-                    getFirstListingsAwaitingApproval(PENDING_PER_PAGE + 1, (pendingListingsPage - 1) * PENDING_PER_PAGE),
+                    getPendingListingApprovals(
+                        PENDING_PER_PAGE + 1,
+                        (pendingListingsPage - 1) * PENDING_PER_PAGE,
+                        pendingApprovalsSort
+                    ),
                 ]);
 
                 setRecentListings(recentData.slice(0, LISTINGS_PER_PAGE));
@@ -56,7 +61,7 @@ export default function AdminListings({ userRole }: { userRole: string | null })
         };
 
         load();
-    }, [userRole, router, listingsPage, pendingListingsPage]);
+    }, [userRole, router, listingsPage, pendingListingsPage, pendingApprovalsSort]);
 
     function handleViewListing(listingId: string) {
         router.push(`/market/listing/${listingId}`);
@@ -209,15 +214,33 @@ export default function AdminListings({ userRole }: { userRole: string | null })
                 </div>
             </div>
 
-            {/* First Listings Awaiting Approval */}
+            {/* Pending Listing Approvals */}
             <div>
-                <h2 className="text-2xl font-bold mb-4">First Listings Awaiting Approval</h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold">Pending Listing Approvals</h2>
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="pendingSort" className="text-sm text-gray-600">Sort</label>
+                        <select
+                            id="pendingSort"
+                            value={pendingApprovalsSort}
+                            onChange={(e) => {
+                                setPendingApprovalsSort(e.target.value as PendingApprovalSort);
+                                setPendingListingsPage(1);
+                            }}
+                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        >
+                            <option value="oldest">Oldest pending first</option>
+                            <option value="newest">Most recent pending first</option>
+                        </select>
+                    </div>
+                </div>
                 <div className="bg-white border-2 border-gray-200 rounded-2xl p-6">
-                    <div className="grid grid-cols-6 font-semibold text-gray-700 mb-3">
+                    <div className="grid grid-cols-7 font-semibold text-gray-700 mb-3">
                         <div>Listing Title</div>
                         <div>Seller</div>
                         <div>Category</div>
                         <div>Price</div>
+                        <div>Pending Reason</div>
                         <div>Date Submitted</div>
                         <div>Action</div>
                     </div>
@@ -228,7 +251,7 @@ export default function AdminListings({ userRole }: { userRole: string | null })
                         <div className="text-gray-500 text-center py-8">No pending listings</div>
                     ) : (
                         pendingListings.map((listing) => (
-                            <div key={listing.id} className="grid grid-cols-6 py-3 items-center hover:bg-green-50 rounded-xl px-2 transition">
+                            <div key={listing.id} className="grid grid-cols-7 py-3 items-center hover:bg-green-50 rounded-xl px-2 transition">
                                 <div className="truncate" title={listing.title}>
                                     {listing.title}
                                 </div>
@@ -237,6 +260,15 @@ export default function AdminListings({ userRole }: { userRole: string | null })
                                 </div>
                                 <div>{listing.category}</div>
                                 <div>{listing.price}</div>
+                                <div>
+                                    <span className="px-2 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                        {listing.pendingReason === "BOTH"
+                                            ? "First listing + profanity"
+                                            : listing.pendingReason === "PROFANITY"
+                                                ? "Profanity match"
+                                                : "First listing"}
+                                    </span>
+                                </div>
                                 <div>{listing.date}</div>
                                 <div className="flex gap-2">
                                     <button

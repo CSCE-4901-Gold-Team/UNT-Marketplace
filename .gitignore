@@ -41,12 +41,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-src/generated/prisma
-generated/prisma
+prisma/generated
 
 .idea/dataSources.xml
 
-/public/images/uploads/*
+/public/uploads/*
 
 # Playwright
 node_modules/

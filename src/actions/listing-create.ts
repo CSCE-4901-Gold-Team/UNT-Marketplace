@@ -5,12 +5,14 @@ import * as z from "zod";
 import { FormStatus } from "@/constants/FormStatus";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/prisma/generated";
 import { redirect } from "next/navigation";
 import { enforceUserStatus } from "@/utils/StatusEnforcer";
 import { getCurrentUserRole } from "@/actions/user-actions";
 import { prisma } from "@/lib/prisma";
+import { imageAdapter } from "@/lib/image-adapter";
 import { censorProfanity } from "@/lib/profanity-filter";
+import { getProfanityModerationTermLists } from "@/lib/profanity-moderation-db";
 import { revalidatePath } from "next/cache";
 
 const CreateListingRequest = z.object({
@@ -38,6 +40,8 @@ export async function createListingAction(_initialState: FormResponse, formData:
         };
     }
 
+    const currentUserRole = await getCurrentUserRole();
+
     // Enforce user status - check if suspended or banned
     try {
         await enforceUserStatus(session.user.id);
@@ -60,10 +64,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         imagePath: formData.get("imagePath") as string || "",
     });
 
-    console.log("Parsed form data:", parsedFormData);
-
     if (!parsedFormData.success) {
-        console.log("Validation errors:", parsedFormData.error.issues);
         return {
             status: FormStatus.ERROR,
             validationErrors: parsedFormData.error.issues,
@@ -75,7 +76,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     if (parsedFormData.data.isProfessorOnly) {
-        const currentUserRole = await getCurrentUserRole();
         if (currentUserRole !== $Enums.UserRole.FACULTY) {
             return {
                 status: FormStatus.ERROR
@@ -85,6 +85,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
 
     let newListingId: string;
     let requiresAdminApproval = false;
+    let pendingReason: "profanity" | "first_listing" | "both" | null = null;
 
     try {
         const user = await prisma.user.findUnique({
@@ -102,7 +103,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             };
         }
 
-        requiresAdminApproval = !user.listingApproved;
+        requiresAdminApproval = currentUserRole !== $Enums.UserRole.ADMIN && !user.listingApproved;
 
         const pendingListing = await prisma.listing.findFirst({
             where: {
@@ -116,7 +117,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
             },
         });
 
-        if (!user.listingApproved && pendingListing) {
+        if (requiresAdminApproval && pendingListing) {
             return {
                 status: FormStatus.ERROR,
                 message: {
@@ -129,7 +130,7 @@ export async function createListingAction(_initialState: FormResponse, formData:
         // Use the image path directly (base64 or file path)
         const imagePath = parsedFormData.data.imagePath || null;
         let imagesParsed: string[] = [];
-        
+
         // Parse images (could be JSON array or single string)
         if (imagePath) {
             try {
@@ -142,57 +143,85 @@ export async function createListingAction(_initialState: FormResponse, formData:
             }
         }
 
+        // Filter to base64 strings only (new uploads)
+        const newBase64s = imagesParsed.filter(
+            (s): s is string => typeof s === "string" && s.startsWith("data:"),
+        );
+
+        // Save new files to disk BEFORE transaction (sharp compression)
+        const newPaths = await Promise.all(
+            newBase64s.map((b64) => imageAdapter.saveFromBase64(b64, { type: "listing" })),
+        );
+
         // Censored title/description; DRAFT if profanity or user requires approval; optional profanity flag row.
         const rawTitle = parsedFormData.data.title.trim();
         const rawDescription = parsedFormData.data.description.trim();
-        const titleC = censorProfanity(rawTitle);
-        const descC = censorProfanity(rawDescription);
+        const { whitelist, blacklist } = await getProfanityModerationTermLists();
+        const titleC = censorProfanity(rawTitle, { whitelist, blacklist });
+        const descC = censorProfanity(rawDescription, { whitelist, blacklist });
         const wasCensored = titleC.wasCensored || descC.wasCensored;
 
         const listingStatus =
             wasCensored || !user.listingApproved ? "DRAFT" : "AVAILABLE";
-
-        const newListing = await prisma.$transaction(async (tx) => {
-            const listing = await tx.listing.create({
-                data: {
-                    title: titleC.censored,
-                    description: descC.censored,
-                    price: parseFloat(parsedFormData.data.price),
-                    isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
-                    listingStatus,
-                    ownerId: session.user.id,
-                    categories: {
-                        connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
-                    },
-                    ...(imagesParsed.length > 0 && {
-                        images: {
-                            create: imagesParsed.map((url, index) => ({
-                                url: url,
-                                imageType: "LISTING",
-                                sortOrder: index,
-                            })),
-                        },
-                    }),
-                },
-            });
-            if (wasCensored) {
-                await tx.listingProfanityFlag.create({
-                    data: {
-                        listingId: listing.id,
-                        ownerId: session.user.id,
-                        originalTitle: rawTitle,
-                        originalDescription: rawDescription,
-                    },
-                });
-            }
-            return listing;
-        });
-
-        if (wasCensored) {
-            revalidatePath("/admin");
+        if (listingStatus === "DRAFT") {
+            if (wasCensored && !user.listingApproved) pendingReason = "both";
+            else if (wasCensored) pendingReason = "profanity";
+            else pendingReason = "first_listing";
         }
 
-        newListingId = newListing.id;
+        try {
+            const newListing = await prisma.$transaction(async (tx) => {
+                const listing = await tx.listing.create({
+                    data: {
+                        title: titleC.censored,
+                        description: descC.censored,
+                        price: parseFloat(parsedFormData.data.price),
+                        isProfessorOnly: parsedFormData.data.isProfessorOnly ?? false,
+                        listingStatus,
+                        ownerId: session.user.id,
+                        categories: {
+                            connect: parsedFormData.data.categoryIds.map((id) => ({ id })),
+                        },
+                    },
+                });
+
+                // Create Image records with file paths
+                if (newPaths.length > 0) {
+                    await tx.image.createMany({
+                        data: newPaths.map((url, index) => ({
+                            url,
+                            listingId: listing.id,
+                            imageType: "LISTING",
+                            sortOrder: index,
+                        })),
+                    });
+                }
+
+                if (wasCensored) {
+                    await tx.listingProfanityFlag.create({
+                        data: {
+                            listingId: listing.id,
+                            ownerId: session.user.id,
+                            originalTitle: rawTitle,
+                            originalDescription: rawDescription,
+                        },
+                    });
+                }
+                return listing;
+            });
+
+            if (wasCensored) {
+                revalidatePath("/admin");
+            }
+
+            newListingId = newListing.id;
+        } catch (error) {
+            // Transaction failed — clean up orphaned files
+            if (newPaths.length > 0) {
+                await imageAdapter.deleteListingFiles(newPaths);
+            }
+            throw error;
+        }
     } catch (error) {
         console.error("Error creating listing:", error);
         return {
@@ -205,5 +234,6 @@ export async function createListingAction(_initialState: FormResponse, formData:
     }
 
     // Redirect after successful creation (outside try-catch)
-    redirect(`/market/listing/${newListingId}?created=true${requiresAdminApproval ? "&requiresApproval=true" : ""}`);
+    const pendingReasonParam = pendingReason ? `&pendingReason=${pendingReason}` : "";
+    redirect(`/market/listing/${newListingId}?created=true${requiresAdminApproval ? "&requiresApproval=true" : ""}${pendingReasonParam}`);
 }

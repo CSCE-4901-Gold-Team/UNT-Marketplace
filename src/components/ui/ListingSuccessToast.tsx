@@ -9,6 +9,7 @@ export default function ListingSuccessToast() {
     const searchParams = useSearchParams();
     const created = searchParams.get("created");
     const requiresApproval = searchParams.get("requiresApproval");
+    const pendingReason = searchParams.get("pendingReason");
     const updated = searchParams.get("updated");
     const deleted = searchParams.get("deleted");
     const hasShownRef = useRef(false);
@@ -17,7 +18,11 @@ export default function ListingSuccessToast() {
         if (hasShownRef.current) return;
 
         if (created === "true") {
-            if (requiresApproval === "true") {
+            if (pendingReason === "both") {
+                toastService.toast("Listing is pending admin review: your first listing plus profanity match requires approval.", "warn");
+            } else if (pendingReason === "profanity") {
+                toastService.toast("Listing was held for profanity review and is pending admin approval.", "warn");
+            } else if (requiresApproval === "true" || pendingReason === "first_listing") {
                 toastService.toast("Your first listing requires admin approval before it becomes available.", "info");
             } else {
                 toastService.toast("Listing created successfully!", "success");
@@ -36,7 +41,7 @@ export default function ListingSuccessToast() {
             toastService.toast("Listing deleted successfully!", "success");
             hasShownRef.current = true;
         }
-    }, [created, requiresApproval, updated, deleted]);
+    }, [created, requiresApproval, pendingReason, updated, deleted]);
 
     return null;
 }

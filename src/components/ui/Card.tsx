@@ -9,7 +9,7 @@ export default function Card({
 }) {
     
     return (
-        <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-md">
+        <div className="w-full max-w-md rounded-2xl bg-gray-50 p-6 shadow-md">
             {children}
         </div>
     );

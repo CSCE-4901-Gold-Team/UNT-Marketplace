@@ -14,6 +14,7 @@ import Button from "@/components/ui/Button";
 import { useSearchParams } from "next/navigation";
 import { toastService } from "@/lib/toast-service";
 import { getCategories, getCategoriesCount } from "@/actions/category-actions";
+import { previewListingProfanityForForm } from "@/actions/listing-profanity-preview";
 
 type EditableListingStatus = "AVAILABLE" | "DRAFT";
 type ListingCategory = { id: number; name: string };
@@ -57,6 +58,13 @@ export default function CreateListing() {
     const [isLoadingCategories, setIsLoadingCategories] = useState(true);
     const [userRole, setUserRole] = useState<string | null>(null);
     const lastToastMessageRef = useRef<string | null>(null);
+    const profanityPreviewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [profanityPreview, setProfanityPreview] = useState<{
+        titleMatches: string[];
+        descriptionMatches: string[];
+        willHoldForReview: boolean;
+    } | null>(null);
+    const [profanityPreviewLoading, setProfanityPreviewLoading] = useState(false);
 
     const canSetProfessorOnly = userRole === "FACULTY" || userRole === "ADMIN";
 
@@ -148,6 +156,38 @@ export default function CreateListing() {
     }, [canSetProfessorOnly]);
 
     useEffect(() => {
+        if (profanityPreviewTimerRef.current) {
+            clearTimeout(profanityPreviewTimerRef.current);
+        }
+        const combined = `${title}\n${description}`.trim();
+        if (!combined) {
+            setProfanityPreview(null);
+            setProfanityPreviewLoading(false);
+            return;
+        }
+
+        setProfanityPreviewLoading(true);
+        profanityPreviewTimerRef.current = setTimeout(() => {
+            void (async () => {
+                try {
+                    const result = await previewListingProfanityForForm(title, description);
+                    setProfanityPreview(result);
+                } catch {
+                    setProfanityPreview(null);
+                } finally {
+                    setProfanityPreviewLoading(false);
+                }
+            })();
+        }, 450);
+
+        return () => {
+            if (profanityPreviewTimerRef.current) {
+                clearTimeout(profanityPreviewTimerRef.current);
+            }
+        };
+    }, [title, description]);
+
+    useEffect(() => {
         const message = state.message?.content;
         if (!message) return;
 
@@ -203,6 +243,52 @@ export default function CreateListing() {
                         required
                     />
 
+                    {(title.trim() || description.trim()) && (
+                        <div
+                            className="rounded-lg border px-4 py-3 text-sm"
+                            role="status"
+                            aria-live="polite"
+                            style={{
+                                borderColor: profanityPreview?.willHoldForReview ? "#f59e0b" : "#d1d5db",
+                                backgroundColor: profanityPreview?.willHoldForReview ? "#fffbeb" : "#f9fafb",
+                            }}
+                        >
+                            {profanityPreviewLoading ? (
+                                <p className="text-gray-600">Checking profanity filter…</p>
+                            ) : profanityPreview?.willHoldForReview ? (
+                                <>
+                                    <p className="font-semibold text-amber-900 mb-2">
+                                        This may be held for review because the following may be censored or flagged:
+                                    </p>
+                                    {profanityPreview.titleMatches.length > 0 && (
+                                        <p className="text-gray-800 mb-1">
+                                            <span className="font-medium">Title:</span>{" "}
+                                            {profanityPreview.titleMatches.join(", ")}
+                                        </p>
+                                    )}
+                                    {profanityPreview.descriptionMatches.length > 0 && (
+                                        <p className="text-gray-800">
+                                            <span className="font-medium">Description:</span>{" "}
+                                            {profanityPreview.descriptionMatches.join(", ")}
+                                        </p>
+                                    )}
+                                    {profanityPreview.titleMatches.length === 0 &&
+                                        profanityPreview.descriptionMatches.length === 0 && (
+                                            <p className="text-gray-800">
+                                                Matched the profanity rules (see admin whitelist if this is a false
+                                                positive).
+                                            </p>
+                                        )}
+                                </>
+                            ) : (
+                                <p className="text-gray-600">
+                                    No profanity filter matches in the title or description right now (admin whitelist
+                                    may apply).
+                                </p>
+                            )}
+                        </div>
+                    )}
+
                     {/* Price */}
                     <PriceInput
                         inputLabel="Price"
@@ -253,16 +339,16 @@ export default function CreateListing() {
                         inputLabel={isEditing ? "Manage Images (remove existing or add new)" : "Upload Images"}
                         name="imagePath"
                         selectedImages={selectedImages}
-                    onImagesChange={setSelectedImages}
-                    maxImages={5}
-                />
+                        onImagesChange={setSelectedImages}
+                        maxImages={5}
+                    />
                     {/* Categories */}
                     <CategoryChipsInput
                         inputLabel="Categories"
                         name="categoryIds"
                         options={categoryOptions}
                         value={selectedCategoryIds}
-                        onChange={setSelectedCategoryIds}
+                        onChangeAction={setSelectedCategoryIds}
                         validationErrors={state.validationErrors}
                         disabled={isPending || isLoadingData || isLoadingCategories}
                         isLoading={isLoadingCategories}

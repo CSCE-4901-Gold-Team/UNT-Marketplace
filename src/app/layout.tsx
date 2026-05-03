@@ -3,6 +3,7 @@ import type {Metadata} from "next";
 import "@/styles/globals.css";
 import {ToastContainer} from "react-toastify";
 import RemoveExtensionAttrs from "@/components/layout/RemoveExtensionAttrs";
+import AccessibilityTools from "@/components/ui/AccessibilityTools";
 
 export const metadata: Metadata = {
     title: "UNT Marketplace",
@@ -23,6 +24,7 @@ export default function RootLayout({
                 <div id="appContainer">
                     {children}
                 </div>
+                <AccessibilityTools />
                 <ToastContainer/>
             </body>
         </html>
