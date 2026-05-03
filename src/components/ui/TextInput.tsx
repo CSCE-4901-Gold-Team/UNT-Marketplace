@@ -45,7 +45,7 @@ export default function TextInput({
     const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
     const [isListening, setIsListening] = useState(false);
 
-    let inputElementClasses = "rounded-md px-3 py-2 border border-black text-black dark:text-white bg-white dark:bg-gray-700 placeholder:text-gray-500 dark:placeholder:text-gray-400 dark:border-gray-600 " + inputClasses;
+    let inputElementClasses = "rounded-md px-3 py-2 border border-black text-black dark:text-black bg-white placeholder:text-gray-500 dark:placeholder:text-gray-400 dark:border-gray-600 " + inputClasses;
 
     const micEnabledInputTypes = new Set(["text", "search", "email", "tel", "url", "password"]);
     const inputType = type ?? "text";
