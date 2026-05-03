@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "public"."Listing" ADD COLUMN "pickupAddress" TEXT;
+ALTER TABLE "public"."listing" ADD COLUMN "pickupAddress" TEXT;
